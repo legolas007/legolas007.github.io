@@ -1,6 +1,6 @@
-http://usherblog.site/2018/01/24/Hadoop HDFS原理/
-http://usherblog.site/2018/01/24/大数据02/
-http://usherblog.site/2018/01/23/学习Maven遇到的一些坑/
-http://usherblog.site/2018/01/23/大数据01/
-http://usherblog.site/2018/01/23/JavaScript继承方式/
-http://usherblog.site/2018/01/23/Hello！2018/
+http://www.usherblog.site/2018/01/24/Hadoop HDFS原理/
+http://www.usherblog.site/2018/01/24/大数据02/
+http://www.usherblog.site/2018/01/23/学习Maven遇到的一些坑/
+http://www.usherblog.site/2018/01/23/大数据01/
+http://www.usherblog.site/2018/01/23/JavaScript继承方式/
+http://www.usherblog.site/2018/01/23/Hello！2018/
