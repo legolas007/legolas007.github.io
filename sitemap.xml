@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://usherblog.site/about/index.html</loc>
+    
+    <lastmod>2018-01-25T14:51:16.393Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://usherblog.site/2018/01/24/Hadoop%20HDFS%E5%8E%9F%E7%90%86/</loc>
     
     <lastmod>2018-01-24T11:30:54.510Z</lastmod>
@@ -19,13 +26,6 @@
     <loc>http://usherblog.site/categories/index.html</loc>
     
     <lastmod>2018-01-23T14:51:54.856Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://usherblog.site/about/index.html</loc>
-    
-    <lastmod>2018-01-23T14:43:44.178Z</lastmod>
     
   </url>
   
