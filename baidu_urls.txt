@@ -1,3 +1,4 @@
+http://www.usherblog.site/2018/01/27/浅析MapReduce/
 http://www.usherblog.site/2018/01/24/Hadoop HDFS原理/
 http://www.usherblog.site/2018/01/24/大数据02/
 http://www.usherblog.site/2018/01/23/HDFS文件系统操作JAVA-API/
