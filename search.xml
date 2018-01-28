@@ -3,6 +3,122 @@
   
     
     <entry>
+      <title><![CDATA[浅析MapReduce(二）]]></title>
+      <url>/2018/01/29/%E6%B5%85%E6%9E%90MapReduce%EF%BC%88%E4%BA%8C%EF%BC%89/</url>
+      <content type="html"><![CDATA[<h1 id="浅析MapReduce（二）"><a href="#浅析MapReduce（二）" class="headerlink" title="浅析MapReduce（二）"></a>浅析MapReduce（二）</h1><h2 id="Map-gt-Reduce"><a href="#Map-gt-Reduce" class="headerlink" title="Map -&gt; Reduce"></a>Map -&gt; Reduce</h2><h3 id="Map阶段五大步骤"><a href="#Map阶段五大步骤" class="headerlink" title="Map阶段五大步骤"></a>Map阶段五大步骤</h3><p><img src="http://ov1nop9io.bkt.clouddn.com/121403128869360.png" alt="http://ov1nop9io.bkt.clouddn.com/121403128869360.png"></p>
+<blockquote>
+<p>MapReduce其实是分治算法的一种实现，所谓分治算法就是“就是分而治之”，将大的问题分解为相同类型的子问题（最好具有相同的规模），对子问题进行求解，然后合并成大问题的解。MapReduce就是分治法的一种，将输入进行分片，然后交给不同的task进行处理，然后合并成最终的解。具体流程图如下：</p>
+</blockquote>
+<p><img src="http://ov1nop9io.bkt.clouddn.com/20161228113443840.png" alt="http://ov1nop9io.bkt.clouddn.com/20161228113443840.png"></p>
+<blockquote>
+<p>MapReduce实际的处理过程可以理解为Input-&gt;Map-&gt;Sort-&gt;Combine-&gt;Partition-&gt;Reduce-&gt;Output。</p>
+<p>（1）Input阶段 数据以一定的格式传递给Mapper，有TextInputFormat，DBInputFormat，SequenceFileFormat等可以使用，在Job.setInputFormat可以设置，也可以自定义分分片函数。</p>
+<p> （2）Map阶段 对输入的key,value进行处理，即map(k1,v1) -&gt; list(k2,v2)，使用Job.setMapperClass进行设置。</p>
+<p> （3） Sort阶段 对于Mapper的输出进行排序，使用Job.setOutputKeyComparatorClass进行设置，然后定义排序规则</p>
+<p> （4） Combine阶段 这个阶段对于Sort之后有相同key的结果进行合并，使用Job.setCombinerClass进行设置，也可以自定义Combine Class类。</p>
+<p>（5） Partition阶段 将Mapper的中间结果按照Key的范围划分为R份（Reduce作业的个数），默认使用HashPatitioner（key.hashCode() &amp; Integer.MAX_VALUE) % numPartitions），也可以自定义划分的函数。使用Job.setPartitionClass进行设置。</p>
+<p>（6） Reduce阶段 对于Mapper的结果进一步进行处理，Job.setReducerClass进行设置自定义的Reduce类。</p>
+<p>（7） Output阶段 Reducer输出数据的格式。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">&gt;  MapReduce将作业的整个运行过程分为两个阶段：Map阶段和Reduce阶段</span><br><span class="line">&gt;     Map阶段由一定数量的Map Task组成</span><br><span class="line">&gt;         输入数据格式解析：InputFormat</span><br><span class="line">&gt;         输入数据处理：Mapper</span><br><span class="line">&gt;         数据分组：Partitioner</span><br><span class="line">&gt;    Reduce阶段由一定数量的Reduce Task组成</span><br><span class="line">&gt;         数据远程拷贝</span><br><span class="line">&gt;         数据按照key排序</span><br><span class="line">&gt;         数据处理：Reducer</span><br><span class="line">&gt;         数据输出格式：OutputFormat</span><br><span class="line">&gt;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<h3 id="InputFormat"><a href="#InputFormat" class="headerlink" title="InputFormat"></a>InputFormat</h3><blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&gt;  InputFormat 负责处理MR的输入部分.</span><br><span class="line">&gt;       有三个作用:</span><br><span class="line">&gt;      <span class="number">1</span>验证作业的输入是否规范.</span><br><span class="line">&gt;      <span class="number">2</span>把输入文件切分成InputSplit. (处理跨行问题)</span><br><span class="line">&gt;      <span class="number">3</span>提供RecordReader 的实现类，把InputSplit读到Mapper中进行处理.</span><br><span class="line">&gt;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<h3 id="TextInputFormat"><a href="#TextInputFormat" class="headerlink" title="TextInputFormat"></a>TextInputFormat</h3><blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&gt; <span class="number">1</span>.TextInputformat是默认的处理类，处理普通文本文件。</span><br><span class="line">&gt; <span class="number">2</span>.文件中每一行作为一个记录，他将每一行在文件中的起始偏移量作为key，每一行的内容作为value。</span><br><span class="line">&gt; <span class="number">3</span>.默认以\n或回车键作为一行记录。</span><br><span class="line">&gt; <span class="number">4</span>.TextInputFormat继承了FileInputFormat。</span><br><span class="line">&gt;</span><br></pre></td></tr></table></figure>
+</blockquote>
+<p>&gt;</p>
+<blockquote>
+</blockquote>
+<h3 id="combiner"><a href="#combiner" class="headerlink" title="combiner"></a>combiner</h3><h4 id="combiner的出现-为什么需要Map规约操作"><a href="#combiner的出现-为什么需要Map规约操作" class="headerlink" title="combiner的出现-为什么需要Map规约操作"></a>combiner的出现-为什么需要Map规约操作</h4><p><img src="http://ov1nop9io.bkt.clouddn.com/%E5%9B%BE%E7%89%878.png" alt="http://ov1nop9io.bkt.clouddn.com/%E5%9B%BE%E7%89%878.png"></p>
+<blockquote>
+<p>在上述过程中，我们看到至少两个性能瓶颈：</p>
+<p>（1）如果我们有10亿个数据，Mapper会生成10亿个键值对在网络间进行传输，但如果我们只是对数据求最大值，那么很明显的Mapper只需要输出它所知道的最大值即可。这样做不仅可以减轻网络压力，同样也可以大幅度提高程序效率。</p>
+<p>　　总结：网络带宽严重被占降低程序效率；</p>
+<p>在MapReduce编程模型中，在Mapper和Reducer之间有一个非常重要的组件，它解决了上述的性能瓶颈问题，它就是Combiner。</p>
+</blockquote>
+<p><img src="http://ov1nop9io.bkt.clouddn.com/20161227175120887.gif" alt="http://ov1nop9io.bkt.clouddn.com/20161227175120887.gif"></p>
+<blockquote>
+<p>①与mapper和reducer不同的是，combiner没有默认的实现，需要显式的设置在conf中才有作用。</p>
+<p>②并不是所有的job都适用combiner，只有操作满足结合律的才可设置combiner。</p>
+<p>combine操作类似于：opt(opt(1, 2, 3), opt(4, 5, 6))。如果opt为求和、求最大值的话，可以使用，但是如果是求中值的话，不适用。</p>
+<p>每一个map都可能会产生大量的本地输出，Combiner的作用就是对map端的输出先做一次合并，以减少在map和reduce节点之间的数据传输量，以提高网络IO性能</p>
+</blockquote>
+<h4 id="Combiner的作用"><a href="#Combiner的作用" class="headerlink" title="Combiner的作用"></a>Combiner的作用</h4><blockquote>
+<p>(1）Combiner最基本是实现<strong>本地key的聚合，对map输出的key排序，value进行迭代</strong>。如下所示：</p>
+<p>​    map: (K1, V1) → list(K2, V2) </p>
+<p>​    combine: (K2, list(V2)) → list(K2, V2) </p>
+<p>​    reduce: (K2, list(V2)) → list(K3, V3)</p>
+<p>（2）Combiner还有<strong>本地reduce</strong>功能（其本质上就是一个reduce），例如Hadoop自带的wordcount的例子和找出value的最大值的程序，combiner和reduce完全一致，如下所示：</p>
+<p>　　map: (K1, V1) → list(K2, V2)<br>　　combine: (K2, list(V2)) → list(K3, V3)<br>　　reduce: (K3, list(V3)) → list(K4, V4)</p>
+<p>使用combiner之后，先完成的map会在本地聚合，提升速度。对于hadoop自带的wordcount的例子，value就是一个叠加的数字，所以map一结束就可以进行reduce的value叠加，而不必要等到所有的map结束再去进行reduce的value叠加。</p>
+</blockquote>
+<h4 id="融合Combiner的MapReduce"><a href="#融合Combiner的MapReduce" class="headerlink" title="融合Combiner的MapReduce"></a>融合Combiner的MapReduce</h4><p><img src="http://ov1nop9io.bkt.clouddn.com/%E5%9B%BE%E7%89%8789.png" alt="http://ov1nop9io.bkt.clouddn.com/%E5%9B%BE%E7%89%8789.png"></p>
+<h4 id="使用MyReducer作为Combiner"><a href="#使用MyReducer作为Combiner" class="headerlink" title="使用MyReducer作为Combiner"></a>使用MyReducer作为Combiner</h4><blockquote>
+<p>// 设置Map规约Combiner<br>    job.setCombinerClass(MyReducer.class);</p>
+</blockquote>
+<p>执行后看到map的输出和combine的输入统计是一致的，而combine的输出与reduce的输入统计是一样的。<br>由此可以看出规约操作成功，而且执行在map的最后，reduce之前。</p>
+<h4 id="自己定义Combiner"><a href="#自己定义Combiner" class="headerlink" title="自己定义Combiner"></a>自己定义Combiner</h4><p>public static class MyCombiner extends<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">        Reducer&lt;Text, LongWritable, Text, LongWritable&gt; &#123;</span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">reduce</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">            Text key,</span></span></span><br><span class="line"><span class="function"><span class="params">            java.lang.Iterable&lt;LongWritable&gt; values,</span></span></span><br><span class="line"><span class="function"><span class="params">            org.apache.hadoop.mapreduce.Reducer&lt;Text, LongWritable, Text, LongWritable&gt;.Context context)</span></span></span><br><span class="line"><span class="function">            <span class="keyword">throws</span> java.io.IOException, InterruptedException </span>&#123;</span><br><span class="line">        <span class="comment">// 显示次数表示规约函数被调用了多少次，表示k2有多少个分组</span></span><br><span class="line">        System.out.println(<span class="string">"Combiner输入分组&lt;"</span> + key.toString() + <span class="string">",N(N&gt;=1)&gt;"</span>);</span><br><span class="line">        <span class="keyword">long</span> count = <span class="number">0L</span>;</span><br><span class="line">        <span class="keyword">for</span> (LongWritable value : values) &#123;</span><br><span class="line">            count += value.get();</span><br><span class="line">            <span class="comment">// 显示次数表示输入的k2,v2的键值对数量</span></span><br><span class="line">            System.out.println(<span class="string">"Combiner输入键值对&lt;"</span> + key.toString() + <span class="string">","</span></span><br><span class="line">                    + value.get() + <span class="string">"&gt;"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        context.write(key, <span class="keyword">new</span> LongWritable(count));</span><br><span class="line">        <span class="comment">// 显示次数表示输出的k2,v2的键值对数量</span></span><br><span class="line">        System.out.println(<span class="string">"Combiner输出键值对&lt;"</span> + key.toString() + <span class="string">","</span> + count</span><br><span class="line">                + <span class="string">"&gt;"</span>);</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="shuffle"><a href="#shuffle" class="headerlink" title="shuffle"></a>shuffle</h2><p>###Reduce阶段三个步骤<br><img src="http://ov1nop9io.bkt.clouddn.com/%E5%9B%BE%E7%89%87562.png" alt="http://ov1nop9io.bkt.clouddn.com/%E5%9B%BE%E7%89%87562.png"></p>
+<blockquote>
+<p>Step2.1就是一个Shuffle[随机、洗牌]操作</p>
+</blockquote>
+<p><img src="http://ov1nop9io.bkt.clouddn.com/20161228102308185.png" alt="http://ov1nop9io.bkt.clouddn.com/20161228102308185.png"></p>
+<blockquote>
+<p>系统执行排序的过程(即将map输出作为输入传给reduce)，称为shuffle.即这张图是官方对Shuffle过程的描述，hadoop的核心思想是MapReduce，但shuffle又是MapReduce的核心(心脏)。shuffle的主要工作是从Map结束到Reduce开始之间的过程。首先看下这张图，就能了解shuffle所处的位置。图中的partitions、copy phase、sort phase所代表的就是shuffle的不同阶段(大致范围)。也可以这样理解， Shuffle描述着数据从map task输出到reduce task输入的这段过程。</p>
+<p> map 端的Shuffle细节：<br> \1. 在map task执行时，它的输入数据来源于HDFS的block。(map函数产生输出时，利用缓冲的方式写入内存，并出于效率考虑的方式就行预排序。如上图。此处默认的内存大小为100M,可通过io.sort.mr 来设置，当此缓冲区编程 %80的时候 ，一个后台线程就会将内容写入磁盘。在写入磁盘之前，线程首先根据最终要传的reduce把这些数据划分成相应的分区(partition),在每个分区中，后台线程进行内排序，如果有combine，就会在排序后的分区内执行。)</p>
+<ol>
+<li><p>在经过mapper的运行后，我们得知mapper的输出是这样一个key/value对：相同的key 到底应该交由哪个reduce去做，是现在决定的，也就是partition 作用。MapReduce提供Partitioner接口，它的作用就是根据key或value及reduce的数量来决定当前的这对输出数据最终应该交由哪个reduce task处理。默认对key hash后再以reduce task数量取模。默认的取模方式只是为了平均reduce的处理能力，如果用户自己对Partitioner有需求，可以订制并设置到job上。</p>
+</li>
+<li><p>接下来，需要将数据写入内存缓冲区中，缓冲区的作用是批量收集map结果，减少磁盘IO的影响。key/value对以及Partition的结果都会被写入缓冲区，当然写入之前，key与value值都会被序列化成字节数组。</p>
+</li>
+<li><p>reduce task在执行之前的工作就是不断地拉取当前job里每个map task的最终结果，然后对从不同地方拉取过来的数据不断地做merge(合并），也最终形成一个文件作为reduce task的输入文件</p>
+<p>​</p>
+<p>reduce 端的Shuffle细节：Copy过程，简单地拉取数据。reduce 通过http的方式得到输出文件的分区。Merge阶段reduce task在执行之前的工作就是不断地拉取当前job里每个map task的最终结果，然后对从不同地方拉取过来的数据不断地做merge(合并），也最终形成一个文件作为reduce task的输入文件。</p>
+<p>​</p>
+</li>
+</ol>
+</blockquote>
+<h3 id="partitioner"><a href="#partitioner" class="headerlink" title="partitioner"></a>partitioner</h3><h4 id="Hadoop内置Partitioner"><a href="#Hadoop内置Partitioner" class="headerlink" title="Hadoop内置Partitioner"></a>Hadoop内置Partitioner</h4><blockquote>
+<p>MapReduce的使用者通常会指定Reduce任务和Reduce任务输出文件的数量（R）。</p>
+<p>用户在中间key上使用分区函数来对数据进行分区，之后在输入到后续任务执行进程。一个默认的分区函数式使用hash方法（比如常见的：hash(key) mod R）进行分区。hash方法能够产生非常平衡的分区。Hadoop中自带了一个默认的分区类HashPartitioner，</p>
+<p>它继承了Partitioner类，提供了一个getPartition的方法</p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** Partition keys by their &#123;<span class="doctag">@link</span> Object#hashCode()&#125;. */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HashPartitioner</span>&lt;<span class="title">K</span>, <span class="title">V</span>&gt; <span class="keyword">extends</span> <span class="title">Partitioner</span>&lt;<span class="title">K</span>, <span class="title">V</span>&gt; </span>&#123;</span><br><span class="line">  <span class="comment">/** Use &#123;<span class="doctag">@link</span> Object#hashCode()&#125; to partition. */</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getPartition</span><span class="params">(K key, V value,</span></span></span><br><span class="line"><span class="function"><span class="params">                          <span class="keyword">int</span> numReduceTasks)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> (key.hashCode() &amp; Integer.MAX_VALUE) % numReduceTasks;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>Map的结果，会通过partition分发到Reducer上，Reducer做完Reduce操作后，通过OutputFormat，进行输出.partition是分割map每个节点的结果，按照key分别映射给不同的reduce，也是可以自定义的。这里其实可以理解归类。</p>
+<p>Mapper的结果，可能送到Combiner做合并，Combiner在系统中并没有自己的基类，而是用Reducer作为Combiner的基类，他们对外的功能是一样的，只是使用的位置和使用时的上下文不太一样而已。Mapper最终处理的键值对</p>
+</blockquote>
+<h4 id="作用"><a href="#作用" class="headerlink" title="作用"></a>作用</h4><blockquote>
+<ol>
+<li>Partitioner决定了Map Task输出的每条数据交给哪个Reduce Task处理</li>
+<li>默认实现：HashPartitioner是mapreduce的默认partitioner。计算方法是 reducer=(key.hashCode() &amp; Integer.MAX_VALUE) % numReduceTasks，得到当前的目的reducer。(hash(key) mod R 其中R是Reduce Task数目)</li>
+<li>允许用户自定义 很多情况需自定义Partitioner比如“hash(hostname(URL)) mod R”确保相同域名的网页交给同一个Reduce Task处理</li>
+</ol>
+</blockquote>
+<h3 id="自定义partitioner"><a href="#自定义partitioner" class="headerlink" title="自定义partitioner"></a>自定义partitioner</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">     * 自定义Partitioner类</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">KpiPartitioner</span> <span class="keyword">extends</span> <span class="title">Partitioner</span>&lt;<span class="title">Text</span>, <span class="title">KpiWritable</span>&gt; </span>&#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getPartition</span><span class="params">(Text key, KpiWritable value, <span class="keyword">int</span> numPartitions)</span> </span>&#123;</span><br><span class="line">            <span class="comment">// 实现不同的长度不同的号码分配到不同的reduce task中</span></span><br><span class="line">            <span class="keyword">int</span> numLength = key.toString().length();</span><br><span class="line">            <span class="keyword">if</span> (numLength == <span class="number">11</span>) &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">     </span><br><span class="line">    &#125;</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">设置为打包运行，设置Partitioner为LiuPartitioner设置ReducerTask的个数为2</span></span><br><span class="line"><span class="comment">注意：分区的例子必须要设置为打成jar包运行！*/</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">run</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line"> </span><br><span class="line">        <span class="comment">// 定义一个作业</span></span><br><span class="line">        Job job = <span class="keyword">new</span> Job(getConf(), <span class="string">"MyJob"</span>);</span><br><span class="line">        <span class="comment">// 分区需要设置为打包运行</span></span><br><span class="line">        job.setJarByClass(MyLiuJob.class);</span><br><span class="line">        <span class="comment">// 设置输入目录</span></span><br><span class="line">        FileInputFormat.setInputPaths(job, <span class="keyword">new</span> Path(INPUT_PATH));</span><br><span class="line">        <span class="comment">// 设置自定义Mapper类</span></span><br><span class="line">        job.setMapperClass(MyMapper.class);</span><br><span class="line">        <span class="comment">// 指定&lt;k2,v2&gt;的类型</span></span><br><span class="line">        job.setMapOutputKeyClass(Text.class);</span><br><span class="line">        job.setMapOutputValueClass(KpiWritable.class);</span><br><span class="line">        <span class="comment">// 设置Partitioner</span></span><br><span class="line">        job.setPartitionerClass(LiuPartitioner.class);</span><br><span class="line">        job.setNumReduceTasks(<span class="number">2</span>);</span><br><span class="line">         <span class="comment">// 设置自定义Reducer类</span></span><br><span class="line">        job.setReducerClass(MyReducer.class);</span><br><span class="line">        <span class="comment">// 指定&lt;k3,v3&gt;的类型</span></span><br><span class="line">        job.setOutputKeyClass(Text.class);</span><br><span class="line">        job.setOutputKeyClass(KpiWritable.class);</span><br><span class="line">        <span class="comment">// 设置输出目录</span></span><br><span class="line">        FileOutputFormat.setOutputPath(job, <span class="keyword">new</span> Path(OUTPUT_PATH));</span><br><span class="line">        <span class="comment">// 提交作业</span></span><br><span class="line">        System.exit(job.waitForCompletion(<span class="keyword">true</span>) ? <span class="number">0</span> : <span class="number">1</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<h2 id="MapReduce排序分组"><a href="#MapReduce排序分组" class="headerlink" title="MapReduce排序分组"></a>MapReduce排序分组</h2><p><img src="http://ov1nop9io.bkt.clouddn.com/121403128869360.png" alt="http://ov1nop9io.bkt.clouddn.com/121403128869360.png"></p>
+<blockquote>
+<p>Step1.4第四步中需要对不同分区中的数据进行排序和分组，默认情况按照key进行排序和分组</p>
+</blockquote>
+]]></content>
+      
+        <categories>
+            
+            <category> 大数据 </category>
+            
+        </categories>
+        
+        
+        <tags>
+            
+            <tag> MapReduce </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
       <title><![CDATA[浅析MapReduce]]></title>
       <url>/2018/01/27/%E6%B5%85%E6%9E%90MapReduce/</url>
       <content type="html"><![CDATA[<h1 id="浅析MapReduce"><a href="#浅析MapReduce" class="headerlink" title="浅析MapReduce"></a>浅析MapReduce</h1><h2 id="MapReduce概念"><a href="#MapReduce概念" class="headerlink" title="MapReduce概念"></a>MapReduce概念</h2><blockquote>
