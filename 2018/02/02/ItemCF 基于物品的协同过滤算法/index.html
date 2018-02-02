@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="MapReduce,推荐系统," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="ItemCF 基于物品的协同过滤算法1、概念 ItemCF：ItemCollaborationFilter，基于物品的协同过滤 算法核心思想：给用户推荐那些和他们之前喜欢的物品相似的物品。 比如，用户A之前买过《数据挖掘导论》，该算法会根据此行为给你推荐《机器学习》，但是ItemCF算法并不利用物品的内容属性计算物品之间的相似度，它主要通过分析用户的行为记录计算物品之间的相似度。 ==&amp;gt;该算">
+<meta name="keywords" content="MapReduce,推荐系统">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ItemCF 基于物品的协同过滤算法">
+<meta property="og:url" content="http://www.usherblog.site/2018/02/02/ItemCF 基于物品的协同过滤算法/index.html">
+<meta property="og:site_name" content="Usher_Ou&#39;s Blog">
+<meta property="og:description" content="ItemCF 基于物品的协同过滤算法1、概念 ItemCF：ItemCollaborationFilter，基于物品的协同过滤 算法核心思想：给用户推荐那些和他们之前喜欢的物品相似的物品。 比如，用户A之前买过《数据挖掘导论》，该算法会根据此行为给你推荐《机器学习》，但是ItemCF算法并不利用物品的内容属性计算物品之间的相似度，它主要通过分析用户的行为记录计算物品之间的相似度。 ==&amp;gt;该算">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://ov1nop9io.bkt.clouddn.com/1008304-20170302233332454-515456069.jpg">
+<meta property="og:image" content="http://ov1nop9io.bkt.clouddn.com/1008304-20170302233332782-1213533378.jpg">
+<meta property="og:image" content="http://ov1nop9io.bkt.clouddn.com/1008304-20170302233333235-1610357057.jpg">
+<meta property="og:image" content="http://ov1nop9io.bkt.clouddn.com/fd.png">
+<meta property="og:updated_time" content="2018-02-02T12:50:47.132Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ItemCF 基于物品的协同过滤算法">
+<meta name="twitter:description" content="ItemCF 基于物品的协同过滤算法1、概念 ItemCF：ItemCollaborationFilter，基于物品的协同过滤 算法核心思想：给用户推荐那些和他们之前喜欢的物品相似的物品。 比如，用户A之前买过《数据挖掘导论》，该算法会根据此行为给你推荐《机器学习》，但是ItemCF算法并不利用物品的内容属性计算物品之间的相似度，它主要通过分析用户的行为记录计算物品之间的相似度。 ==&amp;gt;该算">
+<meta name="twitter:image" content="http://ov1nop9io.bkt.clouddn.com/1008304-20170302233332454-515456069.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.2',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://www.usherblog.site/2018/02/02/ItemCF 基于物品的协同过滤算法/"/>
+
+
+
+
+
+  <title>ItemCF 基于物品的协同过滤算法 | Usher_Ou's Blog</title>
+  
+
+
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?9dac5a1d54c53caffecf4954d4041153";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+	<a href="https://github.com/legolas007"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/e7bbb0521b397edbd5fe43e7f760759336b5e05f/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677265656e5f3030373230302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_green_007200.png"></a>
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Usher_Ou's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="搜索..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://www.usherblog.site/2018/02/02/ItemCF 基于物品的协同过滤算法/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Usher">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Usher_Ou's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">ItemCF 基于物品的协同过滤算法</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-02-02T19:23:56+08:00">
+                2018-02-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/大数据/" itemprop="url" rel="index">
+                    <span itemprop="name">大数据</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/大数据/hadoop/" itemprop="url" rel="index">
+                    <span itemprop="name">hadoop</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+             <span id="/2018/02/02/ItemCF 基于物品的协同过滤算法/" class="leancloud_visitors" data-flag-title="ItemCF 基于物品的协同过滤算法">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">热度&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+				 <span>%</span>
+             </span>
+          
+
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">字数统计&#58;</span>
+                
+                <span title="字数统计">
+                  3,401
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">
+                  19
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="ItemCF-基于物品的协同过滤算法"><a href="#ItemCF-基于物品的协同过滤算法" class="headerlink" title="ItemCF 基于物品的协同过滤算法"></a>ItemCF 基于物品的协同过滤算法</h1><h2 id="1、概念"><a href="#1、概念" class="headerlink" title="1、概念"></a>1、概念</h2><blockquote>
+<p>ItemCF：ItemCollaborationFilter，基于物品的协同过滤</p>
+<p>算法核心思想：给用户推荐那些和他们之前喜欢的物品相似的物品。</p>
+<p>比如，用户A之前买过《数据挖掘导论》，该算法会根据此行为给你推荐《机器学习》，但是ItemCF算法并不利用物品的内容属性计算物品之间的相似度，它主要通过分析用户的行为记录计算物品之间的相似度。</p>
+<p>==&gt;该算法认为，物品A和物品B具有很大的相似度是因为喜欢物品A的用户大都也喜欢物品B。</p>
+</blockquote>
+<h2 id="2、原理"><a href="#2、原理" class="headerlink" title="2、原理"></a>2、原理</h2><p><img src="http://ov1nop9io.bkt.clouddn.com/1008304-20170302233332454-515456069.jpg" alt="http://ov1nop9io.bkt.clouddn.com/1008304-20170302233332454-515456069.jpg"></p>
+<p><img src="http://ov1nop9io.bkt.clouddn.com/1008304-20170302233332782-1213533378.jpg" alt="http://ov1nop9io.bkt.clouddn.com/1008304-20170302233332782-1213533378.jpg"></p>
+<p><img src="http://ov1nop9io.bkt.clouddn.com/1008304-20170302233333235-1610357057.jpg" alt="http://ov1nop9io.bkt.clouddn.com/1008304-20170302233333235-1610357057.jpg"></p>
+<h2 id="3、算法实现"><a href="#3、算法实现" class="headerlink" title="3、算法实现"></a>3、算法实现</h2><h3 id="步骤"><a href="#步骤" class="headerlink" title="步骤"></a>步骤</h3><blockquote>
+<p>1．  建立物品的同现矩阵A，即统计两两物品同时出现的次数</p>
+<p>数据格式：Item_id1:Item_id2        次数</p>
+<p>2．  建立用户对物品的评分矩阵B，即每一个用户对某一物品的评分</p>
+<p>数据格式：Item_id          user_id:preference</p>
+<p>3．  推荐结果=物品的同现矩阵A * 用户对物品的评分矩阵B</p>
+<p>数据格式：user_id           item_id,推荐分值</p>
+<ol>
+<li>过滤用户已评分的物品项</li>
+</ol>
+<p>5.对推荐结果按推荐分值从高到低排序</p>
+</blockquote>
+<h3 id="数据"><a href="#数据" class="headerlink" title="数据"></a>数据</h3><blockquote>
+<p>1,101,5.0</p>
+<p>1,102,3.0</p>
+<p>1,103,2.5</p>
+<p>2,101,2.0</p>
+<p>2,102,2.5</p>
+<p>2,103,5.0</p>
+<p>2,104,2.0</p>
+<p>3,101,2.0</p>
+<p>3,104,4.0</p>
+<p>3,105,4.5</p>
+<p>3,107,5.0</p>
+<p>4,101,5.0</p>
+<p>4,103,3.0</p>
+<p>4,104,4.5</p>
+<p>4,106,4.0</p>
+<p>5,101,4.0</p>
+<p>5,102,3.0</p>
+<p>5,103,2.0</p>
+<p>5,104,4.0</p>
+<p>5,105,3.5</p>
+<p>5,106,4.0</p>
+<p>6,102,4.0</p>
+<p>6,103,2.0</p>
+<p>6,105,3.5</p>
+<p>6,107,4.0</p>
+</blockquote>
+<h3 id="Hadoop-MapReduce程序分为四步："><a href="#Hadoop-MapReduce程序分为四步：" class="headerlink" title="Hadoop MapReduce程序分为四步："></a>Hadoop MapReduce程序分为四步：</h3><h4 id="第一步：读取原始数据，按用户ID分组，输出文件数据格式为"><a href="#第一步：读取原始数据，按用户ID分组，输出文件数据格式为" class="headerlink" title="第一步：读取原始数据，按用户ID分组，输出文件数据格式为"></a>第一步：读取原始数据，按用户ID分组，输出文件数据格式为</h4><blockquote>
+<p>101:5.0,102:3.0, 103:2.5                    —id=1<br>101:2.0,102:2.5,103:5.0,104:2.0              —id=2<br>101:2.0,104:4.0,105:4.5, 107:5.0              —id=3<br>101:5.0,103:3.0,106:4.0,104:4.5              —id=4<br>101:4.0,102:3.0,103:2.0,104:4.0,105:3.5,106:4.0 —id=5<br>102:4.0,103:2.0,105:3.5,107:4.0              —id=6</p>
+</blockquote>
+<h4 id="第二步：统计两两物品同时出现的次数（同一个人买2个物品的出现次数），输出文件数据格式为"><a href="#第二步：统计两两物品同时出现的次数（同一个人买2个物品的出现次数），输出文件数据格式为" class="headerlink" title="第二步：统计两两物品同时出现的次数（同一个人买2个物品的出现次数），输出文件数据格式为"></a>第二步：统计两两物品同时出现的次数（同一个人买2个物品的出现次数），输出文件数据格式为</h4><blockquote>
+<p>101:101 5<br>101:102 3<br>101:103 4<br>101:104 4<br>101:105 2<br>101:106 2<br>101:107 1<br>102:101 3<br>102:102 4<br>102:103 4<br>102:104 2<br>102:105 2<br>102:106 1<br>102:107 1<br>103:101 4<br>103:102 4<br>103:103 5<br>103:104 3<br>103:105 2<br>103:106 2<br>103:107 1<br>104:101 4<br>104:102 2<br>104:103 3<br>104:104 4<br>104:105 2<br>104:106 2<br>104:107 1<br>105:101 2<br>105:102 2<br>105:103 2<br>105:104 2<br>105:105 3<br>105:106 1<br>105:107 2<br>106:101 2<br>106:102 1<br>106:103 2<br>106:104 2<br>106:105 1<br>106:106 2<br>107:101 1<br>107:102 1<br>107:103 1<br>107:104 1<br>107:105 2<br>107:107 2</p>
+</blockquote>
+<h4 id="第三步：生成用户评分矩阵和物品同现矩阵第一个mapper结果为用户评分矩阵，结果如下："><a href="#第三步：生成用户评分矩阵和物品同现矩阵第一个mapper结果为用户评分矩阵，结果如下：" class="headerlink" title="第三步：生成用户评分矩阵和物品同现矩阵第一个mapper结果为用户评分矩阵，结果如下："></a>第三步：生成用户评分矩阵和物品同现矩阵第一个mapper结果为用户评分矩阵，结果如下：</h4><blockquote>
+<p>Item_id    user_id:preference<br>101       2:2.0<br>101       5:4.0<br>101       4:5.0<br>101       3:2.0<br>101       1:5.0<br>102       2:2.5<br>102       1:3.0<br>102       6:4.0<br>102       5:3.0<br>103       6:2.0<br>103       5:2.0<br>103       1:2.5<br>103       4:3.0<br>103       2:5.0<br>104       5:4.0<br>104       2:2.0<br>104       3:4.0<br>104       4:4.5<br>105       5:3.5<br>105       3:4.5<br>105       6:3.5<br>106       4:4.0<br>106       5:4.0<br>107       3:5.0<br>107       6:4.0</p>
+</blockquote>
+<h4 id="第二个mapper生成物品同现矩阵，结果如下："><a href="#第二个mapper生成物品同现矩阵，结果如下：" class="headerlink" title="第二个mapper生成物品同现矩阵，结果如下："></a>第二个mapper生成物品同现矩阵，结果如下：</h4><blockquote>
+<p>Item_id1:Item_id2        次数<br>101:101 5<br>101:102 3<br>101:103 4<br>101:104 4<br>101:105 2<br>101:106 2<br>101:107 1<br>102:101 3<br>102:102 4<br>102:103 4<br>102:104 2<br>102:105 2<br>102:106 1<br>102:107 1<br>103:101 4<br>103:102 4<br>103:103 5<br>103:104 3<br>103:105 2<br>103:106 2<br>103:107 1<br>104:101 4<br>104:102 2<br>104:103 3<br>104:104 4<br>104:105 2<br>104:106 2<br>104:107 1<br>105:101 2<br>105:102 2<br>105:103 2<br>105:104 2<br>105:105 3<br>105:106 1<br>105:107 2<br>106:101 2<br>106:102 1<br>106:103 2<br>106:104 2<br>106:105 1<br>106:106 2<br>107:101 1<br>107:102 1<br>107:103 1<br>107:104 1<br>107:105 2<br>107:107 2</p>
+</blockquote>
+<h4 id="第四步：做矩阵乘法，推荐结果-物品的同现矩阵A-用户对物品的评分矩阵B"><a href="#第四步：做矩阵乘法，推荐结果-物品的同现矩阵A-用户对物品的评分矩阵B" class="headerlink" title="第四步：做矩阵乘法，推荐结果=物品的同现矩阵A * 用户对物品的评分矩阵B"></a>第四步：做矩阵乘法，推荐结果=物品的同现矩阵A * 用户对物品的评分矩阵B</h4><p>&gt;</p>
+<blockquote>
+<p>user_id    item_id,推荐分值<br>1         107,10.5<br>1         106,18.0<br>1         105,21.0<br>1         104,33.5<br>1         103,44.5<br>1         102,37.0<br>1         101,44.0<br>2         107,11.5<br>2         106,20.5<br>2         105,23.0<br>2         104,36.0<br>2         103,49.0<br>2         102,40.0<br>2         101,45.5<br>3         107,25.0<br>3         106,16.5<br>3         105,35.5<br>3         104,38.0<br>3         103,34.0<br>3         102,28.0<br>3         101,40.0<br>4         107,12.5<br>4         106,33.0<br>4         105,29.0<br>4         104,55.0<br>4         103,56.5<br>4         102,40.0<br>4         101,63.0<br>5         107,20.0<br>5         106,34.5<br>5         105,40.5<br>5         104,59.0<br>5         103,65.0<br>5         102,51.0<br>5         101,68.0<br>6         107,21.0<br>6         106,11.5<br>6         105,30.5<br>6         104,25.0<br>6         103,37.0<br>6         102,35.0<br>6         101,31.0</p>
+</blockquote>
+<p><img src="http://ov1nop9io.bkt.clouddn.com/fd.png" alt="enter image description here"></p>
+<h3 id="MR实现步骤"><a href="#MR实现步骤" class="headerlink" title="MR实现步骤"></a>MR实现步骤</h3><h4 id="第一个MR-就是把输入数据的每个用户的信息整合下"><a href="#第一个MR-就是把输入数据的每个用户的信息整合下" class="headerlink" title="第一个MR 就是把输入数据的每个用户的信息整合下"></a>第一个MR 就是把输入数据的每个用户的信息整合下</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">userid:<span class="number">1</span>,vector:&#123;<span class="number">103</span>:<span class="number">2.5</span>,<span class="number">102</span>:<span class="number">3.0</span>,<span class="number">101</span>:<span class="number">5.0</span>&#125;  </span><br><span class="line">userid:<span class="number">2</span>,vector:&#123;<span class="number">104</span>:<span class="number">2.0</span>,<span class="number">103</span>:<span class="number">5.0</span>,<span class="number">102</span>:<span class="number">2.5</span>,<span class="number">101</span>:<span class="number">2.0</span>&#125;  </span><br><span class="line">userid:<span class="number">3</span>,vector:&#123;<span class="number">107</span>:<span class="number">5.0</span>,<span class="number">105</span>:<span class="number">4.5</span>,<span class="number">104</span>:<span class="number">4.0</span>,<span class="number">101</span>:<span class="number">2.5</span>&#125;  </span><br><span class="line">userid:<span class="number">4</span>,vector:&#123;<span class="number">106</span>:<span class="number">4.0</span>,<span class="number">104</span>:<span class="number">4.5</span>,<span class="number">103</span>:<span class="number">3.0</span>,<span class="number">101</span>:<span class="number">5.0</span>&#125;  </span><br><span class="line">userid:<span class="number">5</span>,vector:&#123;<span class="number">106</span>:<span class="number">4.0</span>,<span class="number">105</span>:<span class="number">3.5</span>,<span class="number">104</span>:<span class="number">4.0</span>,<span class="number">103</span>:<span class="number">2.0</span>,<span class="number">102</span>:<span class="number">3.0</span>,<span class="number">101</span>:<span class="number">4.0</span>&#125;  </span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">map</span><span class="params">(LongWritable key,Text value,Context context)</span> <span class="keyword">throws</span> IOException, InterruptedException</span>&#123;  </span><br><span class="line">         </span><br><span class="line">VarLongWritable userID=<span class="keyword">new</span> VarLongWritable();  </span><br><span class="line">LongWritable itemID=<span class="keyword">new</span> LongWritable();  </span><br><span class="line">FloatWritable itemValue=<span class="keyword">new</span> FloatWritable();  </span><br><span class="line">String line=value.toString();  </span><br><span class="line">String[] info=line.split(<span class="string">","</span>);  </span><br><span class="line"><span class="keyword">if</span>(info.length!=<span class="number">3</span>)&#123; <span class="keyword">return</span>; &#125;    <span class="comment">//uid,itemid,preference</span></span><br><span class="line">userID.set(Long.parseLong(info[<span class="number">0</span>]));  </span><br><span class="line">itemID.set(Long.parseLong(info[<span class="number">1</span>]));  </span><br><span class="line">itemValue.set(Float.parseFloat(info[<span class="number">2</span>]));  </span><br><span class="line">context.write(userID, <span class="keyword">new</span> LongAndFloat(itemID,itemValue));  </span><br><span class="line">&#125;  </span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WiKiReducer1</span> <span class="keyword">extends</span> <span class="title">Reducer</span>&lt;<span class="title">VarLongWritable</span>,<span class="title">LongAndFloat</span>,<span class="title">VarLongWritable</span>,<span class="title">VectorWritable</span>&gt; </span>&#123;  </span><br><span class="line">      </span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">reduce</span><span class="params">(VarLongWritable userID,Iterable&lt;LongAndFloat&gt; itemPrefs,Context context)</span> <span class="keyword">throws</span> IOException, InterruptedException</span>&#123;  </span><br><span class="line">            <span class="comment">// RandomAccessSparseVector(int cardinality, int initialCapacity)   </span></span><br><span class="line">            Vector userVector=<span class="keyword">new</span> RandomAccessSparseVector(Integer.MAX_VALUE,<span class="number">10</span>);  </span><br><span class="line">            <span class="keyword">for</span>(LongAndFloat itemPref:itemPrefs)&#123;  </span><br><span class="line">                userVector.set(Integer.parseInt(itemPref.getFirst().toString()),Float.parseFloat(itemPref.getSecond().toString()) );  </span><br><span class="line">            &#125;  </span><br><span class="line">            context.write(userID, <span class="keyword">new</span> VectorWritable(userVector));  </span><br><span class="line">    <span class="comment">//      System.out.println("userid:"+userID+",vector:"+userVector);  </span></span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
+<h4 id="类-LongAndFloat-用于存储数据并实现Writable的数据类型"><a href="#类-LongAndFloat-用于存储数据并实现Writable的数据类型" class="headerlink" title="类 LongAndFloat 用于存储数据并实现Writable的数据类型"></a>类 LongAndFloat 用于存储数据并实现Writable的数据类型</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LongAndFloat</span> <span class="keyword">implements</span> <span class="title">WritableComparable</span>&lt;<span class="title">LongAndFloat</span>&gt; </span>&#123;  </span><br><span class="line">    <span class="keyword">private</span> LongWritable first;  </span><br><span class="line">    <span class="keyword">private</span> FloatWritable second;  </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">LongAndFloat</span><span class="params">()</span></span>&#123;  </span><br><span class="line">        set(<span class="keyword">new</span> LongWritable(),<span class="keyword">new</span> FloatWritable());  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">LongAndFloat</span><span class="params">(LongWritable l,FloatWritable f)</span></span>&#123;  </span><br><span class="line">        set(l,f);  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="function"><span class="keyword">public</span>  <span class="keyword">void</span> <span class="title">set</span><span class="params">(LongWritable longWritable, FloatWritable intWritable)</span> </span>&#123;  </span><br><span class="line">        <span class="comment">// TODO Auto-generated method stub  </span></span><br><span class="line">        <span class="keyword">this</span>.first=longWritable;  </span><br><span class="line">        <span class="keyword">this</span>.second=intWritable;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="function"><span class="keyword">public</span> LongWritable <span class="title">getFirst</span><span class="params">()</span></span>&#123;  </span><br><span class="line">        <span class="keyword">return</span> first;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="function"><span class="keyword">public</span> FloatWritable <span class="title">getSecond</span><span class="params">()</span></span>&#123;  </span><br><span class="line">        <span class="keyword">return</span> second;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="meta">@Override</span>  </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">readFields</span><span class="params">(DataInput arg0)</span> <span class="keyword">throws</span> IOException </span>&#123;  </span><br><span class="line">        <span class="comment">// TODO Auto-generated method stub  </span></span><br><span class="line">        first.readFields(arg0);  </span><br><span class="line">        second.readFields(arg0);  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="meta">@Override</span>  </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">write</span><span class="params">(DataOutput arg0)</span> <span class="keyword">throws</span> IOException </span>&#123;  </span><br><span class="line">        <span class="comment">// TODO Auto-generated method stub  </span></span><br><span class="line">        first.write(arg0);  </span><br><span class="line">        second.write(arg0);  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="meta">@Override</span>  </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">compareTo</span><span class="params">(LongAndFloat o)</span> </span>&#123;  </span><br><span class="line">        <span class="comment">// TODO Auto-generated method stub  </span></span><br><span class="line">        <span class="keyword">int</span> cmp=first.compareTo(o.first);  </span><br><span class="line">        <span class="keyword">if</span>(cmp!=<span class="number">0</span>)&#123;  </span><br><span class="line">            <span class="keyword">return</span> cmp;  </span><br><span class="line">        &#125;  </span><br><span class="line">        <span class="keyword">return</span> second.compareTo(o.second);  </span><br><span class="line">    &#125;     </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="第二个MR："><a href="#第二个MR：" class="headerlink" title="第二个MR："></a>第二个MR：</h4><blockquote>
+<p>输入数据为MR(1) 的输出，只是项目item的相似度，先不管用户ID，直接对后面的所有项目进行拆分。<br>输出应该类似下面：<br>Item_id1:Item_id2        次数<br>101,{107:1.0,106:2.0,105:2.0,104:4.0,103:4.0,102:3.0,101:5.0}<br>102,{106:1.0,105:1.0,104:2.0,103:3.0,102:3.0,101:3.0}  </p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WikiMapper2</span> <span class="keyword">extends</span> <span class="title">Mapper</span>&lt;<span class="title">VarLongWritable</span> ,<span class="title">VectorWritable</span>,<span class="title">IntWritable</span>,<span class="title">IntWritable</span>&gt;</span>&#123;  </span><br><span class="line">      </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">map</span><span class="params">(VarLongWritable userID,VectorWritable userVector,Context context)</span> <span class="keyword">throws</span> IOException, InterruptedException</span>&#123;  </span><br><span class="line">        Iterator&lt;Vector.Element&gt; it=userVector.get().iterateNonZero();  </span><br><span class="line">        <span class="keyword">while</span>(it.hasNext())&#123;  </span><br><span class="line">            <span class="keyword">int</span> index1=it.next().index();  </span><br><span class="line">    <span class="comment">//      System.out.println("index1:"+index1);  </span></span><br><span class="line">            Iterator&lt;Vector.Element&gt; it2=userVector.get().iterateNonZero();  </span><br><span class="line">            <span class="keyword">while</span>(it2.hasNext())&#123;  </span><br><span class="line">                <span class="keyword">int</span> index2=it2.next().index();                    </span><br><span class="line">                <span class="comment">//  test  </span></span><br><span class="line">                <span class="comment">/*if(index1==101)&#123; </span></span><br><span class="line"><span class="comment">                    System.out.println("index1:"+index1+",index2:"+index2); </span></span><br><span class="line"><span class="comment">                &#125;*/</span>  </span><br><span class="line">                context.write(<span class="keyword">new</span> IntWritable(index1), <span class="keyword">new</span> IntWritable(index2));  </span><br><span class="line">            &#125;  </span><br><span class="line">        &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WiKiReducer2</span> <span class="keyword">extends</span> <span class="title">Reducer</span>&lt;<span class="title">IntWritable</span>,<span class="title">IntWritable</span>,<span class="title">IntWritable</span>,<span class="title">VectorWritable</span>&gt; </span>&#123;        </span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">reduce</span><span class="params">(IntWritable itemIndex1,Iterable&lt;IntWritable&gt; itemPrefs,Context context)</span> <span class="keyword">throws</span> IOException, InterruptedException</span>&#123;  </span><br><span class="line">            <span class="comment">// RandomAccessSparseVector(int cardinality, int initialCapacity)   </span></span><br><span class="line">            Vector itemVector=<span class="keyword">new</span> RandomAccessSparseVector(Integer.MAX_VALUE,<span class="number">10</span>);  </span><br><span class="line">            <span class="keyword">for</span>(IntWritable itemPref:itemPrefs)&#123;  </span><br><span class="line">                <span class="keyword">int</span> itemIndex2=itemPref.get();  </span><br><span class="line">                itemVector.set(itemIndex2, itemVector.get(itemIndex2)+<span class="number">1.0</span>);  </span><br><span class="line">            &#125;  </span><br><span class="line">            context.write(itemIndex1, <span class="keyword">new</span> VectorWritable(itemVector));  </span><br><span class="line">    		<span class="comment">// System.out.println(itemIndex1+","+itemVector);  </span></span><br><span class="line">        &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="第三个MR："><a href="#第三个MR：" class="headerlink" title="第三个MR："></a>第三个MR：</h4><blockquote>
+<p>含有两个Mapper，第一个MR(31)把MR(2)的输出的格式转为VectorOrPrefWritable;<br>MR2为用户评分矩阵<br>Item_id    user_id:preference<br>101,{107:1.0,106:2.0,105:2.0,104:4.0,103:4.0,102:3.0,101:5.0}<br>MR(32)针对MR(1)的输出把每一个项目ID和用户ID作为一对进行输出，输出格式也为VectorOrPrefWritable;<br>MR1生成物品同现矩阵<br>Item_id1:Item_id2        次数<br>userid:5,vector:{106:4.0,105:3.5,104:4.0,103:2.0,102:3.0,101:4.0}<br>VectorOrPrefWritable<br>input: MR2的输出userVectors<br>map: 输出：(itemId, VectorOrPrefWritable<userid, pref="">)</userid,></p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WikiMapper31</span> <span class="keyword">extends</span> <span class="title">Mapper</span>&lt;<span class="title">IntWritable</span> ,<span class="title">VectorWritable</span>,<span class="title">IntWritable</span>,<span class="title">VectorOrPrefWritable</span>&gt;</span>&#123;  </span><br><span class="line">      </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">map</span><span class="params">(IntWritable key,VectorWritable value,Context context)</span> <span class="keyword">throws</span> IOException, InterruptedException</span>&#123;  </span><br><span class="line">          </span><br><span class="line">                context.write(key, <span class="keyword">new</span> VectorOrPrefWritable(value.get()));  </span><br><span class="line">        <span class="comment">//      System.out.println("key"+key.toString()+",vlaue"+value.get());  </span></span><br><span class="line">            &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WiKiReducer31</span> <span class="keyword">extends</span> <span class="title">Reducer</span>&lt;<span class="title">IntWritable</span> ,<span class="title">VectorOrPrefWritable</span>,<span class="title">IntWritable</span>,<span class="title">VectorOrPrefWritable</span>&gt; </span>&#123;  </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">reduce</span><span class="params">(IntWritable key,Iterable&lt;VectorOrPrefWritable&gt; values ,Context context )</span> <span class="keyword">throws</span> IOException, InterruptedException</span>&#123;            </span><br><span class="line">        <span class="keyword">for</span>(VectorOrPrefWritable va:values)&#123;  </span><br><span class="line">            context.write(key, va);          &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="第四个MR"><a href="#第四个MR" class="headerlink" title="第四个MR:"></a>第四个MR:</h4><blockquote>
+<p>MR4的map不做任何事情；MR4的reduce输出就是把MR(31)和MR(32)的相同的itemID整合一下而已(注意此处的输入为两个路径)：如下：<br>101    {107:1.0,106:2.0,105:2.0,104:4.0,103:4.0,102:3.0,101:5.0} [5 1 4 2 3] [4.0 5.0 5.0 2.0 2.5]<br>101共现矩阵<br>101{107:1.0,106:2.0,105:2.0,104:4.0,103:4.0,102:3.0,101:5.0}<br>101用户评分矩阵<br>[5 1 4 2 3] [4.0 5.0 5.0 2.0 2.5]<br>Item_id    user_id:preference<br>101       2:2.0<br>101       5:4.0<br>101       4:5.0<br>101       3:2.0<br>101       1:5.0</p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WikiMapper4</span> <span class="keyword">extends</span> <span class="title">Mapper</span>&lt;<span class="title">IntWritable</span> ,<span class="title">VectorOrPrefWritable</span>,<span class="title">IntWritable</span>,<span class="title">VectorOrPrefWritable</span>&gt; </span>&#123;    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">map</span><span class="params">(IntWritable key,VectorOrPrefWritable value,Context context)</span> <span class="keyword">throws</span> IOException, InterruptedException</span>&#123;  </span><br><span class="line">        context.write(key, value);  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WiKiReducer4</span> <span class="keyword">extends</span> <span class="title">Reducer</span>&lt;<span class="title">IntWritable</span>,<span class="title">VectorOrPrefWritable</span>,<span class="title">IntWritable</span>,<span class="title">VectorAndPrefsWritable</span>&gt; </span>&#123;  </span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">reduce</span><span class="params">(IntWritable key, Iterable&lt;VectorOrPrefWritable&gt; values,Context context)</span> <span class="keyword">throws</span> IOException, InterruptedException</span>&#123;  </span><br><span class="line">            List&lt;Long&gt; userfs=<span class="keyword">new</span> ArrayList&lt;Long&gt;();  <span class="comment">//userID</span></span><br><span class="line">            List&lt;Float&gt; prefs=<span class="keyword">new</span> ArrayList&lt;Float&gt;();  <span class="comment">// pref</span></span><br><span class="line">            Vector v=<span class="keyword">null</span>;  </span><br><span class="line">            <span class="keyword">for</span>(VectorOrPrefWritable value:values)&#123;  </span><br><span class="line">                <span class="keyword">if</span>(value.getVector()!=<span class="keyword">null</span>)&#123;  </span><br><span class="line">                    v=value.getVector();  </span><br><span class="line">                &#125;<span class="keyword">else</span>&#123;  </span><br><span class="line">                    userfs.add(value.getUserID());  </span><br><span class="line">                    prefs.add(value.getValue());  </span><br><span class="line">                 &#125;  </span><br><span class="line">            &#125;  </span><br><span class="line">            context.write(key, <span class="keyword">new</span> VectorAndPrefsWritable(v,userfs,prefs));  </span><br><span class="line">    <span class="comment">//System.out.println("key ,itemid:"+key.toString()+", information:"+v+","+userfs+","+prefs);  </span></span><br><span class="line">        &#125;   </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="第五个MR："><a href="#第五个MR：" class="headerlink" title="第五个MR："></a>第五个MR：</h4><blockquote>
+<p>map:针对MR4的输出的每一行中的每一个用户，用这个用户的评分值(value)去乘以项目之间的相似度向量，比如针对第一条记录中的用户3，则有 Vectorforuser3=[1.0 2.0 2.0 4.0 4.0 3.0 5.0]* 2.5  则map的输出为 key : 3    value :  Vectorforuser3;<br>map的输出应该如下所示：<br>alluserids:[5, 1, 4, 2, 3]<br>,userid:5,vector:{107:4.0,106:8.0,105:8.0,104:16.0,103:16.0,102:12.0,101:20.0}<br>,userid:1,vector:{107:5.0,106:10.0,105:10.0,104:20.0,103:20.0,102:15.0,101:25.0}<br>,userid:4,vector:{107:5.0,106:10.0,105:10.0,104:20.0,103:20.0,102:15.0,101:25.0}<br>,userid:2,vector:{107:2.0,106:4.0,105:4.0,104:8.0,103:8.0,102:6.0,101:10.0}<br>,userid:3,vector:{107:2.5,106:5.0,105:5.0,104:10.0,103:10.0,102:7.5,101:12.5}  </p>
+<p>Combine : 针对map的输出，把相同 key(即userID)的向量对应相加，得到的向量和即为该userID的对各个项目的评分；<br>combine的输出应该如下所示：<br>userid:1,vecotr:{107:5.0,106:18.0,105:15.5,104:33.5,103:39.0,102:31.5,101:44.0}<br>userid:2,vecotr:{107:4.0,106:20.5,105:15.5,104:36.0,103:41.5,102:32.5,101:45.5}<br>Reduce:针对combine的输出，把用户已经评价过分的项目筛选掉，然后按照评分值的大小有大到小排序输出，即为用户推荐项目；<br>最后的输出为：<br>1   [104:33.5,106:18.0,105:15.5,107:5.0]<br>2   [106:20.5,105:15.5,107:4.0]<br>3   [103:26.5,102:20.0,106:17.5]<br>4   [102:37.0,105:26.0,107:9.5]<br>5   [107:11.5]  </p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WikiMapper5</span> <span class="keyword">extends</span> <span class="title">Mapper</span>&lt;<span class="title">IntWritable</span> ,<span class="title">VectorAndPrefsWritable</span>,<span class="title">VarLongWritable</span>,<span class="title">VectorWritable</span>&gt;</span>&#123;        </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">map</span><span class="params">(IntWritable key,VectorAndPrefsWritable vectorAndPref,Context context)</span> <span class="keyword">throws</span> IOException, InterruptedException</span>&#123;  </span><br><span class="line">        Vector coo=vectorAndPref.getVector();  </span><br><span class="line">        List&lt;Long&gt; userIds=vectorAndPref.getUserIDs();  </span><br><span class="line">        List&lt;Float&gt; prefValues=vectorAndPref.getValues();  </span><br><span class="line">        <span class="comment">//System.out.println("alluserids:"+userIds);  </span></span><br><span class="line">        <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">0</span>;i&lt;userIds.size();i++)&#123;  </span><br><span class="line">            <span class="keyword">long</span> userID=userIds.get(i);  </span><br><span class="line">            <span class="keyword">float</span> prefValue=prefValues.get(i);  </span><br><span class="line">            Vector par=coo.times(prefValue);  </span><br><span class="line">            context.write(<span class="keyword">new</span> VarLongWritable(userID), <span class="keyword">new</span> VectorWritable(par));  </span><br><span class="line">            <span class="comment">//System.out.println(",userid:"+userID+",vector:"+par);  //  if the user id = 3 is the same as my paper then is right  </span></span><br><span class="line">        &#125;     </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;  </span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WiKiCombiner5</span> <span class="keyword">extends</span> <span class="title">Reducer</span>&lt;<span class="title">VarLongWritable</span>,<span class="title">VectorWritable</span>,<span class="title">VarLongWritable</span>,<span class="title">VectorWritable</span>&gt; </span>&#123;  </span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">reduce</span><span class="params">(VarLongWritable key, Iterable&lt;VectorWritable&gt; values,Context context)</span> <span class="keyword">throws</span> IOException, InterruptedException</span>&#123;  </span><br><span class="line">            Vector partial=<span class="keyword">null</span>;  </span><br><span class="line">            <span class="keyword">for</span>(VectorWritable v:values)&#123;  </span><br><span class="line">                partial=partial==<span class="keyword">null</span>?v.get():partial.plus(v.get());  </span><br><span class="line">            &#125;  </span><br><span class="line">            context.write(key, <span class="keyword">new</span> VectorWritable(partial));  </span><br><span class="line">            System.out.println(<span class="string">"userid:"</span>+key.toString()+<span class="string">",vecotr:"</span>+partial);<span class="comment">//   here also should be the same as my paper's result  </span></span><br><span class="line">        &#125;  </span><br><span class="line">&#125;  </span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">WiKiReducer5</span> <span class="keyword">extends</span> <span class="title">Reducer</span>&lt;<span class="title">VarLongWritable</span>,<span class="title">VectorWritable</span>,<span class="title">VarLongWritable</span>,<span class="title">RecommendedItemsWritable</span>&gt; </span>&#123;        </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> recommendationsPerUser=RECOMMENDATIONSPERUSER;  </span><br><span class="line">    <span class="keyword">private</span> String path=JOB1OUTPATH;        </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> FastMap&lt;Integer,String&gt; map=<span class="keyword">new</span> FastMap&lt;Integer,String&gt;();  </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setup</span><span class="params">(Context context)</span> <span class="keyword">throws</span> IOException</span>&#123;  </span><br><span class="line">        Configuration conf=<span class="keyword">new</span> Configuration();  </span><br><span class="line">        FileSystem fs=FileSystem.get(URI.create(path), conf);  </span><br><span class="line">        Path tempPath=<span class="keyword">new</span> Path(path);  </span><br><span class="line">        SequenceFile.Reader reader=<span class="keyword">null</span>;  </span><br><span class="line">        <span class="keyword">try</span> &#123;  </span><br><span class="line">            reader=<span class="keyword">new</span> SequenceFile.Reader(fs, tempPath, conf);  </span><br><span class="line">            Writable key=(Writable)ReflectionUtils.newInstance(reader.getKeyClass(),conf);  </span><br><span class="line">            Writable value = (Writable) ReflectionUtils.newInstance(reader.getValueClass(), conf);   </span><br><span class="line">        <span class="comment">//  long position = reader.getPosition();    </span></span><br><span class="line">            <span class="keyword">while</span> (reader.next(key, value)) &#123;    </span><br><span class="line">                map.put(Integer.parseInt(key.toString()), value.toString());  </span><br><span class="line">        <span class="comment">//      System.out.println(key.toString()+","+value.toString());  </span></span><br><span class="line">            <span class="comment">//    position = reader.getPosition(); // beginning of next record    </span></span><br><span class="line">            &#125;  </span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;  </span><br><span class="line">            <span class="comment">// TODO Auto-generated catch block  </span></span><br><span class="line">            e.printStackTrace();  </span><br><span class="line">        &#125;    </span><br><span class="line">    &#125;  </span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">reduce</span><span class="params">(VarLongWritable key, Iterable&lt;VectorWritable&gt; values,Context context)</span> <span class="keyword">throws</span> IOException, InterruptedException</span>&#123;  </span><br><span class="line">          </span><br><span class="line">            <span class="keyword">int</span> userID=(<span class="keyword">int</span>)key.get();  </span><br><span class="line">            Vector rev=<span class="keyword">null</span>;  </span><br><span class="line">            <span class="keyword">for</span>(VectorWritable vec:values)&#123;  </span><br><span class="line">                rev=rev==<span class="keyword">null</span>? vec.get():rev.plus(vec.get());  </span><br><span class="line">            &#125;  </span><br><span class="line">            Queue&lt;RecommendedItem&gt;topItems=<span class="keyword">new</span> PriorityQueue&lt;RecommendedItem&gt;(  </span><br><span class="line">                    recommendationsPerUser+<span class="number">1</span>,  </span><br><span class="line">                    Collections.reverseOrder(ByValueRecommendedItemComparator.getInstance())  </span><br><span class="line">                    );  </span><br><span class="line">            Iterator&lt;Vector.Element&gt;recommendationVectorIterator=  </span><br><span class="line">                    rev.iterateNonZero();  </span><br><span class="line">            <span class="keyword">while</span>(recommendationVectorIterator.hasNext())&#123;  </span><br><span class="line">                Vector.Element e=recommendationVectorIterator.next();  </span><br><span class="line">                <span class="keyword">int</span> index=e.index();  </span><br><span class="line">                System.out.println(<span class="string">"Vecotr.element.indxe:"</span>+index);  <span class="comment">//  test here  find the index is item id or not  ** test result : index is item  </span></span><br><span class="line">                <span class="keyword">if</span>(!hasItem(userID,String.valueOf(index)))&#123;  </span><br><span class="line">                    <span class="keyword">float</span> value=(<span class="keyword">float</span>) e.get();  </span><br><span class="line">                    <span class="keyword">if</span>(topItems.size()&lt;recommendationsPerUser)&#123;  </span><br><span class="line">                        <span class="comment">//  here only set index  </span></span><br><span class="line">                        topItems.add(<span class="keyword">new</span> GenericRecommendedItem(index,value));  </span><br><span class="line">                    &#125;<span class="keyword">else</span> <span class="keyword">if</span>(value&gt;topItems.peek().getValue())&#123;  </span><br><span class="line">                        topItems.add(<span class="keyword">new</span> GenericRecommendedItem(index,value));  </span><br><span class="line">                        topItems.poll();  </span><br><span class="line">                    &#125;  </span><br><span class="line">                &#125;  </span><br><span class="line">            &#125;  </span><br><span class="line">            List&lt;RecommendedItem&gt;recom=<span class="keyword">new</span> ArrayList&lt;RecommendedItem&gt;(topItems.size());  </span><br><span class="line">            recom.addAll(topItems);  </span><br><span class="line">            Collections.sort(recom,ByValueRecommendedItemComparator.getInstance());  </span><br><span class="line">            context.write(key, <span class="keyword">new</span> RecommendedItemsWritable(recom));          </span><br><span class="line">        &#125;  </span><br><span class="line">      </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">boolean</span> <span class="title">hasItem</span><span class="params">(<span class="keyword">int</span> user,String item)</span></span>&#123;  <span class="comment">// to check whether the user has rate the item  </span></span><br><span class="line">        <span class="keyword">boolean</span> flag=<span class="keyword">false</span>;  </span><br><span class="line">        String items=map.get(user);  </span><br><span class="line">        <span class="keyword">if</span>(items.contains(item))&#123;  </span><br><span class="line">            flag=<span class="keyword">true</span>;  </span><br><span class="line">        &#125;  </span><br><span class="line">        <span class="keyword">return</span> flag;  </span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/MapReduce/" rel="tag"># MapReduce</a>
+          
+            <a href="/tags/推荐系统/" rel="tag"># 推荐系统</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/01/29/浅析MapReduce（二）/" rel="next" title="浅析MapReduce(二）">
+                <i class="fa fa-chevron-left"></i> 浅析MapReduce(二）
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+<span class="jiathis_txt">分享到：</span>
+<a class="jiathis_button_fav">收藏夹</a>
+<a class="jiathis_button_copy">复制网址</a>
+<a class="jiathis_button_email">邮件</a>
+<a class="jiathis_button_weixin">微信</a>
+<a class="jiathis_button_qzone">QQ空间</a>
+<a class="jiathis_button_tqq">腾讯微薄</a>
+<a class="jiathis_button_douban">豆瓣</a>
+<a class="jiathis_button_share">一键分享</a>
+
+<a href="http://www.jiathis.com/share?uid=2140465" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank">更多</a>
+<a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript" >
+var jiathis_config={
+  data_track_clickback:true,
+  summary:"",
+  shortUrl:false,
+  hideMore:false
+}
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js?uid=" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="lv-container" data-id="city" data-uid="MTAyMC8zMDM0Ni82ODk5"></div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/uploads/avatar.png"
+               alt="Usher" />
+          <p class="site-author-name" itemprop="name">Usher</p>
+           
+              <p class="site-description motion-element" itemprop="description">Honor To The End</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">10</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">4</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/legolas007" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                    
+                      GitHub
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://blog.csdn.net/usher_ou" target="_blank" title="CSDN">
+                  
+                    <i class="fa fa-fw fa-crosshairs"></i>
+                  
+                    
+                      CSDN
+                    
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#ItemCF-基于物品的协同过滤算法"><span class="nav-number">1.</span> <span class="nav-text">ItemCF 基于物品的协同过滤算法</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1、概念"><span class="nav-number">1.1.</span> <span class="nav-text">1、概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2、原理"><span class="nav-number">1.2.</span> <span class="nav-text">2、原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3、算法实现"><span class="nav-number">1.3.</span> <span class="nav-text">3、算法实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#步骤"><span class="nav-number">1.3.1.</span> <span class="nav-text">步骤</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数据"><span class="nav-number">1.3.2.</span> <span class="nav-text">数据</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Hadoop-MapReduce程序分为四步："><span class="nav-number">1.3.3.</span> <span class="nav-text">Hadoop MapReduce程序分为四步：</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#第一步：读取原始数据，按用户ID分组，输出文件数据格式为"><span class="nav-number">1.3.3.1.</span> <span class="nav-text">第一步：读取原始数据，按用户ID分组，输出文件数据格式为</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#第二步：统计两两物品同时出现的次数（同一个人买2个物品的出现次数），输出文件数据格式为"><span class="nav-number">1.3.3.2.</span> <span class="nav-text">第二步：统计两两物品同时出现的次数（同一个人买2个物品的出现次数），输出文件数据格式为</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#第三步：生成用户评分矩阵和物品同现矩阵第一个mapper结果为用户评分矩阵，结果如下："><span class="nav-number">1.3.3.3.</span> <span class="nav-text">第三步：生成用户评分矩阵和物品同现矩阵第一个mapper结果为用户评分矩阵，结果如下：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#第二个mapper生成物品同现矩阵，结果如下："><span class="nav-number">1.3.3.4.</span> <span class="nav-text">第二个mapper生成物品同现矩阵，结果如下：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#第四步：做矩阵乘法，推荐结果-物品的同现矩阵A-用户对物品的评分矩阵B"><span class="nav-number">1.3.3.5.</span> <span class="nav-text">第四步：做矩阵乘法，推荐结果=物品的同现矩阵A * 用户对物品的评分矩阵B</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MR实现步骤"><span class="nav-number">1.3.4.</span> <span class="nav-text">MR实现步骤</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#第一个MR-就是把输入数据的每个用户的信息整合下"><span class="nav-number">1.3.4.1.</span> <span class="nav-text">第一个MR 就是把输入数据的每个用户的信息整合下</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#类-LongAndFloat-用于存储数据并实现Writable的数据类型"><span class="nav-number">1.3.4.2.</span> <span class="nav-text">类 LongAndFloat 用于存储数据并实现Writable的数据类型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#第二个MR："><span class="nav-number">1.3.4.3.</span> <span class="nav-text">第二个MR：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#第三个MR："><span class="nav-number">1.3.4.4.</span> <span class="nav-text">第三个MR：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#第四个MR"><span class="nav-number">1.3.4.5.</span> <span class="nav-text">第四个MR:</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#第五个MR："><span class="nav-number">1.3.4.6.</span> <span class="nav-text">第五个MR：</span></a></li></ol></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Usher</span>
+
+  
+</div>
+
+
+<div class="powered-by">
+<i class="fa fa-user-md"></i><span id="busuanzi_container_site_uv">
+ The total site visits: <span id="busuanzi_value_site_pv"></span> 
+</span>
+</div>
+
+  <div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+
+  <span class="post-meta-divider">|</span>
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.2</div>
+
+
+<div class="theme-info">
+  <div class="powered-by"></div>
+  <span class="post-count">Total 19.5k words</span>
+</div>
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+  
+  <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+    <script type="text/javascript">
+      (function(d, s) {
+        var j, e = d.getElementsByTagName(s)[0];
+        if (typeof LivereTower === 'function') { return; }
+        j = d.createElement(s);
+        j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+        j.async = true;
+        e.parentNode.insertBefore(j, e);
+      })(document, 'script');
+    </script>
+  
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.4.js"></script>
+  <script>AV.initialize("o1i76yejzCmo7XksHOkeR1We-gzGzoHsz", "Smwvl7kAPKRUcfwNq8Ck2eSx");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/love.js"></script>
+

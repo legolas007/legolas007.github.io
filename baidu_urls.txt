@@ -1,3 +1,4 @@
+http://www.usherblog.site/2018/02/02/ItemCF 基于物品的协同过滤算法/
 http://www.usherblog.site/2018/01/29/浅析MapReduce（二）/
 http://www.usherblog.site/2018/01/27/浅析MapReduce/
 http://www.usherblog.site/2018/01/24/Hadoop HDFS原理/
