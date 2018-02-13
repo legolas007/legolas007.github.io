@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Hadoop,Hbase," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="Hbase 深入浅出概述 HBase是一个分布式的、面向列的开源数据库，该技术来源于 Fay Chang 所撰写的Google论文“Bigtable：一个结构化数据的分布式存储系统”。就像Bigtable利用了Google文件系统（File System）所提供的分布式数据存储一样，HBase在Hadoop之上提供了类似于Bigtable的能力。HBase是Apache的Hadoop项目的子项目。">
+<meta name="keywords" content="Hadoop,Hbase">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hbase 深入浅出">
+<meta property="og:url" content="http://www.usherblog.site/2018/02/13/Hbase-深入浅出/index.html">
+<meta property="og:site_name" content="Usher_Ou&#39;s Blog">
+<meta property="og:description" content="Hbase 深入浅出概述 HBase是一个分布式的、面向列的开源数据库，该技术来源于 Fay Chang 所撰写的Google论文“Bigtable：一个结构化数据的分布式存储系统”。就像Bigtable利用了Google文件系统（File System）所提供的分布式数据存储一样，HBase在Hadoop之上提供了类似于Bigtable的能力。HBase是Apache的Hadoop项目的子项目。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://ov1nop9io.bkt.clouddn.com/1005794-20170815072006725-2132221664.png">
+<meta property="og:image" content="http://ov1nop9io.bkt.clouddn.com/1005794-20170814194337318-228599821.png">
+<meta property="og:image" content="http://ww4.sinaimg.cn/mw690/63503acbjw1f5x1207zfmj20gr0atq4h.jpg">
+<meta property="og:image" content="http://ww2.sinaimg.cn/mw690/63503acbjw1f5x2cuji5gj20k409ddho.jpg">
+<meta property="og:updated_time" content="2018-02-13T13:29:41.784Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Hbase 深入浅出">
+<meta name="twitter:description" content="Hbase 深入浅出概述 HBase是一个分布式的、面向列的开源数据库，该技术来源于 Fay Chang 所撰写的Google论文“Bigtable：一个结构化数据的分布式存储系统”。就像Bigtable利用了Google文件系统（File System）所提供的分布式数据存储一样，HBase在Hadoop之上提供了类似于Bigtable的能力。HBase是Apache的Hadoop项目的子项目。">
+<meta name="twitter:image" content="http://ov1nop9io.bkt.clouddn.com/1005794-20170815072006725-2132221664.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.2',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://www.usherblog.site/2018/02/13/Hbase-深入浅出/"/>
+
+
+
+
+
+  <title>Hbase 深入浅出 | Usher_Ou's Blog</title>
+  
+
+
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?9dac5a1d54c53caffecf4954d4041153";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+	<a href="https://github.com/legolas007"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/e7bbb0521b397edbd5fe43e7f760759336b5e05f/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677265656e5f3030373230302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_green_007200.png"></a>
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Usher_Ou's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="搜索..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://www.usherblog.site/2018/02/13/Hbase-深入浅出/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Usher">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Usher_Ou's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Hbase 深入浅出</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-02-13T19:23:56+08:00">
+                2018-02-13
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/大数据/" itemprop="url" rel="index">
+                    <span itemprop="name">大数据</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/大数据/hadoop/" itemprop="url" rel="index">
+                    <span itemprop="name">hadoop</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+             <span id="/2018/02/13/Hbase-深入浅出/" class="leancloud_visitors" data-flag-title="Hbase 深入浅出">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">热度&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+				 <span>%</span>
+             </span>
+          
+
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">字数统计&#58;</span>
+                
+                <span title="字数统计">
+                  3,392
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">
+                  14
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Hbase-深入浅出"><a href="#Hbase-深入浅出" class="headerlink" title="Hbase 深入浅出"></a>Hbase 深入浅出</h1><h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><blockquote>
+<p>HBase是一个分布式的、面向列的开源数据库，该技术来源于 Fay Chang 所撰写的Google论文“Bigtable：一个结构化数据的<a href="https://baike.baidu.com/item/%E5%88%86%E5%B8%83%E5%BC%8F%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F" target="_blank" rel="noopener">分布式存储系统</a>”。就像Bigtable利用了Google文件系统（File System）所提供的分布式数据存储一样，HBase在Hadoop之上提供了类似于Bigtable的能力。HBase是Apache的Hadoop项目的子项目。HBase不同于一般的关系数据库，它是一个适合于非结构化数据存储的数据库。另一个不同的是HBase基于列的而不是基于行的模式。</p>
+<p>与FUJITSU Cliq等商用大数据产品不同，HBase是Google Bigtable的开源实现，<a href="https://baike.baidu.com/item/%E7%B1%BB%E4%BC%BC" target="_blank" rel="noopener">类似</a>Google Bigtable利用GFS作为其文件<a href="https://baike.baidu.com/item/%E5%AD%98%E5%82%A8" target="_blank" rel="noopener">存储</a>系统，HBase利用Hadoop HDFS作为其<a href="https://baike.baidu.com/item/%E6%96%87%E4%BB%B6" target="_blank" rel="noopener">文件</a>存储<a href="https://baike.baidu.com/item/%E7%B3%BB%E7%BB%9F" target="_blank" rel="noopener">系统</a>；Google运行MapReduce来处理Bigtable中的海量<a href="https://baike.baidu.com/item/%E6%95%B0%E6%8D%AE" target="_blank" rel="noopener">数据</a>，HBase同样利用Hadoop MapReduce来处理HBase中的<a href="https://baike.baidu.com/item/%E6%B5%B7%E9%87%8F" target="_blank" rel="noopener">海量</a>数据；Google Bigtable利用 Chubby作为协同服务，HBase利用Zookeeper作为对应</p>
+</blockquote>
+<h2 id="特点"><a href="#特点" class="headerlink" title="特点"></a>特点</h2><blockquote>
+<ol>
+<li>Hbase可以往数据里面insert，也可以update一些数据，但update的实际上也是insert，只是插入一个新的时间戳的一行。delete数据，也是insert，只是insert一行带有delete标记的一行。Hbase的所有操作都是追加插入操作。Hbase是一种日志集数据库。它的存储方式，像是日志文件一样。它是批量大量的往硬盘中写，通常都是以文件形式的读写。这个读写速度，取决于硬盘与机器之间的传输有多快。</li>
+<li>Hbase中数据可以保存许多不同时间戳的版本（即同一数据可以复制许多不同的版本，准许数据冗余，也是优势）。数据按时间排序，因此Hbase特别适合寻找按照时间排序寻找Top n的场景。找出某个人最近浏览的消息，最近写的N篇博客，N种行为等等，因此Hbase在互联网应用非常多。</li>
+<li>Hbase只有主键索引，因此在建模的时候会遇到了问题。例如，在一张表中，很多的列我都想做某种条件的查询。但却只能在主键上建快速查询。</li>
+<li>Hbase是列式数据库,列式数据库的优势在于数据分析。</li>
+<li>Hbase中的数据都是字符串，没有其他类型。</li>
+</ol>
+</blockquote>
+<h2 id="NoSQL数据库"><a href="#NoSQL数据库" class="headerlink" title="NoSQL数据库"></a>NoSQL数据库</h2><blockquote>
+<p>NoSQL 数据库和关系型数据库的设计目的是为了解决不同的问题，NoSQL 数据模型相对简单，它适合应用灵活更强的 IT 系统，不需要预先定义表如构，而且 NoSQL 对数据库性能要求较高，对 PB 级别的数据进行快速的检索，不需要高度的数据一致性及廷迟性的埸景，可以快的跟据 Key-Value 的方式来查看数据。在市埸上有四种NoSQL数据库，分别是：</p>
+<ul>
+<li>键值存储数据库：Key-Value 的鐽值对，通常用 Hash Table 来实现，这类数据库的查找速度快、简单，易部署，但数据无结构化，如果区部查找会很慢，和应用埸景是内容缓存，快速的检索数据，主要用于大量数据的高访问量负X，也适用于一些日志系统, e.g. Redis, Oracle BDB, Tokyo Cabinet；</li>
+<li>列存储数据库：以列族 Column Family 式存储，将同一列数据存在一起，鐽的特点是指向了多少个列，这些列是由列族来实现的，它的好处是查找快速，扩展性非常好以便应用海量数据存储和处理，但功能相对局限，对设计要求很特定的要求，非常适合分布式文件系统 e.g. HBase、Cassandra, Accumulo, Riak；</li>
+<li>文档存储数据库：Key-Value 对应的键值时，Value 为结构化数据，更了解 Value 的内容，数据结构不严格，表结构可变它不需要像关系型数据库一样要预先定义表结构，可以看作他是键值数据库的升级版，文档类型处理得力比较好，但查询能力不高，缺乏统一的查询语法。使用埸景是 Web 应用，，e.g. MongoDB, CouchDB, Couchbase Server ；</li>
+<li>图形数据库：图结构，它可以提用图结构的算法，比如最佳路线寻址，N度关系查找，使用灵活的图形模型并且能扩展到不同的服务器上，但很多时候要对整个图作计算才能得出需要的信息，这种结构不太适合分布式的集群方案。应用埸景：推荐系统，社交网络和关于结构关系图谱, e.g. Neo4J, Infinite Graph；</li>
+</ul>
+</blockquote>
+<h3 id="NoSQL与RDBMS的区别"><a href="#NoSQL与RDBMS的区别" class="headerlink" title="NoSQL与RDBMS的区别"></a>NoSQL与RDBMS的区别</h3><p><img src="http://ov1nop9io.bkt.clouddn.com/1005794-20170815072006725-2132221664.png" alt="http://ov1nop9io.bkt.clouddn.com/1005794-20170815072006725-2132221664.png"></p>
+<blockquote>
+<p>NoSQL 与 RDBMS 最大的分别是数据量和读写吞吐量的不同，数据布局和数据访问频率也不同，他们两个应用解决问题的本质也不一样，比如列存储数据库可以快速查找的原因是列族的设计可以在每一次查询中大量减少磁盘 IO 和数据量的访问。NoSQL 数据库很容易支持数据量达 PB 级别的数据，因为它的特性很容易支持分布式水平扩展；但 RDBMS 只能处理 TB+ 级别的数据，如果你的数据场景是要处理很多事务性数据 e.g. 更新和删除，那么还是优先选择关系型数据库 RBDMS，因为NoSQL数据库不太善于频繁的处理数据更新和删除，因为数据是分布在不同的节点上，还有数据是默认有三份副本，如果需要太量的更新操作，那么每台节点上的数据也有一并更新，这太太增加了解决方案的复杂性；NoSQL 遵从 CAP 和 BASE 理论，RDBMS 遵从 ACID 的理论。如果只有上千行和上百万行的数据，则用傅统数据库会比较适合。</p>
+</blockquote>
+<h3 id="Hbase表结构"><a href="#Hbase表结构" class="headerlink" title="Hbase表结构"></a>Hbase表结构</h3><blockquote>
+<p>HBase 是以数据为中心，RDBMS 是以关系为数据，HBase 是 NoSQL 数据库中的列存储数据库，它有以下特点：强一致性读写，自动分片，HBase 通过 Region 分布在集群中，数据增加时，Region 会自动分割并重新分片。RegionServer 自动故障移取，HBase 支持 HDFS 之外的存储文件，HBase 通过 MapReduce 支持大并发处理，HBase 支持以 API 方式访问数据，HBase 以 Bloom Filters 和 Bloom Cache 对大量数据进行查询优化。HBase 适合场景是存在随机读写的埸景，每秒需要在 TB 级别数据上完成数以千计的操作，访问的操作的方式要简单、明确和直接，如果应用只是插入数据而且处理时需要读取全部数据。HBase 不支持二次索引、事务性数据、关联表的操作。HBase 的使用埸景：消息 (Message) 比如点赞，电商中的 SMS/ MMS，有随机读写的能力，局部数据进行 TopN 的查询、简单实体、图数据、指标。</p>
+</blockquote>
+<p><img src="http://ov1nop9io.bkt.clouddn.com/1005794-20170814194337318-228599821.png" alt="http://ov1nop9io.bkt.clouddn.com/1005794-20170814194337318-228599821.png"></p>
+<blockquote>
+<ol>
+<li><p>HBase 在表中存储数据，而表数据最后存储在 HDFS 上，数据被分割成 HDFS 块 (Block) 存储在集群的多个节点上，以128G为一个 BlockSize；</p>
+</li>
+<li><p>HBase 是由 Column Family (列族)，Column (列) 和 Row Key (行) 组成的，列族是列的一个集合，列族可以有任意数量的列，e.g. contactinfo:fname, contactinfo:lname 它也可以单独对每个列族进行存储属性优化，比如对 profilephoto 进行压缩存储。</p>
+<ol>
+<li>HBase 每一行都有一个 RowKey 用于快速检索，来保证一行数据的完整性，每个 RowKey 就类似于 RDBMS 的主键，HBase 表是基于 RowKey 进行快速检索，行按照排序后进行存储，</li>
+</ol>
+</li>
+<li>HBase 底层磁盘上是按照 Column Family 分开进行存储。这样的好处是相对于行存，占用空间会很小；<ol>
+<li>HBase 中间的数据是存储在 Cell 中，而且 Cell 是有版本化的，可以自定义保留多少过版本，Cell 为空时不存储。</li>
+</ol>
+</li>
+</ol>
+</blockquote>
+<h2 id="架构"><a href="#架构" class="headerlink" title="架构"></a>架构</h2><p><img src="http://ww4.sinaimg.cn/mw690/63503acbjw1f5x1207zfmj20gr0atq4h.jpg" alt="http://ww4.sinaimg.cn/mw690/63503acbjw1f5x1207zfmj20gr0atq4h.jpg"></p>
+<blockquote>
+<p>HBase采用Master/Slave架构搭建集群，它隶属于Hadoop生态系统，由以下类型节点组成：HMaster节点、HRegionServer节点、ZooKeeper集群，而在底层，它将数据存储于HDFS中，因而涉及到HDFS的NameNode、DataNode等节点。</p>
+</blockquote>
+<h3 id="Zookeeper"><a href="#Zookeeper" class="headerlink" title="Zookeeper"></a>Zookeeper</h3><blockquote>
+<p>Zookeeper Quorum存储-ROOT-表地址、HMaster地址。HRegionServer把自己以Ephedral方式注册到Zookeeper中，HMaster随时感知各个HRegionServer的健康状况。</p>
+</blockquote>
+<h3 id="HMaster"><a href="#HMaster" class="headerlink" title="HMaster"></a>HMaster</h3><blockquote>
+<p> HMaster没有单点问题,HBase中可以启动多个HMaster，通过Zookeeper的Master Election机制保证总有一个Master在运行。<br>  HMaster主要负责Table和Region的管理工作</p>
+<ol>
+<li>实现DDL操作（Data Definition Language，namespace和table的增删改，column familiy的增删改等）。</li>
+<li>管理HRegionServer的负载均衡，调整Region分布。</li>
+<li>管理和分配HRegion，比如在HRegion split时分配新的HRegion；在HRegionServer退出时迁移其内的HRegion到其他HRegionServer上。</li>
+<li>权限控制（ACL）。</li>
+</ol>
+</blockquote>
+<h3 id="HRegionServer"><a href="#HRegionServer" class="headerlink" title="HRegionServer"></a>HRegionServer</h3><blockquote>
+<p> HBase中最核心的模块，主要负责响应用户I/O请求，向HDFS文件系统中读写数据。</p>
+<ol>
+<li>存放和管理本地HRegion。读写HDFS，管理Table中的数据。</li>
+<li>Client直接通过HRegionServer读写数据（从HMaster中获取元数据，找到RowKey所在的HRegion/HRegionServer后）。</li>
+</ol>
+</blockquote>
+<h3 id="HRegion"><a href="#HRegion" class="headerlink" title="HRegion"></a>HRegion</h3><p><img src="http://ww2.sinaimg.cn/mw690/63503acbjw1f5x2cuji5gj20k409ddho.jpg" alt="http://ww2.sinaimg.cn/mw690/63503acbjw1f5x2cuji5gj20k409ddho.jpg"></p>
+<blockquote>
+<p>HBase使用RowKey将表水平切割成多个HRegion，从HMaster的角度，每个HRegion都纪录了它的StartKey和EndKey（第一个HRegion的StartKey为空，最后一个HRegion的EndKey为空），由于RowKey是排序的，因而Client可以通过HMaster快速的定位每个RowKey在哪个HRegion中。HRegion由HMaster分配到相应的HRegionServer中，然后由HRegionServer负责HRegion的启动和管理，和Client的通信，负责数据的读(使用HDFS)。</p>
+</blockquote>
+<h2 id="常用Shell命令"><a href="#常用Shell命令" class="headerlink" title="常用Shell命令"></a>常用Shell命令</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br></pre></td><td class="code"><pre><span class="line">显示hbase中的表</span><br><span class="line">list</span><br><span class="line"></span><br><span class="line">创建user表，包含info、data两个列族</span><br><span class="line"><span class="keyword">create</span> <span class="string">'user'</span>, <span class="string">'info1'</span>, <span class="string">'data1'</span></span><br><span class="line"><span class="keyword">create</span> <span class="string">'user'</span>, &#123;<span class="keyword">NAME</span> =&gt; <span class="string">'info'</span>, <span class="keyword">VERSIONS</span> =&gt; <span class="string">'3'</span>&#125;</span><br><span class="line"></span><br><span class="line">向<span class="keyword">user</span>表中插入信息，<span class="keyword">row</span> <span class="keyword">key</span>为rk0001，列族info中添加<span class="keyword">name</span>列标示符，值为zhangsan</span><br><span class="line">put <span class="string">'user'</span>, <span class="string">'rk0001'</span>, <span class="string">'info:name'</span>, <span class="string">'zhangsan'</span></span><br><span class="line"></span><br><span class="line">向<span class="keyword">user</span>表中插入信息，<span class="keyword">row</span> <span class="keyword">key</span>为rk0001，列族info中添加gender列标示符，值为female</span><br><span class="line">put <span class="string">'user'</span>, <span class="string">'rk0001'</span>, <span class="string">'info:gender'</span>, <span class="string">'female'</span></span><br><span class="line"></span><br><span class="line">向<span class="keyword">user</span>表中插入信息，<span class="keyword">row</span> <span class="keyword">key</span>为rk0001，列族info中添加age列标示符，值为<span class="number">20</span></span><br><span class="line">put <span class="string">'user'</span>, <span class="string">'rk0001'</span>, <span class="string">'info:age'</span>, <span class="number">20</span></span><br><span class="line"></span><br><span class="line">向<span class="keyword">user</span>表中插入信息，<span class="keyword">row</span> <span class="keyword">key</span>为rk0001，列族<span class="keyword">data</span>中添加pic列标示符，值为picture</span><br><span class="line">put <span class="string">'user'</span>, <span class="string">'rk0001'</span>, <span class="string">'data:pic'</span>, <span class="string">'picture'</span></span><br><span class="line"></span><br><span class="line">获取<span class="keyword">user</span>表中<span class="keyword">row</span> <span class="keyword">key</span>为rk0001的所有信息</span><br><span class="line"><span class="keyword">get</span> <span class="string">'user'</span>, <span class="string">'rk0001'</span></span><br><span class="line"></span><br><span class="line">获取<span class="keyword">user</span>表中<span class="keyword">row</span> <span class="keyword">key</span>为rk0001，info列族的所有信息</span><br><span class="line"><span class="keyword">get</span> <span class="string">'user'</span>, <span class="string">'rk0001'</span>, <span class="string">'info'</span></span><br><span class="line"></span><br><span class="line">获取<span class="keyword">user</span>表中<span class="keyword">row</span> <span class="keyword">key</span>为rk0001，info列族的<span class="keyword">name</span>、age列标示符的信息</span><br><span class="line"><span class="keyword">get</span> <span class="string">'user'</span>, <span class="string">'rk0001'</span>, <span class="string">'info:name'</span>, <span class="string">'info:age'</span></span><br><span class="line"></span><br><span class="line">获取<span class="keyword">user</span>表中<span class="keyword">row</span> <span class="keyword">key</span>为rk0001，info、<span class="keyword">data</span>列族的信息</span><br><span class="line"><span class="keyword">get</span> <span class="string">'user'</span>, <span class="string">'rk0001'</span>, <span class="string">'info'</span>, <span class="string">'data'</span></span><br><span class="line"><span class="keyword">get</span> <span class="string">'user'</span>, <span class="string">'rk0001'</span>, &#123;<span class="keyword">COLUMN</span> =&gt; [<span class="string">'info'</span>, <span class="string">'data'</span>]&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">get</span> <span class="string">'user'</span>, <span class="string">'rk0001'</span>, &#123;<span class="keyword">COLUMN</span> =&gt; [<span class="string">'info:name'</span>, <span class="string">'data:pic'</span>]&#125;</span><br><span class="line"></span><br><span class="line">获取<span class="keyword">user</span>表中<span class="keyword">row</span> <span class="keyword">key</span>为rk0001，列族为info，版本号最新<span class="number">5</span>个的信息</span><br><span class="line"><span class="keyword">get</span> <span class="string">'user'</span>, <span class="string">'rk0001'</span>, &#123;<span class="keyword">COLUMN</span> =&gt; <span class="string">'info'</span>, <span class="keyword">VERSIONS</span> =&gt; <span class="number">2</span>&#125;</span><br><span class="line"><span class="keyword">get</span> <span class="string">'user'</span>, <span class="string">'rk0001'</span>, &#123;<span class="keyword">COLUMN</span> =&gt; <span class="string">'info:name'</span>, <span class="keyword">VERSIONS</span> =&gt; <span class="number">5</span>&#125;</span><br><span class="line"><span class="keyword">get</span> <span class="string">'user'</span>, <span class="string">'rk0001'</span>, &#123;<span class="keyword">COLUMN</span> =&gt; <span class="string">'info:name'</span>, <span class="keyword">VERSIONS</span> =&gt; <span class="number">5</span>, TIMERANGE =&gt; [<span class="number">1392368783980</span>, <span class="number">1392380169184</span>]&#125;</span><br><span class="line"></span><br><span class="line">获取<span class="keyword">user</span>表中<span class="keyword">row</span> <span class="keyword">key</span>为rk0001，cell的值为zhangsan的信息</span><br><span class="line"><span class="keyword">get</span> <span class="string">'people'</span>, <span class="string">'rk0001'</span>, &#123;FILTER =&gt; <span class="string">"ValueFilter(=, 'binary:图片')"</span>&#125;</span><br><span class="line"></span><br><span class="line">获取<span class="keyword">user</span>表中<span class="keyword">row</span> <span class="keyword">key</span>为rk0001，列标示符中含有a的信息</span><br><span class="line"><span class="keyword">get</span> <span class="string">'people'</span>, <span class="string">'rk0001'</span>, &#123;FILTER =&gt; <span class="string">"(QualifierFilter(=,'substring:a'))"</span>&#125;</span><br><span class="line"></span><br><span class="line">put <span class="string">'user'</span>, <span class="string">'rk0002'</span>, <span class="string">'info:name'</span>, <span class="string">'fanbingbing'</span></span><br><span class="line">put <span class="string">'user'</span>, <span class="string">'rk0002'</span>, <span class="string">'info:gender'</span>, <span class="string">'female'</span></span><br><span class="line">put <span class="string">'user'</span>, <span class="string">'rk0002'</span>, <span class="string">'info:nationality'</span>, <span class="string">'中国'</span></span><br><span class="line"><span class="keyword">get</span> <span class="string">'user'</span>, <span class="string">'rk0002'</span>, &#123;FILTER =&gt; <span class="string">"ValueFilter(=, 'binary:中国')"</span>&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">查询<span class="keyword">user</span>表中的所有信息</span><br><span class="line"><span class="keyword">scan</span> <span class="string">'user'</span></span><br><span class="line"></span><br><span class="line">查询<span class="keyword">user</span>表中列族为info的信息</span><br><span class="line"><span class="keyword">scan</span> <span class="string">'user'</span>, &#123;<span class="keyword">COLUMNS</span> =&gt; <span class="string">'info'</span>&#125;</span><br><span class="line"><span class="keyword">scan</span> <span class="string">'user'</span>, &#123;<span class="keyword">COLUMNS</span> =&gt; <span class="string">'info'</span>, <span class="keyword">RAW</span> =&gt; <span class="literal">true</span>, <span class="keyword">VERSIONS</span> =&gt; <span class="number">5</span>&#125;</span><br><span class="line"><span class="keyword">scan</span> <span class="string">'persion'</span>, &#123;<span class="keyword">COLUMNS</span> =&gt; <span class="string">'info'</span>, <span class="keyword">RAW</span> =&gt; <span class="literal">true</span>, <span class="keyword">VERSIONS</span> =&gt; <span class="number">3</span>&#125;</span><br><span class="line">查询<span class="keyword">user</span>表中列族为info和<span class="keyword">data</span>的信息</span><br><span class="line"><span class="keyword">scan</span> <span class="string">'user'</span>, &#123;<span class="keyword">COLUMNS</span> =&gt; [<span class="string">'info'</span>, <span class="string">'data'</span>]&#125;</span><br><span class="line"><span class="keyword">scan</span> <span class="string">'user'</span>, &#123;<span class="keyword">COLUMNS</span> =&gt; [<span class="string">'info:name'</span>, <span class="string">'data:pic'</span>]&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">查询<span class="keyword">user</span>表中列族为info、列标示符为<span class="keyword">name</span>的信息</span><br><span class="line"><span class="keyword">scan</span> <span class="string">'user'</span>, &#123;<span class="keyword">COLUMNS</span> =&gt; <span class="string">'info:name'</span>&#125;</span><br><span class="line"></span><br><span class="line">查询<span class="keyword">user</span>表中列族为info、列标示符为<span class="keyword">name</span>的信息,并且版本最新的<span class="number">5</span>个</span><br><span class="line"><span class="keyword">scan</span> <span class="string">'user'</span>, &#123;<span class="keyword">COLUMNS</span> =&gt; <span class="string">'info:name'</span>, <span class="keyword">VERSIONS</span> =&gt; <span class="number">5</span>&#125;</span><br><span class="line"></span><br><span class="line">查询<span class="keyword">user</span>表中列族为info和<span class="keyword">data</span>且列标示符中含有a字符的信息</span><br><span class="line"><span class="keyword">scan</span> <span class="string">'user'</span>, &#123;<span class="keyword">COLUMNS</span> =&gt; [<span class="string">'info'</span>, <span class="string">'data'</span>], FILTER =&gt; <span class="string">"(QualifierFilter(=,'substring:a'))"</span>&#125;</span><br><span class="line"></span><br><span class="line">查询<span class="keyword">user</span>表中列族为info，rk范围是[rk0001, rk0003)的数据</span><br><span class="line"><span class="keyword">scan</span> <span class="string">'people'</span>, &#123;<span class="keyword">COLUMNS</span> =&gt; <span class="string">'info'</span>, STARTROW =&gt; <span class="string">'rk0001'</span>, ENDROW =&gt; <span class="string">'rk0003'</span>&#125;</span><br><span class="line"></span><br><span class="line">查询<span class="keyword">user</span>表中<span class="keyword">row</span> <span class="keyword">key</span>以rk字符开头的</span><br><span class="line"><span class="keyword">scan</span> <span class="string">'user'</span>,&#123;FILTER=&gt;<span class="string">"PrefixFilter('rk')"</span>&#125;</span><br><span class="line"></span><br><span class="line">查询<span class="keyword">user</span>表中指定范围的数据</span><br><span class="line"><span class="keyword">scan</span> <span class="string">'user'</span>, &#123;TIMERANGE =&gt; [<span class="number">1392368783980</span>, <span class="number">1392380169184</span>]&#125;</span><br><span class="line"></span><br><span class="line">删除数据</span><br><span class="line">删除<span class="keyword">user</span>表<span class="keyword">row</span> <span class="keyword">key</span>为rk0001，列标示符为info:<span class="keyword">name</span>的数据</span><br><span class="line"><span class="keyword">delete</span> <span class="string">'people'</span>, <span class="string">'rk0001'</span>, <span class="string">'info:name'</span></span><br><span class="line">删除<span class="keyword">user</span>表<span class="keyword">row</span> <span class="keyword">key</span>为rk0001，列标示符为info:<span class="keyword">name</span>，<span class="keyword">timestamp</span>为<span class="number">1392383705316</span>的数据</span><br><span class="line"><span class="keyword">delete</span> <span class="string">'user'</span>, <span class="string">'rk0001'</span>, <span class="string">'info:name'</span>, <span class="number">1392383705316</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">清空<span class="keyword">user</span>表中的数据</span><br><span class="line"><span class="keyword">truncate</span> <span class="string">'people'</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">修改表结构</span><br><span class="line">首先停用<span class="keyword">user</span>表（新版本不用）</span><br><span class="line"><span class="keyword">disable</span> <span class="string">'user'</span></span><br><span class="line"></span><br><span class="line">添加两个列族f1和f2</span><br><span class="line"><span class="keyword">alter</span> <span class="string">'people'</span>, <span class="keyword">NAME</span> =&gt; <span class="string">'f1'</span></span><br><span class="line"><span class="keyword">alter</span> <span class="string">'user'</span>, <span class="keyword">NAME</span> =&gt; <span class="string">'f2'</span></span><br><span class="line">启用表</span><br><span class="line"><span class="keyword">enable</span> <span class="string">'user'</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">###<span class="keyword">disable</span> <span class="string">'user'</span>(新版本不用)</span><br><span class="line">删除一个列族：</span><br><span class="line"><span class="keyword">alter</span> <span class="string">'user'</span>, <span class="keyword">NAME</span> =&gt; <span class="string">'f1'</span>, METHOD =&gt; <span class="string">'delete'</span> 或 <span class="keyword">alter</span> <span class="string">'user'</span>, <span class="string">'delete'</span> =&gt; <span class="string">'f1'</span></span><br><span class="line"></span><br><span class="line">添加列族f1同时删除列族f2</span><br><span class="line"><span class="keyword">alter</span> <span class="string">'user'</span>, &#123;<span class="keyword">NAME</span> =&gt; <span class="string">'f1'</span>&#125;, &#123;<span class="keyword">NAME</span> =&gt; <span class="string">'f2'</span>, METHOD =&gt; <span class="string">'delete'</span>&#125;</span><br><span class="line"></span><br><span class="line">将<span class="keyword">user</span>表的f1列族版本号改为<span class="number">5</span></span><br><span class="line"><span class="keyword">alter</span> <span class="string">'people'</span>, <span class="keyword">NAME</span> =&gt; <span class="string">'info'</span>, <span class="keyword">VERSIONS</span> =&gt; <span class="number">5</span></span><br><span class="line">启用表</span><br><span class="line"><span class="keyword">enable</span> <span class="string">'user'</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">删除表</span><br><span class="line"><span class="keyword">disable</span> <span class="string">'user'</span></span><br><span class="line"><span class="keyword">drop</span> <span class="string">'user'</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">get</span> <span class="string">'person'</span>, <span class="string">'rk0001'</span>, &#123;FILTER =&gt; <span class="string">"ValueFilter(=, 'binary:中国')"</span>&#125;</span><br><span class="line"><span class="keyword">get</span> <span class="string">'person'</span>, <span class="string">'rk0001'</span>, &#123;FILTER =&gt; <span class="string">"(QualifierFilter(=,'substring:a'))"</span>&#125;</span><br><span class="line"><span class="keyword">scan</span> <span class="string">'person'</span>, &#123;<span class="keyword">COLUMNS</span> =&gt; <span class="string">'info:name'</span>&#125;</span><br><span class="line"><span class="keyword">scan</span> <span class="string">'person'</span>, &#123;<span class="keyword">COLUMNS</span> =&gt; [<span class="string">'info'</span>, <span class="string">'data'</span>], FILTER =&gt; <span class="string">"(QualifierFilter(=,'substring:a'))"</span>&#125;</span><br><span class="line"><span class="keyword">scan</span> <span class="string">'person'</span>, &#123;<span class="keyword">COLUMNS</span> =&gt; <span class="string">'info'</span>, STARTROW =&gt; <span class="string">'rk0001'</span>, ENDROW =&gt; <span class="string">'rk0003'</span>&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">scan</span> <span class="string">'person'</span>, &#123;<span class="keyword">COLUMNS</span> =&gt; <span class="string">'info'</span>, STARTROW =&gt; <span class="string">'20140201'</span>, ENDROW =&gt; <span class="string">'20140301'</span>&#125;</span><br><span class="line"><span class="keyword">scan</span> <span class="string">'person'</span>, &#123;<span class="keyword">COLUMNS</span> =&gt; <span class="string">'info:name'</span>, TIMERANGE =&gt; [<span class="number">1395978233636</span>, <span class="number">1395987769587</span>]&#125;</span><br><span class="line"><span class="keyword">delete</span> <span class="string">'person'</span>, <span class="string">'rk0001'</span>, <span class="string">'info:name'</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">alter</span> <span class="string">'person'</span>, <span class="keyword">NAME</span> =&gt; <span class="string">'ffff'</span></span><br><span class="line"><span class="keyword">alter</span> <span class="string">'person'</span>, <span class="keyword">NAME</span> =&gt; <span class="string">'info'</span>, <span class="keyword">VERSIONS</span> =&gt; <span class="number">10</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">get</span> <span class="string">'user'</span>, <span class="string">'rk0002'</span>, &#123;<span class="keyword">COLUMN</span> =&gt; [<span class="string">'info:name'</span>, <span class="string">'data:pic'</span>]&#125;</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Hadoop/" rel="tag"># Hadoop</a>
+          
+            <a href="/tags/Hbase/" rel="tag"># Hbase</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/02/02/ItemCF 基于物品的协同过滤算法/" rel="next" title="ItemCF 基于物品的协同过滤算法">
+                <i class="fa fa-chevron-left"></i> ItemCF 基于物品的协同过滤算法
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+<span class="jiathis_txt">分享到：</span>
+<a class="jiathis_button_fav">收藏夹</a>
+<a class="jiathis_button_copy">复制网址</a>
+<a class="jiathis_button_email">邮件</a>
+<a class="jiathis_button_weixin">微信</a>
+<a class="jiathis_button_qzone">QQ空间</a>
+<a class="jiathis_button_tqq">腾讯微薄</a>
+<a class="jiathis_button_douban">豆瓣</a>
+<a class="jiathis_button_share">一键分享</a>
+
+<a href="http://www.jiathis.com/share?uid=2140465" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank">更多</a>
+<a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript" >
+var jiathis_config={
+  data_track_clickback:true,
+  summary:"",
+  shortUrl:false,
+  hideMore:false
+}
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js?uid=" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="lv-container" data-id="city" data-uid="MTAyMC8zMDM0Ni82ODk5"></div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/uploads/avatar.png"
+               alt="Usher" />
+          <p class="site-author-name" itemprop="name">Usher</p>
+           
+              <p class="site-description motion-element" itemprop="description">Honor To The End</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">11</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">2</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">6</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/legolas007" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                    
+                      GitHub
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://blog.csdn.net/usher_ou" target="_blank" title="CSDN">
+                  
+                    <i class="fa fa-fw fa-crosshairs"></i>
+                  
+                    
+                      CSDN
+                    
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Hbase-深入浅出"><span class="nav-number">1.</span> <span class="nav-text">Hbase 深入浅出</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#概述"><span class="nav-number">1.1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#特点"><span class="nav-number">1.2.</span> <span class="nav-text">特点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#NoSQL数据库"><span class="nav-number">1.3.</span> <span class="nav-text">NoSQL数据库</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#NoSQL与RDBMS的区别"><span class="nav-number">1.3.1.</span> <span class="nav-text">NoSQL与RDBMS的区别</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Hbase表结构"><span class="nav-number">1.3.2.</span> <span class="nav-text">Hbase表结构</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#架构"><span class="nav-number">1.4.</span> <span class="nav-text">架构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Zookeeper"><span class="nav-number">1.4.1.</span> <span class="nav-text">Zookeeper</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#HMaster"><span class="nav-number">1.4.2.</span> <span class="nav-text">HMaster</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#HRegionServer"><span class="nav-number">1.4.3.</span> <span class="nav-text">HRegionServer</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#HRegion"><span class="nav-number">1.4.4.</span> <span class="nav-text">HRegion</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#常用Shell命令"><span class="nav-number">1.5.</span> <span class="nav-text">常用Shell命令</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Usher</span>
+
+  
+</div>
+
+
+<div class="powered-by">
+<i class="fa fa-user-md"></i><span id="busuanzi_container_site_uv">
+ The total site visits: <span id="busuanzi_value_site_pv"></span> 
+</span>
+</div>
+
+  <div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+
+  <span class="post-meta-divider">|</span>
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.2</div>
+
+
+<div class="theme-info">
+  <div class="powered-by"></div>
+  <span class="post-count">Total 22.9k words</span>
+</div>
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+  
+  <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+    <script type="text/javascript">
+      (function(d, s) {
+        var j, e = d.getElementsByTagName(s)[0];
+        if (typeof LivereTower === 'function') { return; }
+        j = d.createElement(s);
+        j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+        j.async = true;
+        e.parentNode.insertBefore(j, e);
+      })(document, 'script');
+    </script>
+  
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.4.js"></script>
+  <script>AV.initialize("o1i76yejzCmo7XksHOkeR1We-gzGzoHsz", "Smwvl7kAPKRUcfwNq8Ck2eSx");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/love.js"></script>
+
