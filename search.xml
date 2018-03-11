@@ -11,10 +11,10 @@
 <p>一般一个android应用是由多个activity组成的，这多个activity之间可以进行相互跳转。例如，按下一个Button按钮后，可能会跳转到其他的activity，与网页跳转稍微有点不一样的是，activity之间的跳转有可能返回值。例如，从activity A跳转到activity B，那么当activity B运行结束时，有可能会给activity A一个返回值。这样做在很多时候是相当方便的。</p>
 <p>当打开一个新的屏幕时，之前一个屏幕会被置为暂停状态，并且压入历史堆栈中。用户可以通过回退操作返回到以前打开过的屏幕。可以选择性的一处一些没有必要保留的屏幕，因为Android会把每个应用的开始到当前的每个屏幕保存在堆栈中。</p>
 </blockquote>
-<h3 id="生命周期及方法"><a href="#生命周期及方法" class="headerlink" title="生命周期及方法"></a>生命周期及方法</h3><h4 id="生命周期"><a href="#生命周期" class="headerlink" title="生命周期"></a>生命周期</h4><blockquote>
+<h3 id="生命周期及方法"><a href="#生命周期及方法" class="headerlink" title="生命周期及方法"></a>生命周期及方法</h3><h4 id="生命周期"><a href="#生命周期" class="headerlink" title="生命周期"></a>生命周期</h4><p><img src="http://ov1nop9io.bkt.clouddn.com/%E6%9C%AA%E5%91%BD%E5%90%8D%E5%9B%BE%E7%89%87.png" alt="enter image description here"></p>
+<blockquote>
 <p>一个activity的生命周期就像我们一样，从出生到童年，青年，中年，老年<br>    最后入土.Activity从创建到销毁有多种状态，从一种状态到另一种状态时会激发相应的回调方法，从onCreate(),<br>    onStart(),onPause(),onResume(),onstop(),onDestroy(),到onRestart()等方法.</p>
 </blockquote>
-<p>​    </p>
 <h4 id="方法"><a href="#方法" class="headerlink" title="方法"></a>方法</h4><blockquote>
 <p>onCreat()方法，谷歌官方的解释是：当这个界面第一次创建的时候执行这个方法，当然<br>   一般情况下，在一个应用中这个方法只会执行一次，（横竖屏切换），既然这个方法最先执行，那我们就可以在<br>   这个方法体里面做一些初始化的操作，如 初始化view(setCountentView(view)),寻找控件 findViewById(id)，<br>   初始化一些数据等等。<br>        执行完oncreate方法界面展示后，即当Activity变成可见的时候，开始执行onStart()方法 ，这个方法和<br>  onStop()方法对应。这个方法的用处不怎么大。<br>        onResume()方法，当一个界面可以和用户交互，获取到焦点的的时候，执行这个方法，什么是和用户交互？<br>  比如说，你点击屏幕上的按钮，图片等等，activity会给出不同的反应。<br>        onPause()方法和onResume()方法对应，即activity不能和用户交互的，activity失去焦点，界面上的view<br>  不能被点击的时候执行。<br>       onStop()方法，当activity不可见的时候，执行这个方法，如从一个activity跳转到另一个activity时，跳转<br>  前的activity被跳转后的activity遮挡，就会执行onStop()这个方法<br>       onRestart()方法，从第一个activity跳转到第二个activity，再返回第一个 activity时，就会执行这个方法<br>  界面重新变得可见就会执行这个方法。<br>       onDestroy()方法，当一个activity销毁的时候调用这个方法，与onCreate()对应。</p>
 </blockquote>
@@ -30,6 +30,7 @@
 <h2 id="Service"><a href="#Service" class="headerlink" title="Service"></a>Service</h2><h3 id="概述-1"><a href="#概述-1" class="headerlink" title="概述"></a>概述</h3><blockquote>
 <p>Service是android系统中的一种组件，跟activity的级别差不多，但是他不能自己运行，只能后台运行，并且可以和其他组件进行交互。Service是没有界面长生命周期的代码。Service是一种程序，可以运行很长时间的，但是却没有用户界面。这么说有点枯燥，来看个例子。打开一个音乐播放器的程序，这时如果想上网，那么打开Android浏览器，这时虽然已经进入浏览器这个程序，但是歌曲播放并没有停止，而是在后台继续一首接一首的播放，其实这个播放就是由播放音乐的Service进行控制。当然这个播放音乐的Service也可以停止。例如，当播放列表里的歌曲都结束，或用户按下了停止音乐播放的快捷键等。Service可以在很多场合的应用中使用，如播放多媒体时用户启动了其他Activity，这时程序要在后台继续播放，比如检测SD卡上文件的变化，或在后台记录地理信息位置的改变等，而服务却藏在后台。</p>
 </blockquote>
+<h3 id="生命周期-1"><a href="#生命周期-1" class="headerlink" title="生命周期"></a>生命周期</h3><p><img src="http://ov1nop9io.bkt.clouddn.com/QQ%E6%88%AA%E5%9B%BE20180311223711.png" alt="enter image description here"></p>
 <h3 id="用法-1"><a href="#用法-1" class="headerlink" title="用法"></a>用法</h3><blockquote>
 <p>（1）service用于在后台完成用户指定的操作。service分为两种：</p>
 <p>（a）started（启动）：当应用程序组件（如activity）调用startService()方法启动服务时，服务处于started状态。</p>
@@ -625,9 +626,9 @@
         
         <tags>
             
-            <tag> Hbase </tag>
-            
             <tag> Hadoop </tag>
+            
+            <tag> Hbase </tag>
             
         </tags>
         
@@ -1159,9 +1160,9 @@
         
         <tags>
             
-            <tag> Hadoop </tag>
-            
             <tag> 大数据 </tag>
+            
+            <tag> Hadoop </tag>
             
         </tags>
         
@@ -1264,9 +1265,9 @@
         
         <tags>
             
-            <tag> Hadoop </tag>
-            
             <tag> 大数据 </tag>
+            
+            <tag> Hadoop </tag>
             
         </tags>
         
