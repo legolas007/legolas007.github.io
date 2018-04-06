@@ -16,7 +16,7 @@
       
         <categories>
             
-            <category> 设计模式，Java </category>
+            <category> 设计模式 Java </category>
             
         </categories>
         
@@ -197,9 +197,9 @@
         
         <tags>
             
-            <tag> Java </tag>
-            
             <tag> Android </tag>
+            
+            <tag> Java </tag>
             
         </tags>
         
@@ -319,9 +319,9 @@
         
         <tags>
             
-            <tag> Spring </tag>
-            
             <tag> Java </tag>
+            
+            <tag> Spring </tag>
             
         </tags>
         
