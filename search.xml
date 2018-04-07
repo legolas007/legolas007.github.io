@@ -91,6 +91,46 @@
     </entry>
     
     <entry>
+      <title><![CDATA[设计模式-工厂方法模式]]></title>
+      <url>/2018/04/07/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F-%E5%B7%A5%E5%8E%82%E6%96%B9%E6%B3%95%E6%A8%A1%E5%BC%8F/</url>
+      <content type="html"><![CDATA[<h1 id="设计模式-工厂方法模式"><a href="#设计模式-工厂方法模式" class="headerlink" title="设计模式-工厂方法模式"></a>设计模式-工厂方法模式</h1><p><img src="http://ov1nop9io.bkt.clouddn.com/bf0ff9fc-467e-4a3f-8922-115ba2c55bde.png" alt="http://ov1nop9io.bkt.clouddn.com/bf0ff9fc-467e-4a3f-8922-115ba2c55bde.png"></p>
+<blockquote>
+<p>定义一个创建对象的接口，但是由子类决定要实例化那个类，工厂方法把实例化推迟到子类,主要解决接口选择的问题</p>
+<ul>
+<li><p>实例：java.util.Collection 接口的 iterator 方法，hibernate里通过sessionFactory创建session,</p>
+</li>
+<li><p>日志记录器：记录可能记录到本地硬盘、系统事件、远程服务器等，用户可以选择记录日志到什么地方。 </p>
+</li>
+<li><p>数据库访问，当用户不知道最后系统采用哪一类数据库，以及数据库可能有变化时</p>
+</li>
+<li><p>在简单工厂中，创建对象的是另一个类，而在工厂方法中，是由子类来创建对象</p>
+<p>​</p>
+</li>
+</ul>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Factory</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> Product <span class="title">factoryMethod</span><span class="params">()</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doSomething</span><span class="params">()</span></span>&#123;</span><br><span class="line">        Product product = factoryMethod();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ConcreteFactory</span> <span class="keyword">extends</span> <span class="title">Factory</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Product <span class="title">factoryMethod</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> ConcreteProduct();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ConcreteFactory2</span> <span class="keyword">extends</span> <span class="title">Factory</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Product <span class="title">factoryMethod</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> ConcreteProduct2();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+]]></content>
+      
+        <categories>
+            
+            <category> 设计模式 </category>
+            
+        </categories>
+        
+        
+        <tags>
+            
+            <tag> Java </tag>
+            
+            <tag> 设计模式 </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
       <title><![CDATA[设计模式-策略模式]]></title>
       <url>/2018/04/07/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F-%E7%AD%96%E7%95%A5%E6%A8%A1%E5%BC%8F/</url>
       <content type="html"><![CDATA[<h1 id="设计模式-策略模式"><a href="#设计模式-策略模式" class="headerlink" title="设计模式-策略模式"></a>设计模式-策略模式</h1><p><img src="http://ov1nop9io.bkt.clouddn.com/strategy_pattern_uml_diagram.jpg" alt="http://ov1nop9io.bkt.clouddn.com/strategy_pattern_uml_diagram.jpg"></p>

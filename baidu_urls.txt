@@ -1,5 +1,6 @@
 http://www.usherblog.site/2018/04/08/设计模式-迭代器模式/
 http://www.usherblog.site/2018/04/07/设计模式-抽象工厂模式/
+http://www.usherblog.site/2018/04/07/设计模式-工厂方法模式/
 http://www.usherblog.site/2018/04/07/设计模式-策略模式/
 http://www.usherblog.site/2018/04/06/设计模式-单例模式/
 http://www.usherblog.site/2018/03/25/Redis集群的伪分布式搭建/
