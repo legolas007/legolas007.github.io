@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Java,语法," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="Java7/8/9语法新特性Java7 Java7的新特性是相对于Java6而言的，增加的特性如下：  二进制变量的表示,支持将整数类型用二进制来表示，用0b开头。123456789101112131415161718// 所有整数 int， short，long，byte都可以用二进制表示     // An 8-bit &apos;byte&apos; value:     byte aByte = (byte)">
+<meta name="keywords" content="Java,语法">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java7&#x2F;8&#x2F;9语法新特性">
+<meta property="og:url" content="http://www.usherblog.site/2018/04/08/Java7、8、9新特性/index.html">
+<meta property="og:site_name" content="Usher_Ou&#39;s Blog">
+<meta property="og:description" content="Java7/8/9语法新特性Java7 Java7的新特性是相对于Java6而言的，增加的特性如下：  二进制变量的表示,支持将整数类型用二进制来表示，用0b开头。123456789101112131415161718// 所有整数 int， short，long，byte都可以用二进制表示     // An 8-bit &apos;byte&apos; value:     byte aByte = (byte)">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-04-08T03:09:28.278Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java7&#x2F;8&#x2F;9语法新特性">
+<meta name="twitter:description" content="Java7/8/9语法新特性Java7 Java7的新特性是相对于Java6而言的，增加的特性如下：  二进制变量的表示,支持将整数类型用二进制来表示，用0b开头。123456789101112131415161718// 所有整数 int， short，long，byte都可以用二进制表示     // An 8-bit &apos;byte&apos; value:     byte aByte = (byte)">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.2',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://www.usherblog.site/2018/04/08/Java7、8、9新特性/"/>
+
+
+
+
+
+  <title>Java7/8/9语法新特性 | Usher_Ou's Blog</title>
+  
+
+
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?9dac5a1d54c53caffecf4954d4041153";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+	<a href="https://github.com/legolas007"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/e7bbb0521b397edbd5fe43e7f760759336b5e05f/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677265656e5f3030373230302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_green_007200.png"></a>
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Usher_Ou's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Never Say Never</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="搜索..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://www.usherblog.site/2018/04/08/Java7、8、9新特性/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Usher">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Usher_Ou's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Java7/8/9语法新特性</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-08T11:09:52+08:00">
+                2018-04-08
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index">
+                    <span itemprop="name">Java</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+             <span id="/2018/04/08/Java7、8、9新特性/" class="leancloud_visitors" data-flag-title="Java7/8/9语法新特性">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">热度&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+				 <span>%</span>
+             </span>
+          
+
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">字数统计&#58;</span>
+                
+                <span title="字数统计">
+                  3,252
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">
+                  15
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Java7-8-9语法新特性"><a href="#Java7-8-9语法新特性" class="headerlink" title="Java7/8/9语法新特性"></a>Java7/8/9语法新特性</h1><h2 id="Java7"><a href="#Java7" class="headerlink" title="Java7"></a>Java7</h2><blockquote>
+<p>Java7的新特性是相对于Java6而言的，增加的特性如下：</p>
+</blockquote>
+<h3 id="二进制变量的表示-支持将整数类型用二进制来表示，用0b开头。"><a href="#二进制变量的表示-支持将整数类型用二进制来表示，用0b开头。" class="headerlink" title="二进制变量的表示,支持将整数类型用二进制来表示，用0b开头。"></a>二进制变量的表示,支持将整数类型用二进制来表示，用0b开头。</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 所有整数 int， short，long，byte都可以用二进制表示  </span></span><br><span class="line">   <span class="comment">// An 8-bit 'byte' value:  </span></span><br><span class="line">   <span class="keyword">byte</span> aByte = (<span class="keyword">byte</span>) <span class="number">0b00100001</span>;  </span><br><span class="line"> </span><br><span class="line">   <span class="comment">// A 16-bit 'short' value:  </span></span><br><span class="line">   <span class="keyword">short</span> aShort = (<span class="keyword">short</span>) <span class="number">0b1010000101000101</span>;  </span><br><span class="line"> </span><br><span class="line">   <span class="comment">// Some 32-bit 'int' values:  </span></span><br><span class="line">   intanInt1 = <span class="number">0b10100001010001011010000101000101</span>;  </span><br><span class="line">   intanInt2 = <span class="number">0b101</span>;  </span><br><span class="line">   intanInt3 = <span class="number">0B101</span>; <span class="comment">// The B can be upper or lower case.  </span></span><br><span class="line"> </span><br><span class="line">   <span class="comment">// A 64-bit 'long' value. Note the "L" suffix:  </span></span><br><span class="line">   <span class="keyword">long</span> aLong = <span class="number">0b1010000101000101101000010100010110100001010001011010000101000101L</span>;  </span><br><span class="line"> </span><br><span class="line">   <span class="comment">// 二进制在数组等的使用  </span></span><br><span class="line">   <span class="keyword">final</span> <span class="keyword">int</span>[] phases = &#123; <span class="number">0b00110001</span>, <span class="number">0b01100010</span>, <span class="number">0b11000100</span>, <span class="number">0b10001001</span>,  </span><br><span class="line">   <span class="number">0b00010011</span>, <span class="number">0b00100110</span>, <span class="number">0b01001100</span>, <span class="number">0b10011000</span> &#125;;</span><br></pre></td></tr></table></figure>
+<h3 id="Switch语句支持string类型"><a href="#Switch语句支持string类型" class="headerlink" title="Switch语句支持string类型"></a>Switch语句支持string类型</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">switch</span> (dayOfWeekArg) &#123;  </span><br><span class="line">             <span class="keyword">case</span> <span class="string">"Monday"</span>:  </span><br><span class="line">                 typeOfDay = <span class="string">"Start of work week"</span>;  </span><br><span class="line">                 <span class="keyword">break</span>;  </span><br><span class="line">             <span class="keyword">case</span> <span class="string">"Tuesday"</span>:  </span><br><span class="line">             <span class="keyword">case</span> <span class="string">"Wednesday"</span>:  </span><br><span class="line">             <span class="keyword">case</span> <span class="string">"Thursday"</span>:  </span><br><span class="line">                 typeOfDay = <span class="string">"Midweek"</span>;  </span><br><span class="line">                 <span class="keyword">break</span>;  </span><br><span class="line">             <span class="keyword">case</span> <span class="string">"Friday"</span>:  </span><br><span class="line">                 typeOfDay = <span class="string">"End of work week"</span>;  </span><br><span class="line">                 <span class="keyword">break</span>;  </span><br><span class="line">             <span class="keyword">case</span> <span class="string">"Saturday"</span>:  </span><br><span class="line">             <span class="keyword">case</span> <span class="string">"Sunday"</span>:  </span><br><span class="line">                 typeOfDay = <span class="string">"Weekend"</span>;  </span><br><span class="line">                 <span class="keyword">break</span>;  </span><br><span class="line">             <span class="keyword">default</span>:  </span><br><span class="line">                 <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"Invalid day of the week: "</span> + dayOfWeekArg);  </span><br><span class="line">         &#125;</span><br></pre></td></tr></table></figure>
+<h3 id="Try-with-resource语句"><a href="#Try-with-resource语句" class="headerlink" title="Try-with-resource语句"></a>Try-with-resource语句</h3><blockquote>
+<p>注意：实现java.lang.AutoCloseable接口的资源都可以放到try中，跟final里面的关闭资源类似； 按照声明逆序关闭资源 ;Try块抛出的异常通过Throwable.getSuppressed获取</p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">try</span> (java.util.zip.ZipFile zf = <span class="keyword">new</span> java.util.zip.ZipFile(zipFileName);  </span><br><span class="line">    java.io.BufferedWriter writer = java.nio.file.Files   </span><br><span class="line">    .newBufferedWriter(outputFilePath, charset)) &#123;  </span><br><span class="line">    <span class="comment">// Enumerate each entry  </span></span><br><span class="line">    <span class="keyword">for</span> (java.util.Enumeration entries = zf.entries(); entries  </span><br><span class="line">    .hasMoreElements();) &#123;  </span><br><span class="line">    <span class="comment">// Get the entry name and write it to the output file  </span></span><br><span class="line">    String newLine = System.getProperty(<span class="string">"line.separator"</span>);  </span><br><span class="line">    String zipEntryName = ((java.util.zip.ZipEntry) entries  </span><br><span class="line">    .nextElement()).getName() + newLine;  </span><br><span class="line">    writer.write(zipEntryName, <span class="number">0</span>, zipEntryName.length());  </span><br><span class="line">    &#125;  </span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<h3 id="Catch多个异常"><a href="#Catch多个异常" class="headerlink" title="Catch多个异常"></a>Catch多个异常</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception </span>&#123;  </span><br><span class="line">    <span class="keyword">try</span> &#123;  </span><br><span class="line">    testthrows();  </span><br><span class="line">    &#125; <span class="keyword">catch</span> (IOException | SQLException ex) &#123;  </span><br><span class="line">    <span class="keyword">throw</span> ex;  </span><br><span class="line">    &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">testthrows</span><span class="params">()</span> <span class="keyword">throws</span> IOException, SQLException </span>&#123;  </span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<h3 id="数字类型的下划线表示"><a href="#数字类型的下划线表示" class="headerlink" title="数字类型的下划线表示"></a>数字类型的下划线表示</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">long</span> creditCardNumber = <span class="number">1234_5678_9012_3456L</span>;  </span><br><span class="line">   <span class="keyword">long</span> socialSecurityNumber = <span class="number">999_99_9999L</span>;  </span><br><span class="line">   <span class="keyword">float</span> pi = <span class="number">3.14_15F</span>;  </span><br><span class="line">   <span class="keyword">long</span> hexBytes = <span class="number">0xFF_EC_DE_5E</span>;  </span><br><span class="line">   <span class="keyword">long</span> hexWords = <span class="number">0xCAFE_BABE</span>;  </span><br><span class="line">   <span class="keyword">long</span> maxLong = <span class="number">0x7fff_ffff_ffff_ffffL</span>;  </span><br><span class="line">   <span class="keyword">byte</span> nybbles = <span class="number">0b0010_0101</span>;  </span><br><span class="line">   <span class="keyword">long</span> bytes = <span class="number">0b11010010_01101001_10010100_10010010</span>;</span><br></pre></td></tr></table></figure>
+<h3 id="泛型实例的创建可以通过类型推断来简化-可以去掉后面new部分的泛型类型，只用-lt-gt"><a href="#泛型实例的创建可以通过类型推断来简化-可以去掉后面new部分的泛型类型，只用-lt-gt" class="headerlink" title="泛型实例的创建可以通过类型推断来简化 可以去掉后面new部分的泛型类型，只用&lt;&gt;"></a>泛型实例的创建可以通过类型推断来简化 可以去掉后面new部分的泛型类型，只用&lt;&gt;</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//使用泛型前   </span></span><br><span class="line">   List strList = <span class="keyword">new</span> ArrayList();   </span><br><span class="line">   List&lt;String&gt; strList4 = <span class="keyword">new</span> ArrayList&lt;String&gt;();   </span><br><span class="line">   List&lt;Map&lt;String, List&lt;String&gt;&gt;&gt; strList5 =  <span class="keyword">new</span> ArrayList&lt;Map&lt;String, List&lt;String&gt;&gt;&gt;();  </span><br><span class="line"> </span><br><span class="line">      </span><br><span class="line">   <span class="comment">//编译器使用尖括号 (&lt;&gt;) 推断类型   </span></span><br><span class="line">   List&lt;String&gt; strList0 = <span class="keyword">new</span> ArrayList&lt;String&gt;();   </span><br><span class="line">   List&lt;Map&lt;String, List&lt;String&gt;&gt;&gt; strList1 =  <span class="keyword">new</span> ArrayList&lt;Map&lt;String, List&lt;String&gt;&gt;&gt;();   </span><br><span class="line">   List&lt;String&gt; strList2 = <span class="keyword">new</span> ArrayList&lt;&gt;();   </span><br><span class="line">   List&lt;Map&lt;String, List&lt;String&gt;&gt;&gt; strList3 = <span class="keyword">new</span> ArrayList&lt;&gt;();  </span><br><span class="line">   List&lt;String&gt; list = <span class="keyword">new</span> ArrayList&lt;&gt;();  </span><br><span class="line">   list.add(<span class="string">"A"</span>);</span><br></pre></td></tr></table></figure>
+<h3 id="在可变参数方法中传递非具体化参数-改进编译警告和错误"><a href="#在可变参数方法中传递非具体化参数-改进编译警告和错误" class="headerlink" title="在可变参数方法中传递非具体化参数,改进编译警告和错误"></a>在可变参数方法中传递非具体化参数,改进编译警告和错误</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">List l = <span class="keyword">new</span> ArrayList&lt;Number&gt;();  </span><br><span class="line">   List&lt;String&gt; ls = l;       <span class="comment">// unchecked warning  </span></span><br><span class="line">   l.add(<span class="number">0</span>, <span class="keyword">new</span> Integer(<span class="number">42</span>)); <span class="comment">// another unchecked warning  </span></span><br><span class="line">   String s = ls.get(<span class="number">0</span>);      <span class="comment">// ClassCastException is thrown  </span></span><br><span class="line">   Jdk7:  </span><br><span class="line">   <span class="keyword">public</span> <span class="keyword">static</span> &lt;T&gt; <span class="function"><span class="keyword">void</span> <span class="title">addToList</span> <span class="params">(List&lt;T&gt; listArg, T... elements)</span> </span>&#123;  </span><br><span class="line">   <span class="keyword">for</span> (T x : elements) &#123;  </span><br><span class="line">   listArg.add(x);  </span><br><span class="line">   &#125;  </span><br><span class="line">   &#125;  </span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">   你会得到一个warning  </span></span><br><span class="line"><span class="comment">   warning: [varargs] Possible heap pollution from parameterized vararg type  </span></span><br><span class="line"><span class="comment">   有三种方式消除警告</span></span><br><span class="line"><span class="comment">   1.加 annotation @SafeVarargs   </span></span><br><span class="line"><span class="comment">   2.加 annotation @SuppressWarnings(&#123;"unchecked", "varargs"&#125;)  </span></span><br><span class="line"><span class="comment">   3.使用编译器参数 –Xlint:varargs;  </span></span><br><span class="line"><span class="comment">   */</span></span><br></pre></td></tr></table></figure>
+<h2 id="Java8"><a href="#Java8" class="headerlink" title="Java8"></a>Java8</h2><h3 id="接口的默认方法"><a href="#接口的默认方法" class="headerlink" title="接口的默认方法"></a>接口的默认方法</h3><blockquote>
+<p>Java 8允许我们给接口添加一个非抽象的方法实现，只需要使用 default关键字即可，这个特征又叫做扩展方法</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">interface Formula &#123;</span><br><span class="line">    double calculate(int a);</span><br><span class="line">    default double sqrt(int a) &#123;</span><br><span class="line">        return Math.sqrt(a);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="Lambda-表达式"><a href="#Lambda-表达式" class="headerlink" title="Lambda 表达式"></a>Lambda 表达式</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Collections.sort(names, (String a, String b) -&gt; b.compareTo(a));</span><br></pre></td></tr></table></figure>
+<h3 id="函数式接口"><a href="#函数式接口" class="headerlink" title="函数式接口"></a>函数式接口</h3><blockquote>
+<p>每一个lambda表达式都对应一个类型，通常是接口类型。而“函数式接口”是指仅仅只包含一个抽象方法的接口，每一个该类型的lambda表达式都会被匹配到这个抽象方法。因为 默认方法 不算抽象方法，所以你也可以给你的函数式接口添加默认方法。<br> 们可以将lambda表达式当作任意只包含一个抽象方法的接口类型，确保你的接口一定达到这个要求，你只需要给你的接口添加 @FunctionalInterface 注解，编译器如果发现你标注了这个注解的接口有多于一个抽象方法的时候会报错的。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">@FunctionalInterface</span><br><span class="line">interface Converter&lt;F, T&gt; &#123;</span><br><span class="line">    T convert(F from);</span><br><span class="line">&#125;</span><br><span class="line">Converter&lt;String, Integer&gt; converter = (from) -&gt; Integer.valueOf(from);</span><br><span class="line">Integer converted = converter.convert(&quot;123&quot;);</span><br><span class="line">System.out.println(converted);    // 123</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<h3 id="方法与构造函数引用"><a href="#方法与构造函数引用" class="headerlink" title="方法与构造函数引用"></a>方法与构造函数引用</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">//指向静态方法的方法引用</span><br><span class="line">public static void main(String[] args) &#123;  </span><br><span class="line">        String num=&quot;122&quot;;  </span><br><span class="line">        int parse = parse(Integer::parseInt,num);  </span><br><span class="line">        System.out.println(parse);  </span><br><span class="line">    &#125;  </span><br><span class="line">    public static int parse(ToIntFunction&lt;String&gt; f,String num)&#123;  </span><br><span class="line">        return f.applyAsInt(num);  </span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">//指向任意类型实例方法的方法引用(这个实例长为方法的参数)</span><br><span class="line"></span><br><span class="line">public static void main(String[] args) &#123;  </span><br><span class="line">        List&lt;String&gt; list = Arrays.asList(&quot;av&quot;,&quot;asdf&quot;,&quot;sad&quot;,&quot;324&quot;,&quot;43&quot;);  </span><br><span class="line">        List&lt;String&gt; collect = list.stream().map(String::toUpperCase).collect(Collectors.toList());  </span><br><span class="line">        System.out.println(collect);  </span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">//指向现有对象的实例方法的方法引用(这个实例为外部对象)  </span><br><span class="line">public static void main(String[] args) &#123;  </span><br><span class="line">        List&lt;String&gt; list = Arrays.asList(&quot;av&quot;,&quot;asdf&quot;,&quot;sad&quot;,&quot;324&quot;,&quot;43&quot;);  </span><br><span class="line">        String a=&quot;avasdf&quot;;  </span><br><span class="line">        List&lt;String&gt; collect = list.stream().filter(a::contains).collect(Collectors.toList());  </span><br><span class="line">        System.out.println(collect);  </span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">//构造引用</span><br><span class="line"> private String color;  </span><br><span class="line">private int weight;  </span><br><span class="line">public Apple() &#123;  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line">public Apple(String color) &#123;  </span><br><span class="line">    super();  </span><br><span class="line">    this.color = color;  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line">public Apple(int weight) &#123;  </span><br><span class="line">    super();  </span><br><span class="line">    this.weight = weight;  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line">public Apple(String color, int weight) &#123;  </span><br><span class="line">    super();  </span><br><span class="line">    this.color = color;  </span><br><span class="line">    this.weight = weight;  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line">@Override  </span><br><span class="line">public String toString() &#123;  </span><br><span class="line">    return &quot;Apple [color=&quot; + color + &quot;, weight=&quot; + weight + &quot;]&quot;;  </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">public static void main(String[] args) &#123;  </span><br><span class="line">        Apple instance1 = instance(11,Apple::new);  </span><br><span class="line">    &#125;  </span><br><span class="line">    public static Apple instance(int a,IntFunction&lt;Apple&gt; ifu)&#123;  </span><br><span class="line">        return ifu.apply(a);  </span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<h3 id="Stream"><a href="#Stream" class="headerlink" title="Stream"></a>Stream</h3><blockquote>
+<p>Stream 使用一种类似用 SQL 语句从数据库查询数据的直观方式来提供一种对 Java 集合运算和表达的高阶抽象。<br> 素流在管道中经过中间操作（intermediate operation）的处理，最后由最终操作(terminal operation)得到前面处理的结果。</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">+--------------------+       +------+   +------+   +---+   +-------+</span><br><span class="line">| stream of elements +-----&gt; |filter+-&gt; |sorted+-&gt; |map+-&gt; |collect|</span><br><span class="line">+--------------------+       +------+   +------+   +---+   +-------+</span><br><span class="line"></span><br><span class="line">List&lt;Integer&gt; transactionsIds = </span><br><span class="line">widgets.stream()</span><br><span class="line">             .filter(b -&gt; b.getColor() == RED)</span><br><span class="line">             .sorted((x,y) -&gt; x.getWeight() - y.getWeight())</span><br><span class="line">             .mapToInt(Widget::getWeight)</span><br><span class="line">             .sum();</span><br></pre></td></tr></table></figure>
+<h3 id="Optional-类"><a href="#Optional-类" class="headerlink" title="Optional 类"></a>Optional 类</h3><blockquote>
+<p>Optional 类是一个可以为null的容器对象。如果值存在则isPresent()方法会返回true，调用get()方法会返回该对象。<br> ptional 是个容器：它可以保存类型T的值，或者仅仅保存null。Optional提供很多有用的方法，这样我们就不用显式进行空值检测。<br> ptional 类的引入很好的解决空指针异常。</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">//java.util.Optional&lt;T&gt; 类的声明</span><br><span class="line">public final class Optional&lt;T&gt;</span><br><span class="line">extends Object</span><br><span class="line">//实例</span><br><span class="line">import java.util.Optional;</span><br><span class="line"> </span><br><span class="line">public class Java8Tester &#123;</span><br><span class="line">   public static void main(String args[])&#123;</span><br><span class="line">   </span><br><span class="line">      Java8Tester java8Tester = new Java8Tester();</span><br><span class="line">      Integer value1 = null;</span><br><span class="line">      Integer value2 = new Integer(10);</span><br><span class="line">        </span><br><span class="line">      // Optional.ofNullable - 允许传递为 null 参数</span><br><span class="line">      Optional&lt;Integer&gt; a = Optional.ofNullable(value1);</span><br><span class="line">        </span><br><span class="line">      // Optional.of - 如果传递的参数是 null，抛出异常 NullPointerException</span><br><span class="line">      Optional&lt;Integer&gt; b = Optional.of(value2);</span><br><span class="line">      System.out.println(java8Tester.sum(a,b));</span><br><span class="line">   &#125;</span><br><span class="line">    </span><br><span class="line">   public Integer sum(Optional&lt;Integer&gt; a, Optional&lt;Integer&gt; b)&#123;</span><br><span class="line">    </span><br><span class="line">      // Optional.isPresent - 判断值是否存在</span><br><span class="line">        </span><br><span class="line">      System.out.println(&quot;第一个参数值存在: &quot; + a.isPresent());</span><br><span class="line">      System.out.println(&quot;第二个参数值存在: &quot; + b.isPresent());</span><br><span class="line">        </span><br><span class="line">      // Optional.orElse - 如果值存在，返回它，否则返回默认值</span><br><span class="line">      Integer value1 = a.orElse(new Integer(0));</span><br><span class="line">        </span><br><span class="line">      //Optional.get - 获取值，值需要存在</span><br><span class="line">      Integer value2 = b.get();</span><br><span class="line">      return value1 + value2;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="Base64"><a href="#Base64" class="headerlink" title="Base64"></a>Base64</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">import java.util.Base64;</span><br><span class="line">import java.util.UUID;</span><br><span class="line">import java.io.UnsupportedEncodingException;</span><br><span class="line"> </span><br><span class="line">public class Java8Tester &#123;</span><br><span class="line">   public static void main(String args[])&#123;</span><br><span class="line">      try &#123;</span><br><span class="line">        </span><br><span class="line">         // 使用基本编码</span><br><span class="line">         String base64encodedString = Base64.getEncoder().encodeToString(&quot;runoob?java8&quot;.getBytes(&quot;utf-8&quot;));</span><br><span class="line">         System.out.println(&quot;Base64 比那么字符串 (基本) :&quot; + base64encodedString);</span><br><span class="line">        </span><br><span class="line">         // 解码</span><br><span class="line">         byte[] base64decodedBytes = Base64.getDecoder().decode(base64encodedString);</span><br><span class="line">        </span><br><span class="line">         System.out.println(&quot;原始字符串: &quot; + new String(base64decodedBytes, &quot;utf-8&quot;));</span><br><span class="line">         base64encodedString = Base64.getUrlEncoder().encodeToString(&quot;TutorialsPoint?java8&quot;.getBytes(&quot;utf-8&quot;));</span><br><span class="line">         System.out.println(&quot;Base64 编码字符串 (URL) :&quot; + base64encodedString);</span><br><span class="line">        </span><br><span class="line">         StringBuilder stringBuilder = new StringBuilder();</span><br><span class="line">        </span><br><span class="line">         for (int i = 0; i &lt; 10; ++i) &#123;</span><br><span class="line">            stringBuilder.append(UUID.randomUUID().toString());</span><br><span class="line">         &#125;</span><br><span class="line">        </span><br><span class="line">         byte[] mimeBytes = stringBuilder.toString().getBytes(&quot;utf-8&quot;);</span><br><span class="line">         String mimeEncodedString = Base64.getMimeEncoder().encodeToString(mimeBytes);</span><br><span class="line">         System.out.println(&quot;Base64 编码字符串 (MIME) :&quot; + mimeEncodedString);</span><br><span class="line">         </span><br><span class="line">      &#125;catch(UnsupportedEncodingException e)&#123;</span><br><span class="line">         System.out.println(&quot;Error :&quot; + e.getMessage());</span><br><span class="line">      &#125;</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="Java9"><a href="#Java9" class="headerlink" title="Java9"></a>Java9</h2><h3 id="Java-平台级模块系统"><a href="#Java-平台级模块系统" class="headerlink" title="Java 平台级模块系统"></a>Java 平台级模块系统</h3><blockquote>
+<p>模块化的 JAR 文件都包含一个额外的模块描述器。在这个模块描述器中, 对其它模块的依赖是通过 “requires”  来表示的。另外, “exports” 语句控制着哪些包是可以被其它模块访问到的。所有不被导出的包默认都封装在模块的里面。如下是一个模块描述器的示例，存在于 “module-info.java” 文件中:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">module blog &#123;</span><br><span class="line"> exports com.pluralsight.blog;</span><br><span class="line"></span><br><span class="line"> requires cms;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>当启动一个模块化应用时， JVM 会验证是否所有的模块都能使用</p>
+<h3 id="Linking"><a href="#Linking" class="headerlink" title="Linking"></a>Linking</h3><p>当你使用具有显式依赖关系的模块和模块化的 JDK 时，新的可能性出现了。你的应用程序模块现在将声明其对其他应用程序模块的依赖以及对其所使用的 JDK 模块的依赖。为什么不使用这些信息创建一个最小的运行时环境，其中只包含运行应用程序所需的那些模块呢？ 这可以通过 Java 9 中的新的 jlink 工具实现。你可以创建针对应用程序进行优化的最小运行时映像而不需要使用完全加载 JDK 安装版本。</p>
+</blockquote>
+<h3 id="JShell-交互式-Java-REPL"><a href="#JShell-交互式-Java-REPL" class="headerlink" title="JShell: 交互式 Java REPL"></a>JShell: 交互式 Java REPL</h3><blockquote>
+<p>许多语言已经具有交互式编程环境，Java 现在加入了这个俱乐部。您可以从控制台启动 jshell ，并直接启动输入和执行 Java 代码。 jshell 的即时反馈使它成为探索 API 和尝试语言特性的好工具。</p>
+</blockquote>
+<p>###改进的 Javadoc</p>
+<blockquote>
+<p>Javadoc 现在支持在 API 文档中的进行搜索。另外，Javadoc 的输出现在符合兼容 HTML5 标准。此外，你会注意到，每个 Javadoc 页面都包含有关 JDK 模块类或接口来源的信息。</p>
+</blockquote>
+<h3 id="集合工厂方法"><a href="#集合工厂方法" class="headerlink" title="集合工厂方法"></a>集合工厂方法</h3><blockquote>
+<p>　Set<integer> ints = Set.of(1, 2, 3);<br>ist<string> strings = List.of(“first”, “second”);<br> 了更短和更好阅读之外，这些方法也可以避免您选择特定的集合实现。 事实上，从工厂方法返回已放入数个元素的集合实现是高度优化的。这是可能的，因为它们是不可变的：在创建后，继续添加元素到这些集合会导致 “UnsupportedOperationException” 。</string></integer></p>
+</blockquote>
+<h3 id="改进的-Stream-API"><a href="#改进的-Stream-API" class="headerlink" title="改进的 Stream API"></a>改进的 Stream API</h3><blockquote>
+<p>　Stream 接口中添加了 4 个新的方法：dropWhile, takeWhile, ofNullable。还有个 iterate 方法的新重载方法，可以让你提供一个 Predicate (判断条件)来指定什么时候结束迭代：</p>
+<p>　IntStream.iterate(1, i -&gt; i &lt; 100, i -&gt; i + 1).forEach(System.out::println);<br>　第二个参数是一个 Lambda，它会在当前 IntStream 中的元素到达 100 的时候返回 true。因此这个简单的示例是向控制台打印 1 到 99。</p>
+<p>　除了对 Stream 本身的扩展，Optional 和 Stream 之间的结合也得到了改进。现在可以通过 Optional 的新方法 <code>stram</code> 将一个 Optional 对象转换为一个(可能是空的) Stream 对象：</p>
+<p>　Stream<integer> s = Optional.of(1).stream();<br>　在组合复杂的 Stream 管道时，将 Optional 转换为 Stream 非常有用。</integer></p>
+</blockquote>
+<h3 id="私有接口方法"><a href="#私有接口方法" class="headerlink" title="私有接口方法"></a>私有接口方法</h3><blockquote>
+<p>　Java 8 为我们带来了接口的默认方法。 接口现在也可以包含行为，而不仅仅是方法签名。 但是，如果在接口上有几个默认方法，代码几乎相同，会发生什么情况？ 通常，您将重构这些方法，调用一个可复用的私有方法。 但默认方法不能是私有的。 将复用代码创建为一个默认方法不是一个解决方案，因为该辅助方法会成为公共API的一部分。 使用 Java 9，您可以向接口添加私有辅助方法来解决此问题：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">public interface MyInterface &#123;</span><br><span class="line"></span><br><span class="line">  void normalInterfaceMethod();</span><br><span class="line"></span><br><span class="line">  default void interfaceMethodWithDefault() &#123; init(); &#125;</span><br><span class="line"></span><br><span class="line">  default void anotherDefaultMethod() &#123; init(); &#125;</span><br><span class="line"></span><br><span class="line">  // This method is not part of the public API exposed by MyInterface</span><br><span class="line">  private void init() &#123; System.out.println(&quot;Initializing&quot;); &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<h3 id="HTTP-2"><a href="#HTTP-2" class="headerlink" title="HTTP/2"></a>HTTP/2</h3><blockquote>
+<p>　Java 9 中有新的方式来处理 HTTP 调用。这个迟到的特性用于代替老旧的 <code>HttpURLConnection</code> API，并提供对 WebSocket 和 HTTP/2 的支持。注意：新的 HttpClient API 在 Java 9 中以所谓的孵化器模块交付。也就是说，这套 API 不能保证 100% 完成。不过你可以在 Java 9 中开始使用这套 API：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">HttpClient client = HttpClient.newHttpClient();</span><br><span class="line"></span><br><span class="line">HttpRequest req =</span><br><span class="line">  HttpRequest.newBuilder(URI.create(&quot;http://www.google.com&quot;))</span><br><span class="line">       .header(&quot;User-Agent&quot;,&quot;Java&quot;)</span><br><span class="line">       .GET()</span><br><span class="line">       .build();</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<p>HttpResponse<string> resp = client.send(req, HttpResponse.BodyHandler.asString());<br>除了这个简单的请求/响应模型之外，HttpClient 还提供了新的 API 来处理 HTTP/2 的特性，比如流和服务端推送。</string></p>
+<h3 id="多版本兼容-JAR"><a href="#多版本兼容-JAR" class="headerlink" title="多版本兼容 JAR"></a>多版本兼容 JAR</h3><blockquote>
+<p>　多版本兼容 JAR 功能能让你创建仅在特定版本的 Java 环境中运行库程序时选择使用的 class 版本：</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">multirelease.jar</span><br><span class="line">├── META-INF</span><br><span class="line">│  └── versions</span><br><span class="line">│    └── 9</span><br><span class="line">│      └── multirelease</span><br><span class="line">│        └── Helper.class</span><br><span class="line">├── multirelease</span><br><span class="line">  ├── Helper.class</span><br><span class="line">  └── Main.class</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>　在上述场景中， multirelease.jar 可以在 Java 9 中使用, 不过 Helper 这个类使用的不是顶层的 multirelease.Helper 这个 class, 而是处在“META-INF/versions/9”下面的这个。这是特别为 Java 9 准备的 class 版本，可以运用 Java 9 所提供的特性和库。同时，在早期的 Java 诸版本中使用这个 JAR 也是能运行的，因为较老版本的 Java 只会看到顶层的这个 Helper 类</p>
+</blockquote>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Java/" rel="tag"># Java</a>
+          
+            <a href="/tags/语法/" rel="tag"># 语法</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/04/07/设计模式-抽象工厂模式/" rel="next" title="设计模式-抽象工厂模式">
+                <i class="fa fa-chevron-left"></i> 设计模式-抽象工厂模式
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/04/08/设计模式-迭代器模式/" rel="prev" title="设计模式-迭代器模式">
+                设计模式-迭代器模式 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+<span class="jiathis_txt">分享到：</span>
+<a class="jiathis_button_fav">收藏夹</a>
+<a class="jiathis_button_copy">复制网址</a>
+<a class="jiathis_button_email">邮件</a>
+<a class="jiathis_button_weixin">微信</a>
+<a class="jiathis_button_qzone">QQ空间</a>
+<a class="jiathis_button_tqq">腾讯微薄</a>
+<a class="jiathis_button_douban">豆瓣</a>
+<a class="jiathis_button_share">一键分享</a>
+
+<a href="http://www.jiathis.com/share?uid=2140465" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank">更多</a>
+<a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript" >
+var jiathis_config={
+  data_track_clickback:true,
+  summary:"",
+  shortUrl:false,
+  hideMore:false
+}
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js?uid=" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="lv-container" data-id="city" data-uid="MTAyMC8zMDM0Ni82ODk5"></div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/uploads/avatar.png"
+               alt="Usher" />
+          <p class="site-author-name" itemprop="name">Usher</p>
+           
+              <p class="site-description motion-element" itemprop="description">Honor To The End</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">24</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">13</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/legolas007" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                    
+                      GitHub
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://blog.csdn.net/usher_ou" target="_blank" title="CSDN">
+                  
+                    <i class="fa fa-fw fa-crosshairs"></i>
+                  
+                    
+                      CSDN
+                    
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+		
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Java7-8-9语法新特性"><span class="nav-number">1.</span> <span class="nav-text">Java7/8/9语法新特性</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Java7"><span class="nav-number">1.1.</span> <span class="nav-text">Java7</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#二进制变量的表示-支持将整数类型用二进制来表示，用0b开头。"><span class="nav-number">1.1.1.</span> <span class="nav-text">二进制变量的表示,支持将整数类型用二进制来表示，用0b开头。</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Switch语句支持string类型"><span class="nav-number">1.1.2.</span> <span class="nav-text">Switch语句支持string类型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Try-with-resource语句"><span class="nav-number">1.1.3.</span> <span class="nav-text">Try-with-resource语句</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Catch多个异常"><span class="nav-number">1.1.4.</span> <span class="nav-text">Catch多个异常</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数字类型的下划线表示"><span class="nav-number">1.1.5.</span> <span class="nav-text">数字类型的下划线表示</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#泛型实例的创建可以通过类型推断来简化-可以去掉后面new部分的泛型类型，只用-lt-gt"><span class="nav-number">1.1.6.</span> <span class="nav-text">泛型实例的创建可以通过类型推断来简化 可以去掉后面new部分的泛型类型，只用&lt;&gt;</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#在可变参数方法中传递非具体化参数-改进编译警告和错误"><span class="nav-number">1.1.7.</span> <span class="nav-text">在可变参数方法中传递非具体化参数,改进编译警告和错误</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Java8"><span class="nav-number">1.2.</span> <span class="nav-text">Java8</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#接口的默认方法"><span class="nav-number">1.2.1.</span> <span class="nav-text">接口的默认方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Lambda-表达式"><span class="nav-number">1.2.2.</span> <span class="nav-text">Lambda 表达式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#函数式接口"><span class="nav-number">1.2.3.</span> <span class="nav-text">函数式接口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#方法与构造函数引用"><span class="nav-number">1.2.4.</span> <span class="nav-text">方法与构造函数引用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Stream"><span class="nav-number">1.2.5.</span> <span class="nav-text">Stream</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Optional-类"><span class="nav-number">1.2.6.</span> <span class="nav-text">Optional 类</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Base64"><span class="nav-number">1.2.7.</span> <span class="nav-text">Base64</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Java9"><span class="nav-number">1.3.</span> <span class="nav-text">Java9</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Java-平台级模块系统"><span class="nav-number">1.3.1.</span> <span class="nav-text">Java 平台级模块系统</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Linking"><span class="nav-number">1.3.2.</span> <span class="nav-text">Linking</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#JShell-交互式-Java-REPL"><span class="nav-number">1.3.3.</span> <span class="nav-text">JShell: 交互式 Java REPL</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#集合工厂方法"><span class="nav-number">1.3.4.</span> <span class="nav-text">集合工厂方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#改进的-Stream-API"><span class="nav-number">1.3.5.</span> <span class="nav-text">改进的 Stream API</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#私有接口方法"><span class="nav-number">1.3.6.</span> <span class="nav-text">私有接口方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#HTTP-2"><span class="nav-number">1.3.7.</span> <span class="nav-text">HTTP/2</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#多版本兼容-JAR"><span class="nav-number">1.3.8.</span> <span class="nav-text">多版本兼容 JAR</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Usher</span>
+
+  
+</div>
+
+
+<div class="powered-by">
+<i class="fa fa-user-md"></i><span id="busuanzi_container_site_uv">
+ The total site visits: <span id="busuanzi_value_site_pv"></span> 
+</span>
+</div>
+
+  <div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+
+  <span class="post-meta-divider">|</span>
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.2</div>
+
+
+<div class="theme-info">
+  <div class="powered-by"></div>
+  <span class="post-count">Total 51.3k words</span>
+</div>
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+  
+  <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+    <script type="text/javascript">
+      (function(d, s) {
+        var j, e = d.getElementsByTagName(s)[0];
+        if (typeof LivereTower === 'function') { return; }
+        j = d.createElement(s);
+        j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+        j.async = true;
+        e.parentNode.insertBefore(j, e);
+      })(document, 'script');
+    </script>
+  
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.4.js"></script>
+  <script>AV.initialize("o1i76yejzCmo7XksHOkeR1We-gzGzoHsz", "Smwvl7kAPKRUcfwNq8Ck2eSx");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/love.js"></script>
+
