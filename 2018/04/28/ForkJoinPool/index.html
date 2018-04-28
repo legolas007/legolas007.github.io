@@ -78,7 +78,7 @@
 <link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="面试,网络," />
+  <meta name="keywords" content="Java,多线程," />
 
 
 
@@ -94,22 +94,20 @@
 
 
 
-<meta name="description" content="浏览器的一个请求从发送到返回浏览器的一个请求从发送到返回1、先从网络模型层面：client （浏览器）与server 通过 http 协议通讯，http 协议属于应用层协议，http 基于 tcp 协议，所以 client 与 server 主要通过socket 进行通讯； 而 tcp属于传输层协议、如果走 https 还需要会话层 TLS、SSL 等协议； 传输层之下网络层，这里主要是路由协议">
-<meta name="keywords" content="面试,网络">
+<meta name="description" content="ForkJoinPoolFork/Join框架  Fork/Join框架是Java7提供了的一个用于并行执行任务的框架， 是一个把大任务分割成若干个小任务，最终汇总每个小任务结果后得到大任务结果的框架。我们再通过Fork和Join这两个单词来理解下Fork/Join框架，Fork就是把一个大任务切分为若干子任务并行的执行，Join就是合并这些子任务的执行结果，最后得到这个大任务的结果。比如计算1+">
+<meta name="keywords" content="Java,多线程">
 <meta property="og:type" content="article">
-<meta property="og:title" content="浏览器的一个请求从发送到返回">
-<meta property="og:url" content="http://www.usherblog.site/2018/04/20/浏览器的一个请求从发送到返回/index.html">
+<meta property="og:title" content="ForkJoinPool">
+<meta property="og:url" content="http://www.usherblog.site/2018/04/28/ForkJoinPool/index.html">
 <meta property="og:site_name" content="Usher_Ou&#39;s Blog">
-<meta property="og:description" content="浏览器的一个请求从发送到返回浏览器的一个请求从发送到返回1、先从网络模型层面：client （浏览器）与server 通过 http 协议通讯，http 协议属于应用层协议，http 基于 tcp 协议，所以 client 与 server 主要通过socket 进行通讯； 而 tcp属于传输层协议、如果走 https 还需要会话层 TLS、SSL 等协议； 传输层之下网络层，这里主要是路由协议">
+<meta property="og:description" content="ForkJoinPoolFork/Join框架  Fork/Join框架是Java7提供了的一个用于并行执行任务的框架， 是一个把大任务分割成若干个小任务，最终汇总每个小任务结果后得到大任务结果的框架。我们再通过Fork和Join这两个单词来理解下Fork/Join框架，Fork就是把一个大任务切分为若干子任务并行的执行，Join就是合并这些子任务的执行结果，最后得到这个大任务的结果。比如计算1+">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="http://ov1nop9io.bkt.clouddn.com/5312575_1522063648561_E15F646CF451374E25E564B27E2F76C7.jpg">
-<meta property="og:image" content="http://ov1nop9io.bkt.clouddn.com/165553_emXw_737747.png">
-<meta property="og:image" content="http://ov1nop9io.bkt.clouddn.com/165608_mu6k_737747.png">
-<meta property="og:updated_time" content="2018-04-20T01:52:59.416Z">
+<meta property="og:image" content="https://images2017.cnblogs.com/blog/755171/201712/755171-20171204223930503-776652335.png">
+<meta property="og:updated_time" content="2018-04-28T09:30:45.738Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="浏览器的一个请求从发送到返回">
-<meta name="twitter:description" content="浏览器的一个请求从发送到返回浏览器的一个请求从发送到返回1、先从网络模型层面：client （浏览器）与server 通过 http 协议通讯，http 协议属于应用层协议，http 基于 tcp 协议，所以 client 与 server 主要通过socket 进行通讯； 而 tcp属于传输层协议、如果走 https 还需要会话层 TLS、SSL 等协议； 传输层之下网络层，这里主要是路由协议">
-<meta name="twitter:image" content="http://ov1nop9io.bkt.clouddn.com/5312575_1522063648561_E15F646CF451374E25E564B27E2F76C7.jpg">
+<meta name="twitter:title" content="ForkJoinPool">
+<meta name="twitter:description" content="ForkJoinPoolFork/Join框架  Fork/Join框架是Java7提供了的一个用于并行执行任务的框架， 是一个把大任务分割成若干个小任务，最终汇总每个小任务结果后得到大任务结果的框架。我们再通过Fork和Join这两个单词来理解下Fork/Join框架，Fork就是把一个大任务切分为若干子任务并行的执行，Join就是合并这些子任务的执行结果，最后得到这个大任务的结果。比如计算1+">
+<meta name="twitter:image" content="https://images2017.cnblogs.com/blog/755171/201712/755171-20171204223930503-776652335.png">
 
 
 
@@ -139,13 +137,13 @@
 
 
 
-  <link rel="canonical" href="http://www.usherblog.site/2018/04/20/浏览器的一个请求从发送到返回/"/>
+  <link rel="canonical" href="http://www.usherblog.site/2018/04/28/ForkJoinPool/"/>
 
 
 
 
 
-  <title>浏览器的一个请求从发送到返回 | Usher_Ou's Blog</title>
+  <title>ForkJoinPool | Usher_Ou's Blog</title>
   
 
 
@@ -326,7 +324,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://www.usherblog.site/2018/04/20/浏览器的一个请求从发送到返回/">
+    <link itemprop="mainEntityOfPage" href="http://www.usherblog.site/2018/04/28/ForkJoinPool/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Usher">
@@ -343,7 +341,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">浏览器的一个请求从发送到返回</h1>
+          <h1 class="post-title" itemprop="name headline">ForkJoinPool</h1>
         
 
         <div class="post-meta">
@@ -355,8 +353,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-20T19:27:56+08:00">
-                2018-04-20
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-28T19:27:56+08:00">
+                2018-04-28
               </time>
             
 
@@ -378,8 +376,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/面试/" itemprop="url" rel="index">
-                    <span itemprop="name">面试</span>
+                  <a href="/categories/多线程/" itemprop="url" rel="index">
+                    <span itemprop="name">多线程</span>
                   </a>
                 </span>
 
@@ -395,7 +393,7 @@
 
           
           
-             <span id="/2018/04/20/浏览器的一个请求从发送到返回/" class="leancloud_visitors" data-flag-title="浏览器的一个请求从发送到返回">
+             <span id="/2018/04/28/ForkJoinPool/" class="leancloud_visitors" data-flag-title="ForkJoinPool">
                <span class="post-meta-divider">|</span>
                <span class="post-meta-item-icon">
                  <i class="fa fa-eye"></i>
@@ -421,7 +419,7 @@
                   <span class="post-meta-item-text">字数统计&#58;</span>
                 
                 <span title="字数统计">
-                  1,494
+                  610
                 </span>
               
 
@@ -437,7 +435,7 @@
                   <span class="post-meta-item-text">阅读时长 &asymp;</span>
                 
                 <span title="阅读时长">
-                  5
+                  3
                 </span>
               
             </div>
@@ -458,39 +456,15 @@
       
 
       
-        <h1 id="浏览器的一个请求从发送到返回"><a href="#浏览器的一个请求从发送到返回" class="headerlink" title="浏览器的一个请求从发送到返回"></a>浏览器的一个请求从发送到返回</h1><h2 id="浏览器的一个请求从发送到返回-1"><a href="#浏览器的一个请求从发送到返回-1" class="headerlink" title="浏览器的一个请求从发送到返回"></a>浏览器的一个请求从发送到返回</h2><h3 id="1、先从网络模型层面："><a href="#1、先从网络模型层面：" class="headerlink" title="1、先从网络模型层面："></a>1、先从网络模型层面：</h3><p>client （浏览器）与server 通过 http 协议通讯，http 协议属于应用层协议，http 基于 tcp 协议，所以 client 与 server 主要通过socket 进行通讯；</p>
-<p>而 tcp属于传输层协议、如果走 https 还需要会话层 TLS、SSL 等协议； 传输层之下网络层，这里主要是路由协议 OSPF等进行路由转发之类的。再向下数据链路层主要是 ARP、RARP 协议完成 IP 和 Mac 地址互解析，再向下到最底层物理层基本就是 IEEE 802.X等协议进行数据比特流转成高低电平的的一些定义等等；</p>
-<p>当浏览器发出请求，首先进行数据封包，然后数据链路层解析IP 与 mac 地址的映射，然后上层网路层进行路由查表路由，通过应用层 DNS 协议得到目标地址对应的 IP ，在这里进行 n 跳的路由寻路；而传输层tcp 协议可以说下比较经典的三次握手、四次分手的过程和状态机，这里放个图可以作为参考：</p>
-<h3 id="2、应用层方面："><a href="#2、应用层方面：" class="headerlink" title="2、应用层方面："></a>2、应用层方面：</h3><p>数据交换主要通过 http协议， http 协议是无状态协议，这里可以谈一谈 post、get 的区别以及 RESTFul 接口设计，然后可以讲服务器 server 模型epoll、select 等，接着可以根据实际经验讲下 server 处理流程，比如我： server 这边 Nginx拿到请求，进行一些验证，比如黑名单拦截之类的，然后 Nginx 直接处理静态资源请求，其他请求 Nginx 转发给后端服务器</p>
-<h2 id="tcp三次握手四次分手"><a href="#tcp三次握手四次分手" class="headerlink" title="tcp三次握手四次分手"></a>tcp三次握手四次分手</h2><p><img src="http://ov1nop9io.bkt.clouddn.com/5312575_1522063648561_E15F646CF451374E25E564B27E2F76C7.jpg" alt="http://ov1nop9io.bkt.clouddn.com/5312575_1522063648561_E15F646CF451374E25E564B27E2F76C7.jpg"></p>
-<h3 id="TCP报文："><a href="#TCP报文：" class="headerlink" title="TCP报文："></a>TCP报文：</h3><p> （1）序号：Seq序号，占32位，用来标识从TCP源端向目的端发送的字节流，发起方发送数据时对此进行标记。</p>
-<p>（2）确认序号：Ack序号，占32位，只有ACK标志位为1时，确认序号字段才有效，Ack=Seq+1。</p>
-<p>（3）标志位：共6个，即URG、ACK、PSH、RST、SYN、FIN等，具体含义如下：</p>
-<p>​      （A）URG：紧急指针（urgent pointer）有效。</p>
-<p>​      （B）ACK：确认序号有效。</p>
-<p>​      （C）PSH：接收方应该尽快将这个报文交给应用层。</p>
-<p>​      （D）RST：重置连接。</p>
-<p>​      （E）SYN：发起一个新连接。</p>
-<p>​      （F）FIN：释放一个连接。</p>
-<p>需要注意的是：</p>
-<p>（A）不要将确认序号Ack与标志位中的ACK搞混了。</p>
-<p>（B）确认方Ack=发起方Req+1，两端配对。 </p>
-<h3 id="三次握手"><a href="#三次握手" class="headerlink" title="三次握手"></a>三次握手</h3><p>第一次握手：客户端发送 syn 包 (syn=x) 到服务器，并进入 SYN_SEND 状态，等待服务器确认；</p>
-<p>第二次握手：服务器收到 syn 包，必须确认客户的 SYN（ack=x+1），同时自己也发送一个 SYN 包（syn=y），即 SYN+ACK 包，此时服务器进入 SYN_RECV 状态；</p>
-<p>第三次握手：客户端收到服务器的 SYN＋ACK 包，向服务器发送确认包 ACK(ack=y+1)，此包发送完毕，客户端和服务器进入 ESTABLISHED 状态，完成三次握手。</p>
-<p>握手过程中传送的包里不包含数据，三次握手完毕后，客户端与服务器才正式开始传送数据。理想状态下，TCP 连接一旦建立，在通信双方中的任何一方主动关闭连接之前，TCP 连接都将被一直保持下去。</p>
-<h3 id="SYN攻击："><a href="#SYN攻击：" class="headerlink" title="SYN攻击："></a>SYN攻击：</h3><p>在三次握手过程中，Server发送SYN-ACK之后，收到Client的ACK之前的TCP连接称为半连接（half-openconnect），此时Server处于SYN_RCVD状态，当收到ACK后，Server转入ESTABLISHED状态。SYN攻击就是Client在短时间内伪造大量不存在的IP地址，并向Server不断地发送SYN包，Server回复确认包，并等待Client的确认，由于源地址是不存在的，因此，Server需要不断重发直至超时，这些伪造的SYN包将产时间占用未连接队列，导致正常的SYN请求因为队列满而被丢弃，从而引起网络堵塞甚至系统瘫痪。SYN攻击时一种典型的DDOS攻击，检测SYN攻击的方式非常简单，即当Server上有大量半连接状态且源IP地址是随机的，则可以断定遭到SYN攻击了。</p>
-<h3 id="四次挥手"><a href="#四次挥手" class="headerlink" title="四次挥手"></a>四次挥手</h3><p>即终止TCP连接，就是指断开一个TCP连接时，需要客户端和服务端总共发送4个包以确认连接的断开。在socket编程中，这一过程由客户端或服务端任一方执行close来触发。</p>
-<p><img src="http://ov1nop9io.bkt.clouddn.com/165553_emXw_737747.png" alt="http://ov1nop9io.bkt.clouddn.com/165553_emXw_737747.png"></p>
-<p>由于TCP连接时全双工的，因此，每个方向都必须要单独进行关闭，这一原则是当一方完成数据发送任务后，发送一个FIN来终止这一方向的连接，收到一个FIN只是意味着这一方向上没有数据流动了，即不会再收到数据了，但是在这个TCP连接上仍然能够发送数据，直到这一方向也发送了FIN。首先进行关闭的一方将执行主动关闭，而另一方则执行被动关闭，上图描述的即是如此。</p>
-<ul>
-<li>第一次挥手：<br>​          Client发送一个FIN，用来关闭Client到Server的数据传送，Client进入FIN_WAIT_1状态。</li>
-<li>第二次挥手：<br>​     Server收到FIN后，发送一个ACK给Client，确认序号为收到序号+1（与SYN相同，一个FIN占用一个序号），Server进入CLOSE_WAIT状态。</li>
-<li>第三次挥手：<br>​          Server发送一个FIN，用来关闭Server到Client的数据传送，Server进入LAST_ACK状态。</li>
-<li>第四次挥手：<br>​     Client收到FIN后，Client进入TIME_WAIT状态，接着发送一个ACK给Server，确认序号为收到序号+1，Server进入CLOSED状态，完成四次挥手。</li>
-</ul>
-<p>上面是一方主动关闭，另一方被动关闭的情况，实际中还会出现同时发起主动关闭的情况，具体流程如下图：</p>
-<p><img src="http://ov1nop9io.bkt.clouddn.com/165608_mu6k_737747.png" alt="http://ov1nop9io.bkt.clouddn.com/165608_mu6k_737747.png"></p>
+        <h1 id="ForkJoinPool"><a href="#ForkJoinPool" class="headerlink" title="ForkJoinPool"></a>ForkJoinPool</h1><h2 id="Fork-Join框架"><a href="#Fork-Join框架" class="headerlink" title="Fork/Join框架"></a>Fork/Join框架</h2><blockquote>
+<p> Fork/Join框架是Java7提供了的一个用于并行执行任务的框架， 是一个把大任务分割成若干个小任务，最终汇总每个小任务结果后得到大任务结果的框架。我们再通过Fork和Join这两个单词来理解下Fork/Join框架，Fork就是把一个大任务切分为若干子任务并行的执行，Join就是合并这些子任务的执行结果，最后得到这个大任务的结果。比如计算1+2+。。＋10000，可以分割成10个子任务，每个子任务分别对1000个数进行求和，最终汇总这10个子任务的结果。</p>
+<p>使用方法：创建了ForkJoinPool实例之后，就可以调用ForkJoinPool的submit(ForkJoinTask<t> task) 或invoke(ForkJoinTask<t> task)方法来执行指定任务了。</t></t></p>
+<p>其中ForkJoinTask代表一个可以并行、合并的任务。ForkJoinTask是一个抽象类，它还有两个抽象子类：RecusiveAction和RecusiveTask。其中RecusiveTask代表有返回值的任务，而RecusiveAction代表没有返回值的任务。</p>
+<p>下面的UML类图显示了ForkJoinPool、ForkJoinTask之间的关系：</p>
+</blockquote>
+<p><img src="https://images2017.cnblogs.com/blog/755171/201712/755171-20171204223930503-776652335.png" alt="img"></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> org.junit.Test;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.time.Duration;</span><br><span class="line"><span class="keyword">import</span> java.time.Instant;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.ForkJoinPool;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.ForkJoinTask;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.RecursiveTask;</span><br><span class="line"><span class="keyword">import</span> java.util.stream.LongStream;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Author</span>: Usher</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span>:</span></span><br><span class="line"><span class="comment"> * ForkJoinPool</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TestForkJoinPool</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        ForkJoinPool pool = <span class="keyword">new</span> ForkJoinPool();</span><br><span class="line">        Instant instant = Instant.now();</span><br><span class="line">        ForkJoinTask&lt;Long&gt; task = <span class="keyword">new</span> ForkAndJoin(<span class="number">0L</span>,<span class="number">10000000L</span>);</span><br><span class="line">        Long sum = pool.invoke(task);</span><br><span class="line">        Instant end = Instant.now();</span><br><span class="line">        System.out.println(sum + <span class="string">" 时间："</span> + Duration.between(instant,end).toMillis());</span><br><span class="line">    &#125;</span><br><span class="line">  	<span class="comment">//JDK1.8 Stream新特性</span></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">test</span><span class="params">()</span></span>&#123;</span><br><span class="line">        Instant instant = Instant.now();</span><br><span class="line">        Long sum = LongStream.rangeClosed(<span class="number">0L</span>,<span class="number">10000000L</span>)</span><br><span class="line">                .parallel()</span><br><span class="line">                .reduce(<span class="number">0L</span>,Long ::sum);</span><br><span class="line">        System.out.println(sum);</span><br><span class="line">        Instant end = Instant.now();</span><br><span class="line">        System.out.println(<span class="string">"耗费时间："</span> + Duration.between(instant,end).toMillis());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ForkAndJoin</span> <span class="keyword">extends</span> <span class="title">RecursiveTask</span>&lt;<span class="title">Long</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">long</span> start;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">long</span> end;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> THURSHOLD = <span class="number">0L</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ForkAndJoin</span><span class="params">(<span class="keyword">long</span> start, <span class="keyword">long</span> end)</span></span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.start = start;</span><br><span class="line">        <span class="keyword">this</span>.end = end;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> Long <span class="title">compute</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">long</span> length = end - start;</span><br><span class="line">        <span class="keyword">if</span> (length &lt;= THURSHOLD)&#123;</span><br><span class="line">            <span class="keyword">long</span> sum = <span class="number">0L</span>;</span><br><span class="line">            <span class="keyword">for</span>(<span class="keyword">long</span> i = start;i &lt;= end;i++)&#123;</span><br><span class="line">                sum += i;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> sum;</span><br><span class="line">        &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">long</span> middle = (start + end) / <span class="number">2</span>;</span><br><span class="line">            ForkAndJoin left = <span class="keyword">new</span> ForkAndJoin(start, middle);</span><br><span class="line">            left.fork();<span class="comment">//拆分，压入线程队列</span></span><br><span class="line">            ForkAndJoin right = <span class="keyword">new</span> ForkAndJoin(middle + <span class="number">1</span>,end);</span><br><span class="line">            right.fork();</span><br><span class="line"></span><br><span class="line">            <span class="keyword">return</span> left.join() + right.join();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//输出Test</span></span><br><span class="line">---- IntelliJ IDEA coverage runner ---- </span><br><span class="line">sampling ...</span><br><span class="line">include patterns:</span><br><span class="line">main\.java\.com\.usher\.concurrency\.ForkAndJoin\..*</span><br><span class="line">exclude patterns:<span class="number">50000005000000</span></span><br><span class="line">耗费时间：<span class="number">101</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//输出ForkJoinPool</span></span><br><span class="line"><span class="number">50000005000000</span> 时间：<span class="number">1220</span></span><br></pre></td></tr></table></figure>
 
       
     </div>
@@ -508,9 +482,9 @@
       
         <div class="post-tags">
           
-            <a href="/tags/面试/" rel="tag"># 面试</a>
+            <a href="/tags/Java/" rel="tag"># Java</a>
           
-            <a href="/tags/网络/" rel="tag"># 网络</a>
+            <a href="/tags/多线程/" rel="tag"># 多线程</a>
           
         </div>
       
@@ -523,8 +497,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2018/04/18/LRU缓存实现-LinkedHashMap/" rel="next" title="LRU缓存实现-LinkedHashMap">
-                <i class="fa fa-chevron-left"></i> LRU缓存实现-LinkedHashMap
+              <a href="/2018/04/27/模拟CAS/" rel="next" title="模拟CAS">
+                <i class="fa fa-chevron-left"></i> 模拟CAS
               </a>
             
           </div>
@@ -532,10 +506,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2018/04/21/写一个死锁程序/" rel="prev" title="写一个死锁程序">
-                写一个死锁程序 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -721,7 +691,7 @@ var jiathis_config={
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#浏览器的一个请求从发送到返回"><span class="nav-number">1.</span> <span class="nav-text">浏览器的一个请求从发送到返回</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#浏览器的一个请求从发送到返回-1"><span class="nav-number">1.1.</span> <span class="nav-text">浏览器的一个请求从发送到返回</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1、先从网络模型层面："><span class="nav-number">1.1.1.</span> <span class="nav-text">1、先从网络模型层面：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2、应用层方面："><span class="nav-number">1.1.2.</span> <span class="nav-text">2、应用层方面：</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#tcp三次握手四次分手"><span class="nav-number">1.2.</span> <span class="nav-text">tcp三次握手四次分手</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP报文："><span class="nav-number">1.2.1.</span> <span class="nav-text">TCP报文：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#三次握手"><span class="nav-number">1.2.2.</span> <span class="nav-text">三次握手</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SYN攻击："><span class="nav-number">1.2.3.</span> <span class="nav-text">SYN攻击：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#四次挥手"><span class="nav-number">1.2.4.</span> <span class="nav-text">四次挥手</span></a></li></ol></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#ForkJoinPool"><span class="nav-number">1.</span> <span class="nav-text">ForkJoinPool</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Fork-Join框架"><span class="nav-number">1.1.</span> <span class="nav-text">Fork/Join框架</span></a></li></ol></li></ol></div>
             
 
           </div>
