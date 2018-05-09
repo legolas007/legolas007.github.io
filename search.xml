@@ -3,6 +3,91 @@
   
     
     <entry>
+      <title><![CDATA[Docker部署Spring Boot应用]]></title>
+      <url>/2018/04/28/Docker%E9%83%A8%E7%BD%B2Spring-Boot%E5%BA%94%E7%94%A8/</url>
+      <content type="html"><![CDATA[<h1 id="Docker部署Spring-Boot应用"><a href="#Docker部署Spring-Boot应用" class="headerlink" title="Docker部署Spring Boot应用"></a>Docker部署Spring Boot应用</h1><blockquote>
+<p> Docker是一个开源的引擎，可以轻松的为任何应用创建一个轻量级的、可移植的、自给自足的容器。开发者在笔记本上编译测试通过的容器可以批量地在生产环境中部署，包括VMs（虚拟机）、<a href="http://www.whatis.com.cn/word_5275.htm" target="_blank" rel="noopener">bare metal</a>、OpenStack 集群和其他的基础应用平台。 使用Docker我们可以很方便的部署Spring Boot应用。</p>
+</blockquote>
+<p>首先构建一个简单的 Spring Boot 项目，然后给项目添加 Docker 支持，最后对项目进行部署</p>
+<h2 id="Spring-Boot-项目"><a href="#Spring-Boot-项目" class="headerlink" title="Spring Boot 项目"></a>Spring Boot 项目</h2><blockquote>
+<p>在pom.xml文件中添加web和测试依赖</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">&lt;dependencies&gt;</span><br><span class="line">     &lt;dependency&gt;</span><br><span class="line">	&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;</span><br><span class="line">	&lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line">	&lt;dependency&gt;</span><br><span class="line">		&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;</span><br><span class="line">		&lt;artifactId&gt;spring-boot-starter-test&lt;/artifactId&gt;</span><br><span class="line">		&lt;scope&gt;test&lt;/scope&gt;</span><br><span class="line">	&lt;/dependency&gt;</span><br><span class="line">&lt;/dependencies&gt;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>创建一个Controller来验证是否部署成功</p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RestController</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DockerController</span> </span>&#123;</span><br><span class="line">	</span><br><span class="line">    <span class="meta">@RequestMapping</span>(<span class="string">"/"</span>)</span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">index</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">"Docker &amp;&amp; Spring Boot"</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="Spring-Boot-项目添加-Docker-支持"><a href="#Spring-Boot-项目添加-Docker-支持" class="headerlink" title="Spring Boot 项目添加 Docker 支持"></a>Spring Boot 项目添加 Docker 支持</h2><blockquote>
+<p>在pom.xml中添加Docker镜像名称及插件</p>
+</blockquote>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">properties</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">docker.image.prefix</span>&gt;</span>springboot<span class="tag">&lt;/<span class="name">docker.image.prefix</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">properties</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">build</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">plugins</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">plugin</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-boot-maven-plugin<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;/<span class="name">plugin</span>&gt;</span></span><br><span class="line">		<span class="comment">&lt;!-- Docker maven plugin --&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">plugin</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.spotify<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>docker-maven-plugin<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">version</span>&gt;</span>1.0.0<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;<span class="name">imageName</span>&gt;</span>$&#123;docker.image.prefix&#125;/$&#123;project.artifactId&#125;<span class="tag">&lt;/<span class="name">imageName</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;<span class="name">dockerDirectory</span>&gt;</span>src/main/docker<span class="tag">&lt;/<span class="name">dockerDirectory</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;<span class="name">resources</span>&gt;</span></span><br><span class="line">					<span class="tag">&lt;<span class="name">resource</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;<span class="name">targetPath</span>&gt;</span>/<span class="tag">&lt;/<span class="name">targetPath</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;<span class="name">directory</span>&gt;</span>$&#123;project.build.directory&#125;<span class="tag">&lt;/<span class="name">directory</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;<span class="name">include</span>&gt;</span>$&#123;project.build.finalName&#125;.jar<span class="tag">&lt;/<span class="name">include</span>&gt;</span></span><br><span class="line">					<span class="tag">&lt;/<span class="name">resource</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;/<span class="name">resources</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;/<span class="name">plugin</span>&gt;</span></span><br><span class="line">		<span class="comment">&lt;!-- Docker maven plugin --&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">plugins</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">build</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>在src/main/docker 下创建DockerFile文件</p>
+</blockquote>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">#第一行必须指令基于的基础镜像</span><br><span class="line">FROM openjdk:8-jdk-alpine</span><br><span class="line">#创建一个可以从本地主机或其他容器挂载的挂载点，一般用来存放数据库和需要保持的数据等。</span><br><span class="line">VOLUME /tmp</span><br><span class="line">#该命令将复制指定的 到容器中的,并且重命名</span><br><span class="line">ADD spring-boot-docker-1.0.jar app.jar</span><br><span class="line">#配置容器启动后执行的命令，并且不可被 docker run 提供的参数覆盖</span><br><span class="line">ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]</span><br></pre></td></tr></table></figure>
+<h2 id="构建打包环境"><a href="#构建打包环境" class="headerlink" title="构建打包环境"></a>构建打包环境</h2><blockquote>
+<p>以 Centos 7 为例</p>
+</blockquote>
+<h3 id="安装-Docker-环境"><a href="#安装-Docker-环境" class="headerlink" title="安装 Docker 环境"></a>安装 Docker 环境</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">安装</span><br><span class="line">yum install docker</span><br><span class="line"></span><br><span class="line">启动</span><br><span class="line">service docker start</span><br><span class="line"></span><br><span class="line">镜像加速</span><br><span class="line">vi  /etc/docker/daemon.json</span><br><span class="line">&#123;</span><br><span class="line">  "registry-mirrors": ["http://hub-mirror.c.163.com"]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>输入<code>docker version</code> 返回版本信息则安装正常</p>
+</blockquote>
+<h3 id="安装MAVEN"><a href="#安装MAVEN" class="headerlink" title="安装MAVEN"></a>安装MAVEN</h3><ol>
+<li><p>下载安装文件<br>wget <a href="http://mirrors.tuna.tsinghua.edu.cn/apache/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz" target="_blank" rel="noopener">http://mirrors.tuna.tsinghua.edu.cn/apache/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz</a></p>
+</li>
+<li><p>解压安装：<br>tar -zxvf apache-maven-3.3.9-bin.tar.gz </p>
+<p>mv apache-maven-3.3.9 /usr/local/maven3</p>
+</li>
+</ol>
+<blockquote>
+<p> 修改环境变量， 在<code>/etc/profile</code>最后添加以下几行</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">MAVEN_HOME=/usr/local/maven3</span><br><span class="line">export MAVEN_HOME</span><br><span class="line">export PATH=$&#123;PATH&#125;:$&#123;MAVEN_HOME&#125;/bin</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p> 执行<code>source /etc/profile</code>使环境变量生效。</p>
+<p>输入<code>mvn -version</code> 返回版本信息则安装正常。</p>
+</blockquote>
+<h2 id="使用-Docker-部署-Spring-Boot-项目"><a href="#使用-Docker-部署-Spring-Boot-项目" class="headerlink" title="使用 Docker 部署 Spring Boot 项目"></a>使用 Docker 部署 Spring Boot 项目</h2><blockquote>
+<p> 将项目 拷贝服务器中，进入项目路径下进行打包测试</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">#打包</span><br><span class="line">mvn package</span><br><span class="line">#启动</span><br><span class="line">java -jar target/spring-boot-docker-1.0.jar</span><br></pre></td></tr></table></figure>
+<p>&gt;</p>
+<blockquote>
+<p>如果打包失败，跳过test打包</p>
+<p>mvn package -Dmaven.test.skip=true    </p>
+<p>看到 Spring Boot 的启动日志后表明环境配置没有问题，接下来我们使用 DockerFile 构建镜像</p>
+<p>mvn package docker:build</p>
+<p> 使用<code>docker images</code>命令查看构建好的镜像：</p>
+</blockquote>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">docker images</span><br><span class="line">REPOSITORY                      TAG                 IMAGE ID            CREATED             SIZE</span><br><span class="line">springboot/spring-boot-docker   latest              99ce9468da74        6 seconds ago       117.5 MB</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>运行该镜像</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -p 8080:8080 -t springboot/spring-boot-docker</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p> 使用<code>docker ps</code>查看正在运行的镜像：</p>
+<p> 然后访问浏览器。<a href="http://192.168.x.x:8080/" target="_blank" rel="noopener">http://192.168.x.x:8080/</a></p>
+</blockquote>
+<h3 id="部署完成"><a href="#部署完成" class="headerlink" title="部署完成"></a>部署完成</h3>]]></content>
+      
+        <categories>
+            
+            <category> Docker </category>
+            
+        </categories>
+        
+        
+        <tags>
+            
+            <tag> Spring Boot </tag>
+            
+            <tag> Docker </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
       <title><![CDATA[ForkJoinPool]]></title>
       <url>/2018/04/28/ForkJoinPool/</url>
       <content type="html"><![CDATA[<h1 id="ForkJoinPool"><a href="#ForkJoinPool" class="headerlink" title="ForkJoinPool"></a>ForkJoinPool</h1><h2 id="Fork-Join框架"><a href="#Fork-Join框架" class="headerlink" title="Fork/Join框架"></a>Fork/Join框架</h2><blockquote>
