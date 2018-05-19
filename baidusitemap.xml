@@ -4,6 +4,28 @@
 
     
   <url>
+    <loc>http://usherblog.site/2018/05/19/%E5%9F%BA%E4%BA%8ENetty%E5%AE%9E%E7%8E%B0%E8%81%8A%E5%A4%A9%E5%AE%A4/</loc>
+    <lastmod>2018-05-19T12:29:24.920Z</lastmod>
+    <data>
+        <display>
+        <title>基于Netty实现聊天室</title>
+        <pubTime>2018-05-19T11:27:56.000Z</pubTime>
+        
+        <tag>Java</tag>
+         
+        <tag>Netty</tag>
+         
+         
+           
+             
+              <breadCrumb title="Netty" url="http://www.usherblog.site/categories/Netty/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://usherblog.site/2018/05/19/NIO%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%E5%8F%8A%E5%AE%9E%E7%8E%B0%E7%AE%80%E5%8D%95%E8%81%8A%E5%A4%A9%E5%AE%A4/</loc>
     <lastmod>2018-05-19T10:33:01.114Z</lastmod>
     <data>
