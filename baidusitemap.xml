@@ -4,6 +4,28 @@
 
     
   <url>
+    <loc>http://usherblog.site/2018/04/06/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F-%E5%8D%95%E4%BE%8B%E6%A8%A1%E5%BC%8F/</loc>
+    <lastmod>2018-05-20T09:48:19.526Z</lastmod>
+    <data>
+        <display>
+        <title>设计模式-单例模式</title>
+        <pubTime>2018-04-06T11:23:56.000Z</pubTime>
+        
+        <tag>Java</tag>
+         
+        <tag>设计模式</tag>
+         
+         
+           
+             
+              <breadCrumb title="设计模式" url="http://www.usherblog.site/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://usherblog.site/2018/05/20/%E5%9F%BA%E4%BA%8ENetty%E5%AE%9E%E7%8E%B0%E8%81%8A%E5%A4%A9%E5%AE%A4/</loc>
     <lastmod>2018-05-19T12:34:07.850Z</lastmod>
     <data>
@@ -109,28 +131,6 @@
            
              
               <breadCrumb title="多线程" url="http://www.usherblog.site/categories/%E5%A4%9A%E7%BA%BF%E7%A8%8B/"/>
-          
-        </display>
-    </data>
-    </url>
-
-    
-  <url>
-    <loc>http://usherblog.site/2018/04/06/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F-%E5%8D%95%E4%BE%8B%E6%A8%A1%E5%BC%8F/</loc>
-    <lastmod>2018-04-25T13:59:03.404Z</lastmod>
-    <data>
-        <display>
-        <title>设计模式-单例模式</title>
-        <pubTime>2018-04-06T11:23:56.000Z</pubTime>
-        
-        <tag>Java</tag>
-         
-        <tag>设计模式</tag>
-         
-         
-           
-             
-              <breadCrumb title="设计模式" url="http://www.usherblog.site/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/"/>
           
         </display>
     </data>
