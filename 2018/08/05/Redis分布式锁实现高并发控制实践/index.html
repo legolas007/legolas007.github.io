@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Java,Redis,高并发," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="Redis分布式锁实现高并发控制实践分布式锁 分布式锁是控制分布式系统之间同步访问共享资源的一种方式。在分布式系统中，常常需要协调他们的动作。如果不同的系统或是同一个系统的不同主机之间共享了一个或一组资源，那么访问这些资源的时候，往往需要互斥来防止彼此干扰来保证一致性，在这种情况下，便需要使用到分布式锁。  分布式锁基本功能 1.同一时刻只能存在一个锁  2.需要解决意外死锁问题，也就是锁能超时自">
+<meta name="keywords" content="Java,Redis,高并发">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis分布式锁实现高并发控制实践">
+<meta property="og:url" content="http://www.usherblog.site/2018/08/05/Redis分布式锁实现高并发控制实践/index.html">
+<meta property="og:site_name" content="Usher_Ou&#39;s Blog">
+<meta property="og:description" content="Redis分布式锁实现高并发控制实践分布式锁 分布式锁是控制分布式系统之间同步访问共享资源的一种方式。在分布式系统中，常常需要协调他们的动作。如果不同的系统或是同一个系统的不同主机之间共享了一个或一组资源，那么访问这些资源的时候，往往需要互斥来防止彼此干扰来保证一致性，在这种情况下，便需要使用到分布式锁。  分布式锁基本功能 1.同一时刻只能存在一个锁  2.需要解决意外死锁问题，也就是锁能超时自">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://ww1.sinaimg.cn/large/005P73H4ly1ftyyuuzh5ej30l8024jra.jpg">
+<meta property="og:updated_time" content="2018-08-05T10:16:43.299Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Redis分布式锁实现高并发控制实践">
+<meta name="twitter:description" content="Redis分布式锁实现高并发控制实践分布式锁 分布式锁是控制分布式系统之间同步访问共享资源的一种方式。在分布式系统中，常常需要协调他们的动作。如果不同的系统或是同一个系统的不同主机之间共享了一个或一组资源，那么访问这些资源的时候，往往需要互斥来防止彼此干扰来保证一致性，在这种情况下，便需要使用到分布式锁。  分布式锁基本功能 1.同一时刻只能存在一个锁  2.需要解决意外死锁问题，也就是锁能超时自">
+<meta name="twitter:image" content="http://ww1.sinaimg.cn/large/005P73H4ly1ftyyuuzh5ej30l8024jra.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '5.1.2',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://www.usherblog.site/2018/08/05/Redis分布式锁实现高并发控制实践/"/>
+
+
+
+
+
+  <title>Redis分布式锁实现高并发控制实践 | Usher_Ou's Blog</title>
+  
+
+
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?9dac5a1d54c53caffecf4954d4041153";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+	<a href="https://github.com/legolas007"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/e7bbb0521b397edbd5fe43e7f760759336b5e05f/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677265656e5f3030373230302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_green_007200.png"></a>
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Usher_Ou's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Never Say Never</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="搜索..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://www.usherblog.site/2018/08/05/Redis分布式锁实现高并发控制实践/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Usher">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/uploads/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Usher_Ou's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Redis分布式锁实现高并发控制实践</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-08-05T19:27:56+08:00">
+                2018-08-05
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Redis/" itemprop="url" rel="index">
+                    <span itemprop="name">Redis</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+             <span id="/2018/08/05/Redis分布式锁实现高并发控制实践/" class="leancloud_visitors" data-flag-title="Redis分布式锁实现高并发控制实践">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">热度&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+				 <span>%</span>
+             </span>
+          
+
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">字数统计&#58;</span>
+                
+                <span title="字数统计">
+                  3,015
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">
+                  13
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Redis分布式锁实现高并发控制实践"><a href="#Redis分布式锁实现高并发控制实践" class="headerlink" title="Redis分布式锁实现高并发控制实践"></a>Redis分布式锁实现高并发控制实践</h1><h3 id="分布式锁"><a href="#分布式锁" class="headerlink" title="分布式锁"></a>分布式锁</h3><blockquote>
+<p>分布式锁是控制分布式系统之间同步访问共享资源的一种方式。在分布式系统中，常常需要协调他们的动作。如果不同的系统或是同一个系统的不同主机之间共享了一个或一组资源，那么访问这些资源的时候，往往需要互斥来防止彼此干扰来保证一致性，在这种情况下，便需要使用到分布式锁。</p>
+</blockquote>
+<h4 id="分布式锁基本功能"><a href="#分布式锁基本功能" class="headerlink" title="分布式锁基本功能"></a>分布式锁基本功能</h4><blockquote>
+<p>1.同一时刻只能存在一个锁 </p>
+<p>2.需要解决意外死锁问题，也就是锁能超时自动释放</p>
+<p> 3.支持主动释放锁 </p>
+</blockquote>
+<h4 id="分布式锁解决什么问题"><a href="#分布式锁解决什么问题" class="headerlink" title="分布式锁解决什么问题"></a><strong>分布式锁解决什么问题</strong></h4><blockquote>
+<p>多进程并发执行任务时，需要保证任务的有序性或者唯一性 </p>
+</blockquote>
+<h4 id="分布式锁适用场景"><a href="#分布式锁适用场景" class="headerlink" title="分布式锁适用场景"></a>分布式锁适用场景</h4><blockquote>
+<p><strong>场景一：</strong>从前端界面发起一笔支付请求，如果前端没有做防重处理，那么可能在某一个时刻会有二笔一样的单子同时到达系统后台。</p>
+<p><strong>场景二：</strong>在App中下订单的时候，点击确认之后，没反应，就又点击了几次。在这种情况下，如果无法保证该接口的幂等性，那么将会出现重复下单问题。<br>在接收消息的时候，消息推送重复。如果处理消息的接口无法保证幂等，那么重复消费消息产生的影响可能会非常大</p>
+<p><strong>场景三</strong>：秒杀场景，数据库里有一张表，column分别是商品ID，和商品ID对应的库存量，秒杀成功就将此商品库存量-1。现在假设有1000个线程来秒杀商品，我们来根据这个简单的业务场景来解释一下分布式锁。</p>
+</blockquote>
+<h3 id="代码解释："><a href="#代码解释：" class="headerlink" title="代码解释："></a>代码解释：</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//RedisLock.java</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Author</span>: Usher</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span>: redis分布式锁</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="meta">@Slf</span>4j</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RedisLock</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> StringRedisTemplate stringRedisTemplate;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 加锁</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> key   productId - 商品的唯一标志</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> value 当前时间+超时时间</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="comment">//setIfAbsent ,SETINX</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">lock</span><span class="params">(String key, String value)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (stringRedisTemplate.opsForValue().setIfAbsent(key, value)) &#123;</span><br><span class="line">            <span class="comment">//返回true，也就是key不存在，获得锁</span></span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//判断锁超时 - 防止原来的操作异常，没有运行解锁操作  防止死锁</span></span><br><span class="line">        String curValue = stringRedisTemplate.opsForValue().get(key);</span><br><span class="line">        <span class="comment">//如果锁过期</span></span><br><span class="line">        <span class="comment">//curValue不为空且小于当前时间,说明锁过期，其他线程获得锁</span></span><br><span class="line">        <span class="keyword">if</span> (!StringUtils.isEmpty(curValue) &amp;&amp; Long.parseLong(curValue) &lt; System.currentTimeMillis()) &#123;</span><br><span class="line">            <span class="comment">//获取上一个锁的时间value</span></span><br><span class="line">            String oldValue = stringRedisTemplate.opsForValue().getAndSet(key, value);</span><br><span class="line">            <span class="comment">//假设两个线程同时进来，key被占用了。获取的值currentValue=A(get取的旧的值肯定是一样的),两个线程的value都是B,key都是K.锁时间已经过期了。</span></span><br><span class="line">            <span class="comment">//而这里面的getAndSet一次只会一个执行，也就是一个执行之后，上一个的value已经变成了B。只有一个线程获取的上一个值会是A，另一个线程拿到的值是B。</span></span><br><span class="line">            <span class="comment">//而oldValue等于A，不等于B，只能有一个线程拿到锁</span></span><br><span class="line">            <span class="keyword">if</span> (!StringUtils.isEmpty(oldValue) &amp;&amp; oldValue.equals(curValue)) &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 解锁</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> key</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> value</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">unlock</span><span class="params">(String key, String value)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            String curValue = stringRedisTemplate.opsForValue().get(key);</span><br><span class="line">            <span class="keyword">if</span> (!StringUtils.isEmpty(curValue) &amp;&amp; curValue.equals(value)) &#123;</span><br><span class="line">                stringRedisTemplate.opsForValue().getOperations().delete(key);<span class="comment">//删除key</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            log.error(<span class="string">"[Redis分布式锁] 解锁出现异常了，&#123;&#125;"</span>, e);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="Redis的SETNX命令："><a href="#Redis的SETNX命令：" class="headerlink" title="Redis的SETNX命令："></a>Redis的SETNX命令：</h4><p>将<code>key</code>设置值为<code>value</code>，如果<code>key</code>不存在，这种情况下等同<a href="http://redis.cn/commands/set.html" target="_blank" rel="noopener">SET</a>命令。 当<code>key</code>存在时，什么也不做。<code>SETNX</code>是”<strong>SET</strong> if <strong>N</strong>ot e<strong>X</strong>ists”的简写。</p>
+<h5 id="返回值"><a href="#返回值" class="headerlink" title="返回值"></a>返回值</h5><p><a href="http://redis.cn/topics/protocol.html#integer-reply" target="_blank" rel="noopener">Integer reply</a>, 特定值:</p>
+<ul>
+<li><code>1</code> 如果key被设置了</li>
+<li><code>0</code> 如果key没有被设置</li>
+</ul>
+<p>##例子</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">redis&gt; SETNX mykey &quot;Hello&quot;</span><br><span class="line">(integer) 1</span><br><span class="line">redis&gt; SETNX mykey &quot;World&quot;</span><br><span class="line">(integer) 0</span><br><span class="line">redis&gt; GET mykey</span><br><span class="line">&quot;Hello&quot;</span><br><span class="line">redis&gt;</span><br></pre></td></tr></table></figure>
+<h5 id="Design-pattern-Locking-with-SETNX"><a href="#Design-pattern-Locking-with-SETNX" class="headerlink" title="Design pattern: Locking with !SETNX"></a>Design pattern: Locking with <code>!SETNX</code></h5><h5 id="设计模式：使用-SETNX加锁"><a href="#设计模式：使用-SETNX加锁" class="headerlink" title="设计模式：使用!SETNX加锁"></a>设计模式：使用<code>!SETNX</code>加锁</h5><p><strong>Please note that:</strong></p>
+<p><strong>请注意：</strong></p>
+<ol>
+<li>不鼓励以下模式来实现<a href="http://redis.cn/topics/distlock.html" target="_blank" rel="noopener">the Redlock algorithm</a> ，该算法实现起来有一些复杂，但是提供了更好的保证并且具有容错性。</li>
+<li>无论如何，我们保留旧的模式，因为肯定存在一些已实现的方法链接到该页面作为引用。而且，这是一个有趣的例子说明Redis命令能够被用来作为编程原语的。</li>
+<li>无论如何，即使假设一个单例的加锁原语，但是从 2.6.12 开始，可以创建一个更加简单的加锁原语，相当于使用<code>SET</code>命令来获取锁，并且用一个简单的 Lua 脚本来释放锁。该模式被记录在<code>SET</code>命令的页面中。</li>
+</ol>
+<p>也就是说，<code>SETNX</code>能够被使用并且以前也在被使用去作为一个加锁原语。例如，获取键为<code>foo</code>的锁，客户端可以尝试一下操作：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SETNX lock.foo &lt;current Unix time + lock timeout + 1&gt;</span><br></pre></td></tr></table></figure>
+<p>如果客户端获得锁，<code>SETNX</code>返回<code>1</code>，那么将<code>lock.foo</code>键的Unix时间设置为不在被认为有效的时间。客户端随后会使用<code>DEL lock.foo</code>去释放该锁。</p>
+<p>如果<code>SETNX</code>返回<code>0</code>，那么该键已经被其他的客户端锁定。如果这是一个非阻塞的锁，才能立刻返回给调用者，或者尝试重新获取该锁，直到成功或者过期超时。</p>
+<h5 id="处理死锁"><a href="#处理死锁" class="headerlink" title="处理死锁"></a>处理死锁</h5><p>以上加锁算法存在一个问题：如果客户端出现故障，崩溃或者其他情况无法释放该锁会发生什么情况？这是能够检测到这种情况，因为该锁包含一个Unix时间戳，如果这样一个时间戳等于当前的Unix时间，该锁将不再有效。</p>
+<p>当以下这种情况发生时，我们不能调用<code>DEL</code>来删除该锁，并且尝试执行一个<code>SETNX</code>，因为这里存在一个竞态条件，当多个客户端察觉到一个过期的锁并且都尝试去释放它。</p>
+<ul>
+<li>C1 和 C2 读<code>lock.foo</code>检查时间戳，因为他们执行完<code>SETNX</code>后都被返回了<code>0</code>，因为锁仍然被 C3 所持有，并且 C3 已经崩溃。</li>
+<li>C1 发送<code>DEL lock.foo</code></li>
+<li>C1 发送<code>SETNX lock.foo</code>命令并且成功返回</li>
+<li>C2 发送<code>DEL lock.foo</code></li>
+<li>C2 发送<code>SETNX lock.foo</code>命令并且成功返回</li>
+<li><strong>错误</strong>：由于竞态条件导致 C1 和 C2 都获取到了锁</li>
+</ul>
+<p>幸运的是，可以使用以下的算法来避免这种情况，请看 C4 客户端所使用的好的算法：</p>
+<ul>
+<li><p>C4 发送<code>SETNX lock.foo</code>为了获得该锁</p>
+</li>
+<li><p>已经崩溃的客户端 C3 仍然持有该锁，所以Redis将会返回<code>0</code>给 C4</p>
+</li>
+<li><p>C4 发送<code>GET lock.foo</code>检查该锁是否已经过期。如果没有过期，C4 客户端将会睡眠一会，并且从一开始进行重试操作</p>
+</li>
+<li><p>另一种情况，如果因为 <code>lock.foo</code>键的Unix时间小于当前的Unix时间而导致该锁已经过期，C4 会尝试执行以下的操作：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">GETSET lock.foo &lt;current Unix timestamp + lock timeout + 1&gt;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>由于<code>GETSET</code> 的语意，C4会检查已经过期的旧值是否仍然存储在<code>lock.foo</code>中。如果是的话，C4 会获得锁</p>
+</li>
+<li><p>如果另一个客户端，假如为 C5 ，比 C4 更快的通过<code>GETSET</code>操作获取到锁，那么 C4 执行<code>GETSET</code>操作会被返回一个不过期的时间戳。C4 将会从第一个步骤重新开始。请注意：即使 C4 在将来几秒设置该键，这也不是问题。</p>
+</li>
+</ul>
+<p>为了使这种加锁算法更加的健壮，持有锁的客户端应该总是要检查是否超时，保证使用<code>DEL</code>释放锁之前不会过期，因为客户端故障的情况可能是复杂的，不止是崩溃，还会阻塞一段时间，阻止一些操作的执行，并且在阻塞恢复后尝试执行<code>DEL</code>（此时，该LOCK已经被其他客户端所持有）</p>
+<h4 id="Redis的GETSET命令"><a href="#Redis的GETSET命令" class="headerlink" title="Redis的GETSET命令"></a>Redis的GETSET命令</h4><p>自动将key对应到value并且返回原来key对应的value。如果key存在但是对应的value不是字符串，就返回错误。</p>
+<p>设计模式</p>
+<p><a href="http://redis.cn/commands/getset.html" target="_blank" rel="noopener">GETSET</a>可以和<a href="http://redis.cn/commands/incr.html" target="_blank" rel="noopener">INCR</a>一起使用实现支持重置的计数功能。举个例子：每当有事件发生的时候，一段程序都会调用<a href="http://redis.cn/commands/incr.html" target="_blank" rel="noopener">INCR</a>给key mycounter加1，但是有时我们需要获取计数器的值，并且自动将其重置为0。这可以通过GETSET mycounter “0”来实现：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">INCR mycounter</span><br><span class="line">GETSET mycounter &quot;0&quot;</span><br><span class="line">GET mycounter</span><br></pre></td></tr></table></figure>
+<h5 id="返回值-1"><a href="#返回值-1" class="headerlink" title="返回值"></a>返回值</h5><p><a href="http://redis.cn/topics/protocol.html#bulk-string-reply" target="_blank" rel="noopener">bulk-string-reply</a>: 返回之前的旧值，如果之前<code>Key</code>不存在将返回<code>nil</code>。</p>
+<h5 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">redis&gt; INCR mycounter</span><br><span class="line">(integer) 1</span><br><span class="line">redis&gt; GETSET mycounter &quot;0&quot;</span><br><span class="line">&quot;1&quot;</span><br><span class="line">redis&gt; GET mycounter</span><br><span class="line">&quot;0&quot;</span><br><span class="line">redis&gt;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Author</span>: Usher</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span>:</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SeckillServiceImpl</span> <span class="keyword">implements</span> <span class="title">SeckillService</span></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> RedisLock redisLock;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> TIMEOUT = <span class="number">10</span>*<span class="number">1000</span>;<span class="comment">//超时时间 10s</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 活动，特价，限量100000份</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">static</span> Map&lt;String,Integer&gt; products;<span class="comment">//模拟商品信息表</span></span><br><span class="line">    <span class="keyword">static</span> Map&lt;String,Integer&gt; stock;<span class="comment">//模拟库存表</span></span><br><span class="line">    <span class="keyword">static</span> Map&lt;String,String&gt; orders;<span class="comment">//模拟下单成功用户表</span></span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        <span class="comment">/**</span></span><br><span class="line"><span class="comment">         * 模拟多个表，商品信息表，库存表，秒杀成功订单表</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        products = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">        stock = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">        orders = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">        products.put(<span class="string">"123456"</span>,<span class="number">100000</span>);</span><br><span class="line">        stock.put(<span class="string">"123456"</span>,<span class="number">100000</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> String <span class="title">queryMap</span><span class="params">(String productId)</span></span>&#123;<span class="comment">//模拟查询数据库</span></span><br><span class="line">        <span class="keyword">return</span> <span class="string">"国庆活动，红烧肉特惠，限量"</span></span><br><span class="line">                +products.get(productId)</span><br><span class="line">                +<span class="string">"份,还剩:"</span>+stock.get(productId)</span><br><span class="line">                +<span class="string">"份,该商品成功下单用户数:"</span></span><br><span class="line">                +orders.size()+<span class="string">"人"</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">querySecKillProductInfo</span><span class="params">(String productId)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">this</span>.queryMap(productId);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//synchronized锁，没做到细粒度控制。比如有很多商品的秒杀，但是这个把所有商品的秒杀都锁住了。只适合单机的情况，不适合集群,</span></span><br><span class="line">    <span class="comment">//采用redis分布式锁</span></span><br><span class="line">    <span class="comment">//如果采用redis锁再加syn锁，可以保证都可以获得锁</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span>  <span class="keyword">void</span>  <span class="title">orderProductMockDiffUser</span><span class="params">(String productId)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//加锁</span></span><br><span class="line">        <span class="keyword">long</span> time = System.currentTimeMillis() + TIMEOUT;</span><br><span class="line">        <span class="keyword">if</span>(!redisLock.lock(productId,String.valueOf(time)))&#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> Exception(<span class="string">"很抱歉，人太多了！稍后再试！"</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//1.查询该商品库存，为0则活动结束</span></span><br><span class="line">        <span class="keyword">int</span> stockNum = stock.get(productId);</span><br><span class="line">        <span class="keyword">if</span>(stockNum==<span class="number">0</span>)&#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> Exception(<span class="string">"活动结束"</span>);</span><br><span class="line">        &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">//2.下单</span></span><br><span class="line">            orders.put(KeyUtil.genUniqueKey(),productId);</span><br><span class="line">            <span class="comment">//3.减库存</span></span><br><span class="line">            stockNum -=<span class="number">1</span>;<span class="comment">//不做处理的话，高并发下会出现超卖的情况，下单数，大于减库存的情况。虽然这里减了，但由于并发，减的库存还没存到map中去。新的并发拿到的是原来的库存</span></span><br><span class="line">            <span class="keyword">try</span>&#123;</span><br><span class="line">                Thread.sleep(<span class="number">100</span>);<span class="comment">//模拟减库存的处理时间</span></span><br><span class="line">            &#125;<span class="keyword">catch</span> (InterruptedException e)&#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">            stock.put(productId,stockNum);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//解锁</span></span><br><span class="line">        redisLock.unlock(productId,String.valueOf(time));</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>使用Apache ab压力测试工具，500个请求，100个并发</p>
+</blockquote>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">H:\软件\<span class="title">Apache24</span>\<span class="title">bin</span>&gt;<span class="title">ab</span> -<span class="title">n</span> 500 -<span class="title">c</span> 100 <span class="title">http</span>://<span class="title">localhost</span>:8080/<span class="title">sell</span>/<span class="title">skill</span>/<span class="title">order</span>/123456</span></span><br><span class="line"><span class="function"><span class="title">This</span> <span class="title">is</span> <span class="title">ApacheBench</span>, <span class="title">Version</span> 2.3 &lt;$<span class="title">Revision</span>: 1826891 $&gt;</span></span><br><span class="line"><span class="function"><span class="title">Copyright</span> 1996 <span class="title">Adam</span> <span class="title">Twiss</span>, <span class="title">Zeus</span> <span class="title">Technology</span> <span class="title">Ltd</span>, <span class="title">http</span>://<span class="title">www.zeustech.net</span>/</span></span><br><span class="line"><span class="function"><span class="title">Licensed</span> <span class="title">to</span> <span class="title">The</span> <span class="title">Apache</span> <span class="title">Software</span> <span class="title">Foundation</span>, <span class="title">http</span>://<span class="title">www.apache.org</span>/</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="title">Benchmarking</span> <span class="title">localhost</span> (<span class="title">be</span> <span class="title">patient</span>)</span></span><br><span class="line"><span class="function"><span class="title">Completed</span> 100 <span class="title">requests</span></span></span><br><span class="line"><span class="function"><span class="title">Completed</span> 200 <span class="title">requests</span></span></span><br><span class="line"><span class="function"><span class="title">Completed</span> 300 <span class="title">requests</span></span></span><br><span class="line"><span class="function"><span class="title">Completed</span> 400 <span class="title">requests</span></span></span><br><span class="line"><span class="function"><span class="title">Completed</span> 500 <span class="title">requests</span></span></span><br><span class="line"><span class="function"><span class="title">Finished</span> 500 <span class="title">requests</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="title">Server</span> <span class="title">Software</span>:</span></span><br><span class="line"><span class="function"><span class="title">Server</span> <span class="title">Hostname</span>:        <span class="title">localhost</span></span></span><br><span class="line"><span class="function"><span class="title">Server</span> <span class="title">Port</span>:            8080</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="title">Document</span> <span class="title">Path</span>:          /<span class="title">sell</span>/<span class="title">skill</span>/<span class="title">order</span>/123456</span></span><br><span class="line"><span class="function"><span class="title">Document</span> <span class="title">Length</span>:        101 <span class="title">bytes</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="title">Concurrency</span> <span class="title">Level</span>:      100</span></span><br><span class="line"><span class="function"><span class="title">Time</span> <span class="title">taken</span> <span class="title">for</span> <span class="title">tests</span>:   9.222 <span class="title">seconds</span></span></span><br><span class="line"><span class="function"><span class="title">Complete</span> <span class="title">requests</span>:      500</span></span><br><span class="line"><span class="function"><span class="title">Failed</span> <span class="title">requests</span>:        494</span></span><br><span class="line"><span class="function">   (<span class="title">Connect</span>: 0, <span class="title">Receive</span>: 0, <span class="title">Length</span>: 494, <span class="title">Exceptions</span>: 0)</span></span><br><span class="line"><span class="function"><span class="title">Total</span> <span class="title">transferred</span>:      95270 <span class="title">bytes</span></span></span><br><span class="line"><span class="function"><span class="title">HTML</span> <span class="title">transferred</span>:       35680 <span class="title">bytes</span></span></span><br><span class="line"><span class="function"><span class="title">Requests</span> <span class="title">per</span> <span class="title">second</span>:    54.22 [#/<span class="title">sec</span>] (<span class="title">mean</span>)</span></span><br><span class="line"><span class="function"><span class="title">Time</span> <span class="title">per</span> <span class="title">request</span>:       1844.420 [<span class="title">ms</span>] (<span class="title">mean</span>)</span></span><br><span class="line"><span class="function"><span class="title">Time</span> <span class="title">per</span> <span class="title">request</span>:       18.444 [<span class="title">ms</span>] (<span class="title">mean</span>, <span class="title">across</span> <span class="title">all</span> <span class="title">concurrent</span> <span class="title">requests</span>)</span></span><br><span class="line"><span class="function"><span class="title">Transfer</span> <span class="title">rate</span>:          10.09 [<span class="title">Kbytes</span>/<span class="title">sec</span>] <span class="title">received</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="title">Connection</span> <span class="title">Times</span> (<span class="title">ms</span>)</span></span><br><span class="line"><span class="function">              <span class="title">min</span>  <span class="title">mean</span>[+/-<span class="title">sd</span>] <span class="title">median</span>   <span class="title">max</span></span></span><br><span class="line"><span class="function"><span class="title">Connect</span>:        2    3   0.5      3       8</span></span><br><span class="line"><span class="function"><span class="title">Processing</span>:   130 1557 1007.6   1012    7236</span></span><br><span class="line"><span class="function"><span class="title">Waiting</span>:      129 1556 1008.5   1012    7236</span></span><br><span class="line"><span class="function"><span class="title">Total</span>:        132 1560 1007.6   1015    7238</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="title">Percentage</span> <span class="title">of</span> <span class="title">the</span> <span class="title">requests</span> <span class="title">served</span> <span class="title">within</span> <span class="title">a</span> <span class="title">certain</span> <span class="title">time</span> (<span class="title">ms</span>)</span></span><br><span class="line"><span class="function">  50%   1015</span></span><br><span class="line"><span class="function">  66%   1715</span></span><br><span class="line"><span class="function">  75%   1829</span></span><br><span class="line"><span class="function">  80%   2489</span></span><br><span class="line"><span class="function">  90%   2769</span></span><br><span class="line"><span class="function">  95%   3337</span></span><br><span class="line"><span class="function">  98%   4431</span></span><br><span class="line"><span class="function">  99%   5124</span></span><br><span class="line"><span class="function"> 100%   7238 (<span class="title">longest</span> <span class="title">request</span>)</span></span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>测试结果</p>
+</blockquote>
+<p><img src="http://ww1.sinaimg.cn/large/005P73H4ly1ftyyuuzh5ej30l8024jra.jpg" alt=""></p>
+<blockquote>
+<p>可以看到库存剩余数量和成功下单数一致，说明实现了分布式锁的并发控制</p>
+</blockquote>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Java/" rel="tag"># Java</a>
+          
+            <a href="/tags/Redis/" rel="tag"># Redis</a>
+          
+            <a href="/tags/高并发/" rel="tag"># 高并发</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/07/22/Tomcat调优和JVM优化/" rel="next" title="Tomcat调优和JVM优化">
+                <i class="fa fa-chevron-left"></i> Tomcat调优和JVM优化
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+        <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+<span class="jiathis_txt">分享到：</span>
+<a class="jiathis_button_fav">收藏夹</a>
+<a class="jiathis_button_copy">复制网址</a>
+<a class="jiathis_button_email">邮件</a>
+<a class="jiathis_button_weixin">微信</a>
+<a class="jiathis_button_qzone">QQ空间</a>
+<a class="jiathis_button_tqq">腾讯微薄</a>
+<a class="jiathis_button_douban">豆瓣</a>
+<a class="jiathis_button_share">一键分享</a>
+
+<a href="http://www.jiathis.com/share?uid=2140465" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank">更多</a>
+<a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript" >
+var jiathis_config={
+  data_track_clickback:true,
+  summary:"",
+  shortUrl:false,
+  hideMore:false
+}
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js?uid=" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="lv-container" data-id="city" data-uid="MTAyMC8zMDM0Ni82ODk5"></div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/uploads/avatar.png"
+               alt="Usher" />
+          <p class="site-author-name" itemprop="name">Usher</p>
+           
+              <p class="site-description motion-element" itemprop="description">Honor To The End</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">36</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">14</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">22</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/legolas007" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                    
+                      GitHub
+                    
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://blog.csdn.net/usher_ou" target="_blank" title="CSDN">
+                  
+                    <i class="fa fa-fw fa-crosshairs"></i>
+                  
+                    
+                      CSDN
+                    
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+		
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Redis分布式锁实现高并发控制实践"><span class="nav-number">1.</span> <span class="nav-text">Redis分布式锁实现高并发控制实践</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#分布式锁"><span class="nav-number">1.0.1.</span> <span class="nav-text">分布式锁</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#分布式锁基本功能"><span class="nav-number">1.0.1.1.</span> <span class="nav-text">分布式锁基本功能</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#分布式锁解决什么问题"><span class="nav-number">1.0.1.2.</span> <span class="nav-text">分布式锁解决什么问题</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#分布式锁适用场景"><span class="nav-number">1.0.1.3.</span> <span class="nav-text">分布式锁适用场景</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#代码解释："><span class="nav-number">1.0.2.</span> <span class="nav-text">代码解释：</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Redis的SETNX命令："><span class="nav-number">1.0.2.1.</span> <span class="nav-text">Redis的SETNX命令：</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#返回值"><span class="nav-number">1.0.2.1.1.</span> <span class="nav-text">返回值</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Design-pattern-Locking-with-SETNX"><span class="nav-number">1.0.2.1.2.</span> <span class="nav-text">Design pattern: Locking with !SETNX</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#设计模式：使用-SETNX加锁"><span class="nav-number">1.0.2.1.3.</span> <span class="nav-text">设计模式：使用!SETNX加锁</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#处理死锁"><span class="nav-number">1.0.2.1.4.</span> <span class="nav-text">处理死锁</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Redis的GETSET命令"><span class="nav-number">1.0.2.2.</span> <span class="nav-text">Redis的GETSET命令</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#返回值-1"><span class="nav-number">1.0.2.2.1.</span> <span class="nav-text">返回值</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#例子"><span class="nav-number">1.0.2.2.2.</span> <span class="nav-text">例子</span></a></li></ol></li></ol></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Usher</span>
+
+  
+</div>
+
+
+<div class="powered-by">
+<i class="fa fa-user-md"></i><span id="busuanzi_container_site_uv">
+ The total site visits: <span id="busuanzi_value_site_pv"></span> 
+</span>
+</div>
+
+  <div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+
+  <span class="post-meta-divider">|</span>
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">NexT.Gemini</a> v5.1.2</div>
+
+
+<div class="theme-info">
+  <div class="powered-by"></div>
+  <span class="post-count">Total 75.3k words</span>
+</div>
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+  
+  <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+    <script type="text/javascript">
+      (function(d, s) {
+        var j, e = d.getElementsByTagName(s)[0];
+        if (typeof LivereTower === 'function') { return; }
+        j = d.createElement(s);
+        j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+        j.async = true;
+        e.parentNode.insertBefore(j, e);
+      })(document, 'script');
+    </script>
+  
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.4.js"></script>
+  <script>AV.initialize("o1i76yejzCmo7XksHOkeR1We-gzGzoHsz", "Smwvl7kAPKRUcfwNq8Ck2eSx");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
+<!-- 页面点击小红心 -->
+<script type="text/javascript" src="/js/src/love.js"></script>
+

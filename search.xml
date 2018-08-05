@@ -3,6 +3,111 @@
   
     
     <entry>
+      <title><![CDATA[Redis分布式锁实现高并发控制实践]]></title>
+      <url>/2018/08/05/Redis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81%E5%AE%9E%E7%8E%B0%E9%AB%98%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6%E5%AE%9E%E8%B7%B5/</url>
+      <content type="html"><![CDATA[<h1 id="Redis分布式锁实现高并发控制实践"><a href="#Redis分布式锁实现高并发控制实践" class="headerlink" title="Redis分布式锁实现高并发控制实践"></a>Redis分布式锁实现高并发控制实践</h1><h3 id="分布式锁"><a href="#分布式锁" class="headerlink" title="分布式锁"></a>分布式锁</h3><blockquote>
+<p>分布式锁是控制分布式系统之间同步访问共享资源的一种方式。在分布式系统中，常常需要协调他们的动作。如果不同的系统或是同一个系统的不同主机之间共享了一个或一组资源，那么访问这些资源的时候，往往需要互斥来防止彼此干扰来保证一致性，在这种情况下，便需要使用到分布式锁。</p>
+</blockquote>
+<h4 id="分布式锁基本功能"><a href="#分布式锁基本功能" class="headerlink" title="分布式锁基本功能"></a>分布式锁基本功能</h4><blockquote>
+<p>1.同一时刻只能存在一个锁 </p>
+<p>2.需要解决意外死锁问题，也就是锁能超时自动释放</p>
+<p> 3.支持主动释放锁 </p>
+</blockquote>
+<h4 id="分布式锁解决什么问题"><a href="#分布式锁解决什么问题" class="headerlink" title="分布式锁解决什么问题"></a><strong>分布式锁解决什么问题</strong></h4><blockquote>
+<p>多进程并发执行任务时，需要保证任务的有序性或者唯一性 </p>
+</blockquote>
+<h4 id="分布式锁适用场景"><a href="#分布式锁适用场景" class="headerlink" title="分布式锁适用场景"></a>分布式锁适用场景</h4><blockquote>
+<p><strong>场景一：</strong>从前端界面发起一笔支付请求，如果前端没有做防重处理，那么可能在某一个时刻会有二笔一样的单子同时到达系统后台。</p>
+<p><strong>场景二：</strong>在App中下订单的时候，点击确认之后，没反应，就又点击了几次。在这种情况下，如果无法保证该接口的幂等性，那么将会出现重复下单问题。<br>在接收消息的时候，消息推送重复。如果处理消息的接口无法保证幂等，那么重复消费消息产生的影响可能会非常大</p>
+<p><strong>场景三</strong>：秒杀场景，数据库里有一张表，column分别是商品ID，和商品ID对应的库存量，秒杀成功就将此商品库存量-1。现在假设有1000个线程来秒杀商品，我们来根据这个简单的业务场景来解释一下分布式锁。</p>
+</blockquote>
+<h3 id="代码解释："><a href="#代码解释：" class="headerlink" title="代码解释："></a>代码解释：</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//RedisLock.java</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Author</span>: Usher</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span>: redis分布式锁</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="meta">@Slf</span>4j</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RedisLock</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> StringRedisTemplate stringRedisTemplate;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 加锁</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> key   productId - 商品的唯一标志</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> value 当前时间+超时时间</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="comment">//setIfAbsent ,SETINX</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">lock</span><span class="params">(String key, String value)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (stringRedisTemplate.opsForValue().setIfAbsent(key, value)) &#123;</span><br><span class="line">            <span class="comment">//返回true，也就是key不存在，获得锁</span></span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//判断锁超时 - 防止原来的操作异常，没有运行解锁操作  防止死锁</span></span><br><span class="line">        String curValue = stringRedisTemplate.opsForValue().get(key);</span><br><span class="line">        <span class="comment">//如果锁过期</span></span><br><span class="line">        <span class="comment">//curValue不为空且小于当前时间,说明锁过期，其他线程获得锁</span></span><br><span class="line">        <span class="keyword">if</span> (!StringUtils.isEmpty(curValue) &amp;&amp; Long.parseLong(curValue) &lt; System.currentTimeMillis()) &#123;</span><br><span class="line">            <span class="comment">//获取上一个锁的时间value</span></span><br><span class="line">            String oldValue = stringRedisTemplate.opsForValue().getAndSet(key, value);</span><br><span class="line">            <span class="comment">//假设两个线程同时进来，key被占用了。获取的值currentValue=A(get取的旧的值肯定是一样的),两个线程的value都是B,key都是K.锁时间已经过期了。</span></span><br><span class="line">            <span class="comment">//而这里面的getAndSet一次只会一个执行，也就是一个执行之后，上一个的value已经变成了B。只有一个线程获取的上一个值会是A，另一个线程拿到的值是B。</span></span><br><span class="line">            <span class="comment">//而oldValue等于A，不等于B，只能有一个线程拿到锁</span></span><br><span class="line">            <span class="keyword">if</span> (!StringUtils.isEmpty(oldValue) &amp;&amp; oldValue.equals(curValue)) &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 解锁</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> key</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> value</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">unlock</span><span class="params">(String key, String value)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            String curValue = stringRedisTemplate.opsForValue().get(key);</span><br><span class="line">            <span class="keyword">if</span> (!StringUtils.isEmpty(curValue) &amp;&amp; curValue.equals(value)) &#123;</span><br><span class="line">                stringRedisTemplate.opsForValue().getOperations().delete(key);<span class="comment">//删除key</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            log.error(<span class="string">"[Redis分布式锁] 解锁出现异常了，&#123;&#125;"</span>, e);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="Redis的SETNX命令："><a href="#Redis的SETNX命令：" class="headerlink" title="Redis的SETNX命令："></a>Redis的SETNX命令：</h4><p>将<code>key</code>设置值为<code>value</code>，如果<code>key</code>不存在，这种情况下等同<a href="http://redis.cn/commands/set.html" target="_blank" rel="noopener">SET</a>命令。 当<code>key</code>存在时，什么也不做。<code>SETNX</code>是”<strong>SET</strong> if <strong>N</strong>ot e<strong>X</strong>ists”的简写。</p>
+<h5 id="返回值"><a href="#返回值" class="headerlink" title="返回值"></a>返回值</h5><p><a href="http://redis.cn/topics/protocol.html#integer-reply" target="_blank" rel="noopener">Integer reply</a>, 特定值:</p>
+<ul>
+<li><code>1</code> 如果key被设置了</li>
+<li><code>0</code> 如果key没有被设置</li>
+</ul>
+<p>##例子</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">redis&gt; SETNX mykey &quot;Hello&quot;</span><br><span class="line">(integer) 1</span><br><span class="line">redis&gt; SETNX mykey &quot;World&quot;</span><br><span class="line">(integer) 0</span><br><span class="line">redis&gt; GET mykey</span><br><span class="line">&quot;Hello&quot;</span><br><span class="line">redis&gt;</span><br></pre></td></tr></table></figure>
+<h5 id="Design-pattern-Locking-with-SETNX"><a href="#Design-pattern-Locking-with-SETNX" class="headerlink" title="Design pattern: Locking with !SETNX"></a>Design pattern: Locking with <code>!SETNX</code></h5><h5 id="设计模式：使用-SETNX加锁"><a href="#设计模式：使用-SETNX加锁" class="headerlink" title="设计模式：使用!SETNX加锁"></a>设计模式：使用<code>!SETNX</code>加锁</h5><p><strong>Please note that:</strong></p>
+<p><strong>请注意：</strong></p>
+<ol>
+<li>不鼓励以下模式来实现<a href="http://redis.cn/topics/distlock.html" target="_blank" rel="noopener">the Redlock algorithm</a> ，该算法实现起来有一些复杂，但是提供了更好的保证并且具有容错性。</li>
+<li>无论如何，我们保留旧的模式，因为肯定存在一些已实现的方法链接到该页面作为引用。而且，这是一个有趣的例子说明Redis命令能够被用来作为编程原语的。</li>
+<li>无论如何，即使假设一个单例的加锁原语，但是从 2.6.12 开始，可以创建一个更加简单的加锁原语，相当于使用<code>SET</code>命令来获取锁，并且用一个简单的 Lua 脚本来释放锁。该模式被记录在<code>SET</code>命令的页面中。</li>
+</ol>
+<p>也就是说，<code>SETNX</code>能够被使用并且以前也在被使用去作为一个加锁原语。例如，获取键为<code>foo</code>的锁，客户端可以尝试一下操作：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SETNX lock.foo &lt;current Unix time + lock timeout + 1&gt;</span><br></pre></td></tr></table></figure>
+<p>如果客户端获得锁，<code>SETNX</code>返回<code>1</code>，那么将<code>lock.foo</code>键的Unix时间设置为不在被认为有效的时间。客户端随后会使用<code>DEL lock.foo</code>去释放该锁。</p>
+<p>如果<code>SETNX</code>返回<code>0</code>，那么该键已经被其他的客户端锁定。如果这是一个非阻塞的锁，才能立刻返回给调用者，或者尝试重新获取该锁，直到成功或者过期超时。</p>
+<h5 id="处理死锁"><a href="#处理死锁" class="headerlink" title="处理死锁"></a>处理死锁</h5><p>以上加锁算法存在一个问题：如果客户端出现故障，崩溃或者其他情况无法释放该锁会发生什么情况？这是能够检测到这种情况，因为该锁包含一个Unix时间戳，如果这样一个时间戳等于当前的Unix时间，该锁将不再有效。</p>
+<p>当以下这种情况发生时，我们不能调用<code>DEL</code>来删除该锁，并且尝试执行一个<code>SETNX</code>，因为这里存在一个竞态条件，当多个客户端察觉到一个过期的锁并且都尝试去释放它。</p>
+<ul>
+<li>C1 和 C2 读<code>lock.foo</code>检查时间戳，因为他们执行完<code>SETNX</code>后都被返回了<code>0</code>，因为锁仍然被 C3 所持有，并且 C3 已经崩溃。</li>
+<li>C1 发送<code>DEL lock.foo</code></li>
+<li>C1 发送<code>SETNX lock.foo</code>命令并且成功返回</li>
+<li>C2 发送<code>DEL lock.foo</code></li>
+<li>C2 发送<code>SETNX lock.foo</code>命令并且成功返回</li>
+<li><strong>错误</strong>：由于竞态条件导致 C1 和 C2 都获取到了锁</li>
+</ul>
+<p>幸运的是，可以使用以下的算法来避免这种情况，请看 C4 客户端所使用的好的算法：</p>
+<ul>
+<li><p>C4 发送<code>SETNX lock.foo</code>为了获得该锁</p>
+</li>
+<li><p>已经崩溃的客户端 C3 仍然持有该锁，所以Redis将会返回<code>0</code>给 C4</p>
+</li>
+<li><p>C4 发送<code>GET lock.foo</code>检查该锁是否已经过期。如果没有过期，C4 客户端将会睡眠一会，并且从一开始进行重试操作</p>
+</li>
+<li><p>另一种情况，如果因为 <code>lock.foo</code>键的Unix时间小于当前的Unix时间而导致该锁已经过期，C4 会尝试执行以下的操作：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">GETSET lock.foo &lt;current Unix timestamp + lock timeout + 1&gt;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>由于<code>GETSET</code> 的语意，C4会检查已经过期的旧值是否仍然存储在<code>lock.foo</code>中。如果是的话，C4 会获得锁</p>
+</li>
+<li><p>如果另一个客户端，假如为 C5 ，比 C4 更快的通过<code>GETSET</code>操作获取到锁，那么 C4 执行<code>GETSET</code>操作会被返回一个不过期的时间戳。C4 将会从第一个步骤重新开始。请注意：即使 C4 在将来几秒设置该键，这也不是问题。</p>
+</li>
+</ul>
+<p>为了使这种加锁算法更加的健壮，持有锁的客户端应该总是要检查是否超时，保证使用<code>DEL</code>释放锁之前不会过期，因为客户端故障的情况可能是复杂的，不止是崩溃，还会阻塞一段时间，阻止一些操作的执行，并且在阻塞恢复后尝试执行<code>DEL</code>（此时，该LOCK已经被其他客户端所持有）</p>
+<h4 id="Redis的GETSET命令"><a href="#Redis的GETSET命令" class="headerlink" title="Redis的GETSET命令"></a>Redis的GETSET命令</h4><p>自动将key对应到value并且返回原来key对应的value。如果key存在但是对应的value不是字符串，就返回错误。</p>
+<p>设计模式</p>
+<p><a href="http://redis.cn/commands/getset.html" target="_blank" rel="noopener">GETSET</a>可以和<a href="http://redis.cn/commands/incr.html" target="_blank" rel="noopener">INCR</a>一起使用实现支持重置的计数功能。举个例子：每当有事件发生的时候，一段程序都会调用<a href="http://redis.cn/commands/incr.html" target="_blank" rel="noopener">INCR</a>给key mycounter加1，但是有时我们需要获取计数器的值，并且自动将其重置为0。这可以通过GETSET mycounter “0”来实现：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">INCR mycounter</span><br><span class="line">GETSET mycounter &quot;0&quot;</span><br><span class="line">GET mycounter</span><br></pre></td></tr></table></figure>
+<h5 id="返回值-1"><a href="#返回值-1" class="headerlink" title="返回值"></a>返回值</h5><p><a href="http://redis.cn/topics/protocol.html#bulk-string-reply" target="_blank" rel="noopener">bulk-string-reply</a>: 返回之前的旧值，如果之前<code>Key</code>不存在将返回<code>nil</code>。</p>
+<h5 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">redis&gt; INCR mycounter</span><br><span class="line">(integer) 1</span><br><span class="line">redis&gt; GETSET mycounter &quot;0&quot;</span><br><span class="line">&quot;1&quot;</span><br><span class="line">redis&gt; GET mycounter</span><br><span class="line">&quot;0&quot;</span><br><span class="line">redis&gt;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Author</span>: Usher</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span>:</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SeckillServiceImpl</span> <span class="keyword">implements</span> <span class="title">SeckillService</span></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> RedisLock redisLock;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> TIMEOUT = <span class="number">10</span>*<span class="number">1000</span>;<span class="comment">//超时时间 10s</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 活动，特价，限量100000份</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">static</span> Map&lt;String,Integer&gt; products;<span class="comment">//模拟商品信息表</span></span><br><span class="line">    <span class="keyword">static</span> Map&lt;String,Integer&gt; stock;<span class="comment">//模拟库存表</span></span><br><span class="line">    <span class="keyword">static</span> Map&lt;String,String&gt; orders;<span class="comment">//模拟下单成功用户表</span></span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        <span class="comment">/**</span></span><br><span class="line"><span class="comment">         * 模拟多个表，商品信息表，库存表，秒杀成功订单表</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        products = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">        stock = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">        orders = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">        products.put(<span class="string">"123456"</span>,<span class="number">100000</span>);</span><br><span class="line">        stock.put(<span class="string">"123456"</span>,<span class="number">100000</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> String <span class="title">queryMap</span><span class="params">(String productId)</span></span>&#123;<span class="comment">//模拟查询数据库</span></span><br><span class="line">        <span class="keyword">return</span> <span class="string">"国庆活动，红烧肉特惠，限量"</span></span><br><span class="line">                +products.get(productId)</span><br><span class="line">                +<span class="string">"份,还剩:"</span>+stock.get(productId)</span><br><span class="line">                +<span class="string">"份,该商品成功下单用户数:"</span></span><br><span class="line">                +orders.size()+<span class="string">"人"</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">querySecKillProductInfo</span><span class="params">(String productId)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">this</span>.queryMap(productId);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//synchronized锁，没做到细粒度控制。比如有很多商品的秒杀，但是这个把所有商品的秒杀都锁住了。只适合单机的情况，不适合集群,</span></span><br><span class="line">    <span class="comment">//采用redis分布式锁</span></span><br><span class="line">    <span class="comment">//如果采用redis锁再加syn锁，可以保证都可以获得锁</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span>  <span class="keyword">void</span>  <span class="title">orderProductMockDiffUser</span><span class="params">(String productId)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//加锁</span></span><br><span class="line">        <span class="keyword">long</span> time = System.currentTimeMillis() + TIMEOUT;</span><br><span class="line">        <span class="keyword">if</span>(!redisLock.lock(productId,String.valueOf(time)))&#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> Exception(<span class="string">"很抱歉，人太多了！稍后再试！"</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//1.查询该商品库存，为0则活动结束</span></span><br><span class="line">        <span class="keyword">int</span> stockNum = stock.get(productId);</span><br><span class="line">        <span class="keyword">if</span>(stockNum==<span class="number">0</span>)&#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> Exception(<span class="string">"活动结束"</span>);</span><br><span class="line">        &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">//2.下单</span></span><br><span class="line">            orders.put(KeyUtil.genUniqueKey(),productId);</span><br><span class="line">            <span class="comment">//3.减库存</span></span><br><span class="line">            stockNum -=<span class="number">1</span>;<span class="comment">//不做处理的话，高并发下会出现超卖的情况，下单数，大于减库存的情况。虽然这里减了，但由于并发，减的库存还没存到map中去。新的并发拿到的是原来的库存</span></span><br><span class="line">            <span class="keyword">try</span>&#123;</span><br><span class="line">                Thread.sleep(<span class="number">100</span>);<span class="comment">//模拟减库存的处理时间</span></span><br><span class="line">            &#125;<span class="keyword">catch</span> (InterruptedException e)&#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">            stock.put(productId,stockNum);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//解锁</span></span><br><span class="line">        redisLock.unlock(productId,String.valueOf(time));</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>使用Apache ab压力测试工具，500个请求，100个并发</p>
+</blockquote>
+<figure class="highlight cmd"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">H:\软件\<span class="title">Apache24</span>\<span class="title">bin</span>&gt;<span class="title">ab</span> -<span class="title">n</span> 500 -<span class="title">c</span> 100 <span class="title">http</span>://<span class="title">localhost</span>:8080/<span class="title">sell</span>/<span class="title">skill</span>/<span class="title">order</span>/123456</span></span><br><span class="line"><span class="function"><span class="title">This</span> <span class="title">is</span> <span class="title">ApacheBench</span>, <span class="title">Version</span> 2.3 &lt;$<span class="title">Revision</span>: 1826891 $&gt;</span></span><br><span class="line"><span class="function"><span class="title">Copyright</span> 1996 <span class="title">Adam</span> <span class="title">Twiss</span>, <span class="title">Zeus</span> <span class="title">Technology</span> <span class="title">Ltd</span>, <span class="title">http</span>://<span class="title">www.zeustech.net</span>/</span></span><br><span class="line"><span class="function"><span class="title">Licensed</span> <span class="title">to</span> <span class="title">The</span> <span class="title">Apache</span> <span class="title">Software</span> <span class="title">Foundation</span>, <span class="title">http</span>://<span class="title">www.apache.org</span>/</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="title">Benchmarking</span> <span class="title">localhost</span> (<span class="title">be</span> <span class="title">patient</span>)</span></span><br><span class="line"><span class="function"><span class="title">Completed</span> 100 <span class="title">requests</span></span></span><br><span class="line"><span class="function"><span class="title">Completed</span> 200 <span class="title">requests</span></span></span><br><span class="line"><span class="function"><span class="title">Completed</span> 300 <span class="title">requests</span></span></span><br><span class="line"><span class="function"><span class="title">Completed</span> 400 <span class="title">requests</span></span></span><br><span class="line"><span class="function"><span class="title">Completed</span> 500 <span class="title">requests</span></span></span><br><span class="line"><span class="function"><span class="title">Finished</span> 500 <span class="title">requests</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="title">Server</span> <span class="title">Software</span>:</span></span><br><span class="line"><span class="function"><span class="title">Server</span> <span class="title">Hostname</span>:        <span class="title">localhost</span></span></span><br><span class="line"><span class="function"><span class="title">Server</span> <span class="title">Port</span>:            8080</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="title">Document</span> <span class="title">Path</span>:          /<span class="title">sell</span>/<span class="title">skill</span>/<span class="title">order</span>/123456</span></span><br><span class="line"><span class="function"><span class="title">Document</span> <span class="title">Length</span>:        101 <span class="title">bytes</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="title">Concurrency</span> <span class="title">Level</span>:      100</span></span><br><span class="line"><span class="function"><span class="title">Time</span> <span class="title">taken</span> <span class="title">for</span> <span class="title">tests</span>:   9.222 <span class="title">seconds</span></span></span><br><span class="line"><span class="function"><span class="title">Complete</span> <span class="title">requests</span>:      500</span></span><br><span class="line"><span class="function"><span class="title">Failed</span> <span class="title">requests</span>:        494</span></span><br><span class="line"><span class="function">   (<span class="title">Connect</span>: 0, <span class="title">Receive</span>: 0, <span class="title">Length</span>: 494, <span class="title">Exceptions</span>: 0)</span></span><br><span class="line"><span class="function"><span class="title">Total</span> <span class="title">transferred</span>:      95270 <span class="title">bytes</span></span></span><br><span class="line"><span class="function"><span class="title">HTML</span> <span class="title">transferred</span>:       35680 <span class="title">bytes</span></span></span><br><span class="line"><span class="function"><span class="title">Requests</span> <span class="title">per</span> <span class="title">second</span>:    54.22 [#/<span class="title">sec</span>] (<span class="title">mean</span>)</span></span><br><span class="line"><span class="function"><span class="title">Time</span> <span class="title">per</span> <span class="title">request</span>:       1844.420 [<span class="title">ms</span>] (<span class="title">mean</span>)</span></span><br><span class="line"><span class="function"><span class="title">Time</span> <span class="title">per</span> <span class="title">request</span>:       18.444 [<span class="title">ms</span>] (<span class="title">mean</span>, <span class="title">across</span> <span class="title">all</span> <span class="title">concurrent</span> <span class="title">requests</span>)</span></span><br><span class="line"><span class="function"><span class="title">Transfer</span> <span class="title">rate</span>:          10.09 [<span class="title">Kbytes</span>/<span class="title">sec</span>] <span class="title">received</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="title">Connection</span> <span class="title">Times</span> (<span class="title">ms</span>)</span></span><br><span class="line"><span class="function">              <span class="title">min</span>  <span class="title">mean</span>[+/-<span class="title">sd</span>] <span class="title">median</span>   <span class="title">max</span></span></span><br><span class="line"><span class="function"><span class="title">Connect</span>:        2    3   0.5      3       8</span></span><br><span class="line"><span class="function"><span class="title">Processing</span>:   130 1557 1007.6   1012    7236</span></span><br><span class="line"><span class="function"><span class="title">Waiting</span>:      129 1556 1008.5   1012    7236</span></span><br><span class="line"><span class="function"><span class="title">Total</span>:        132 1560 1007.6   1015    7238</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="title">Percentage</span> <span class="title">of</span> <span class="title">the</span> <span class="title">requests</span> <span class="title">served</span> <span class="title">within</span> <span class="title">a</span> <span class="title">certain</span> <span class="title">time</span> (<span class="title">ms</span>)</span></span><br><span class="line"><span class="function">  50%   1015</span></span><br><span class="line"><span class="function">  66%   1715</span></span><br><span class="line"><span class="function">  75%   1829</span></span><br><span class="line"><span class="function">  80%   2489</span></span><br><span class="line"><span class="function">  90%   2769</span></span><br><span class="line"><span class="function">  95%   3337</span></span><br><span class="line"><span class="function">  98%   4431</span></span><br><span class="line"><span class="function">  99%   5124</span></span><br><span class="line"><span class="function"> 100%   7238 (<span class="title">longest</span> <span class="title">request</span>)</span></span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>测试结果</p>
+</blockquote>
+<p><img src="http://ww1.sinaimg.cn/large/005P73H4ly1ftyyuuzh5ej30l8024jra.jpg" alt=""></p>
+<blockquote>
+<p>可以看到库存剩余数量和成功下单数一致，说明实现了分布式锁的并发控制</p>
+</blockquote>
+]]></content>
+      
+        <categories>
+            
+            <category> Redis </category>
+            
+        </categories>
+        
+        
+        <tags>
+            
+            <tag> Java </tag>
+            
+            <tag> Redis </tag>
+            
+            <tag> 高并发 </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
       <title><![CDATA[Tomcat调优和JVM优化]]></title>
       <url>/2018/07/22/Tomcat%E8%B0%83%E4%BC%98%E5%92%8CJVM%E4%BC%98%E5%8C%96/</url>
       <content type="html"><![CDATA[<h1 id="Tomcat调优和JVM优化"><a href="#Tomcat调优和JVM优化" class="headerlink" title="Tomcat调优和JVM优化"></a>Tomcat调优和JVM优化</h1><h3 id="Tomcat本身优化"><a href="#Tomcat本身优化" class="headerlink" title="Tomcat本身优化"></a>Tomcat本身优化</h3><h4 id="工作方式选择"><a href="#工作方式选择" class="headerlink" title="工作方式选择"></a>工作方式选择</h4><blockquote>
@@ -1086,6 +1191,39 @@ org.springframework.boot.autoconfigure.webservices.WebServicesAutoConfiguration
     </entry>
     
     <entry>
+      <title><![CDATA[设计模式-简单工厂模式]]></title>
+      <url>/2018/04/07/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F-%E7%AE%80%E5%8D%95%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F/</url>
+      <content type="html"><![CDATA[<h1 id="设计模式-简单工厂模式"><a href="#设计模式-简单工厂模式" class="headerlink" title="设计模式-简单工厂模式"></a>设计模式-简单工厂模式</h1><p><img src="http://ov1nop9io.bkt.clouddn.com/d7f6dec1-02b6-4969-b3ab-e01ee78659b9.png" alt="http://ov1nop9io.bkt.clouddn.com/d7f6dec1-02b6-4969-b3ab-e01ee78659b9.png"></p>
+<blockquote>
+<p>  在创建一个对象时不向客户暴露内部细节<br>  它把实例化的操作单独放到一个类中，这个类就成为简单工厂类，<br>  让简单工厂类来决定应该用哪个子类来实例化。<br>  这样做能把客户类和具体子类的实现解耦，</p>
+<p>  客户类不再需要知道有哪些子类以及应当实例化哪个子类。<br>  因为客户类往往有多个，如果不使用简单工厂，所有的客户类都要知道所有子类的细节。<br>  而且一旦子类发生改变，例如增加子类，那么所有的客户类都要进行修改。</p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SimpleFactory</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> Product <span class="title">createProduct</span><span class="params">(<span class="keyword">int</span> type)</span></span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (type == <span class="number">1</span>)&#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> ConcreteProduct1();</span><br><span class="line">        &#125;<span class="keyword">else</span> <span class="keyword">if</span> (type == <span class="number">2</span>)&#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> ConcreteProduct2();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> ConcreteProduct();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Product</span> </span>&#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ConcreteProduct</span> <span class="keyword">implements</span> <span class="title">Product</span> </span>&#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ConcreteProduct1</span> <span class="keyword">implements</span> <span class="title">Product</span> </span>&#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ConcreteProduct2</span> <span class="keyword">implements</span> <span class="title">Product</span> </span>&#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Client</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span>&#123;</span><br><span class="line">        SimpleFactory simpleFactory = <span class="keyword">new</span> SimpleFactory();</span><br><span class="line">        Product product = simpleFactory.createProduct(<span class="number">2</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+]]></content>
+      
+        <categories>
+            
+            <category> 设计模式 </category>
+            
+        </categories>
+        
+        
+        <tags>
+            
+            <tag> Java </tag>
+            
+            <tag> 设计模式 </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
       <title><![CDATA[设计模式-策略模式]]></title>
       <url>/2018/04/07/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F-%E7%AD%96%E7%95%A5%E6%A8%A1%E5%BC%8F/</url>
       <content type="html"><![CDATA[<h1 id="设计模式-策略模式"><a href="#设计模式-策略模式" class="headerlink" title="设计模式-策略模式"></a>设计模式-策略模式</h1><p><img src="http://ov1nop9io.bkt.clouddn.com/strategy_pattern_uml_diagram.jpg" alt="http://ov1nop9io.bkt.clouddn.com/strategy_pattern_uml_diagram.jpg"></p>
@@ -1112,6 +1250,49 @@ org.springframework.boot.autoconfigure.webservices.WebServicesAutoConfiguration
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">public class OperationSubstract implements Strategy &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public int doOperation(int num1, int num2) &#123;</span><br><span class="line">        return num1 - num2;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">/**创建表示各种策略的对象和一个行为随着策略对象改变而改变的 context 对象。</span><br><span class="line"> 策略对象改变 context 对象的执行算法</span><br><span class="line"> */</span><br><span class="line"></span><br><span class="line">public class Context &#123;</span><br><span class="line">    private Strategy strategy;</span><br><span class="line">    public Context(Strategy strategy)&#123;</span><br><span class="line">        this.strategy = strategy;</span><br><span class="line">    &#125;</span><br><span class="line">    public int executeStrategy(int num1,int num2)&#123;</span><br><span class="line">        return strategy.doOperation(num1,num2);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">public class StrategyPatternDemo &#123;</span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        Context context = new Context(new OperationAdd());</span><br><span class="line">        System.out.println(&quot;10 + 5 = &quot; + context.executeStrategy(10, 5));</span><br><span class="line"></span><br><span class="line">        context = new Context(new OperationSubstract());</span><br><span class="line">        System.out.println(&quot;10 - 5 = &quot; + context.executeStrategy(10, 5));</span><br><span class="line"></span><br><span class="line">        context = new Context(new OperationMultiply());</span><br><span class="line">        System.out.println(&quot;10 * 5 = &quot; + context.executeStrategy(10, 5));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+]]></content>
+      
+        <categories>
+            
+            <category> 设计模式 </category>
+            
+        </categories>
+        
+        
+        <tags>
+            
+            <tag> Java </tag>
+            
+            <tag> 设计模式 </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[设计模式-观察者模式]]></title>
+      <url>/2018/04/07/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F-%E8%A7%82%E5%AF%9F%E8%80%85%E6%A8%A1%E5%BC%8F/</url>
+      <content type="html"><![CDATA[<h1 id="设计模式-观察者模式"><a href="#设计模式-观察者模式" class="headerlink" title="设计模式-观察者模式"></a>设计模式-观察者模式</h1><p><img src="http://ov1nop9io.bkt.clouddn.com/observer_pattern_uml_diagram.jpg" alt="http://ov1nop9io.bkt.clouddn.com/observer_pattern_uml_diagram.jpg"></p>
+<p>&gt;</p>
+<blockquote>
+<ul>
+<li><p>观察者模式又被称作发布/订阅模式，定义了对象间一对多依赖，当一个对象改变状态时，它的所有依赖者都会收到通知并自动更新。</p>
+</li>
+<li><p>观察者模式属于行为型模式,主要解决一个对象状态改变给其他对象通知的问题，而且要考虑到易用和低耦合，保证高度的协作。</p>
+</li>
+<li><p>一个对象状态改变给其他对象通知的问题，而且要考虑到易用和低耦合，保证高度的协作。</p>
+</li>
+<li><p>应用场景如下：</p>
+<p>  a、对一个对象状态的更新，需要其他对象同步更新，而且其他对象的数量动态可变。<br>  b、对象仅需要将自己的更新通知给其他对象而不需要知道其他对象的细节。</p>
+</li>
+</ul>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">import java.util.ArrayList;</span><br><span class="line">import java.util.List;</span><br><span class="line"></span><br><span class="line">/**</span><br><span class="line"> 观察者模式使用三个类 Subject、Observer 和 Client。</span><br><span class="line"> Subject 对象带有绑定观察者到 Client 对象和从 Client 对象解绑观察者的方法。</span><br><span class="line"> 我们创建 Subject 类、Observer 抽象类和扩展了抽象类 Observer 的实体类。</span><br><span class="line"> */</span><br><span class="line">public class Subject &#123;</span><br><span class="line">    private List&lt;Observer&gt; observers = new ArrayList&lt;&gt;();</span><br><span class="line">    private int state;</span><br><span class="line"></span><br><span class="line">    public int getState() &#123;</span><br><span class="line">        return state;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void setState(int state) &#123;</span><br><span class="line">        this.state = state;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">    public void attach(Observer observer)&#123;</span><br><span class="line">        observers.add(observer);</span><br><span class="line">    &#125;</span><br><span class="line">    public void notifyAllObservers()&#123;</span><br><span class="line">        for (Observer observer : observers)&#123;</span><br><span class="line">            observer.update();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">public abstract class Observer &#123;</span><br><span class="line">    protected Subject subject;</span><br><span class="line">    public abstract void update();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">//实体观察者类</span><br><span class="line">public class OctalObserver extends Observer&#123;</span><br><span class="line">    public OctalObserver(Subject subject) &#123;</span><br><span class="line">        this.subject = subject;</span><br><span class="line">        this.subject.attach(this);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void update() &#123;</span><br><span class="line">        System.out.println( &quot;Octal String: &quot;</span><br><span class="line">                + Integer.toOctalString( subject.getState() ) );</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">//实体观察者类</span><br><span class="line">public class HexaObserver extends Observer&#123;</span><br><span class="line"></span><br><span class="line">    public HexaObserver(Subject subject)&#123;</span><br><span class="line">        this.subject = subject;</span><br><span class="line">        this.subject.attach(this);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void update() &#123;</span><br><span class="line">        System.out.println( &quot;Hex String: &quot;</span><br><span class="line">                + Integer.toHexString( subject.getState() ).toUpperCase() );</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">/**</span><br><span class="line"> * 实体观察者类</span><br><span class="line"> */</span><br><span class="line">public class BinaryObserver extends Observer&#123;</span><br><span class="line">    public BinaryObserver(Subject subject) &#123;</span><br><span class="line">        this.subject = subject;</span><br><span class="line">        this.subject.attach(this);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void update() &#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">public class ObserverPatternDemo &#123;</span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        Subject subject = new Subject();</span><br><span class="line"></span><br><span class="line">        new HexaObserver(subject);</span><br><span class="line">        new OctalObserver(subject);</span><br><span class="line">        new BinaryObserver(subject);</span><br><span class="line"></span><br><span class="line">        System.out.println(&quot;First state change: 15&quot;);</span><br><span class="line">        subject.setState(15);</span><br><span class="line">        System.out.println(&quot;Second state change: 10&quot;);</span><br><span class="line">        subject.setState(10);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 ]]></content>
       
         <categories>
@@ -1172,39 +1353,6 @@ org.springframework.boot.autoconfigure.webservices.WebServicesAutoConfiguration
     </entry>
     
     <entry>
-      <title><![CDATA[设计模式-简单工厂模式]]></title>
-      <url>/2018/04/07/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F-%E7%AE%80%E5%8D%95%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F/</url>
-      <content type="html"><![CDATA[<h1 id="设计模式-简单工厂模式"><a href="#设计模式-简单工厂模式" class="headerlink" title="设计模式-简单工厂模式"></a>设计模式-简单工厂模式</h1><p><img src="http://ov1nop9io.bkt.clouddn.com/d7f6dec1-02b6-4969-b3ab-e01ee78659b9.png" alt="http://ov1nop9io.bkt.clouddn.com/d7f6dec1-02b6-4969-b3ab-e01ee78659b9.png"></p>
-<blockquote>
-<p>  在创建一个对象时不向客户暴露内部细节<br>  它把实例化的操作单独放到一个类中，这个类就成为简单工厂类，<br>  让简单工厂类来决定应该用哪个子类来实例化。<br>  这样做能把客户类和具体子类的实现解耦，</p>
-<p>  客户类不再需要知道有哪些子类以及应当实例化哪个子类。<br>  因为客户类往往有多个，如果不使用简单工厂，所有的客户类都要知道所有子类的细节。<br>  而且一旦子类发生改变，例如增加子类，那么所有的客户类都要进行修改。</p>
-</blockquote>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SimpleFactory</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> Product <span class="title">createProduct</span><span class="params">(<span class="keyword">int</span> type)</span></span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (type == <span class="number">1</span>)&#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> ConcreteProduct1();</span><br><span class="line">        &#125;<span class="keyword">else</span> <span class="keyword">if</span> (type == <span class="number">2</span>)&#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">new</span> ConcreteProduct2();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> ConcreteProduct();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Product</span> </span>&#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ConcreteProduct</span> <span class="keyword">implements</span> <span class="title">Product</span> </span>&#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ConcreteProduct1</span> <span class="keyword">implements</span> <span class="title">Product</span> </span>&#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ConcreteProduct2</span> <span class="keyword">implements</span> <span class="title">Product</span> </span>&#123;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Client</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span>&#123;</span><br><span class="line">        SimpleFactory simpleFactory = <span class="keyword">new</span> SimpleFactory();</span><br><span class="line">        Product product = simpleFactory.createProduct(<span class="number">2</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-]]></content>
-      
-        <categories>
-            
-            <category> 设计模式 </category>
-            
-        </categories>
-        
-        
-        <tags>
-            
-            <tag> Java </tag>
-            
-            <tag> 设计模式 </tag>
-            
-        </tags>
-        
-    </entry>
-    
-    <entry>
       <title><![CDATA[设计模式-模板方法模式]]></title>
       <url>/2018/04/07/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F-%E6%A8%A1%E6%9D%BF%E6%96%B9%E6%B3%95%E6%A8%A1%E5%BC%8F/</url>
       <content type="html"><![CDATA[<h1 id="设计模式-模板方法模式"><a href="#设计模式-模板方法模式" class="headerlink" title="设计模式-模板方法模式"></a>设计模式-模板方法模式</h1><p><img src="http://ov1nop9io.bkt.clouddn.com/template_pattern_uml_diagram%20%281%29.jpg" alt="http://ov1nop9io.bkt.clouddn.com/template_pattern_uml_diagram%20%281%29.jpg"></p>
@@ -1223,49 +1371,6 @@ org.springframework.boot.autoconfigure.webservices.WebServicesAutoConfiguration
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">public class Football extends Game&#123;</span><br><span class="line">    @Override</span><br><span class="line">    public void endPlay() &#123;</span><br><span class="line">        System.out.println(&quot;Football Game Finished!&quot;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void initialize() &#123;</span><br><span class="line">        System.out.println(&quot;Football Game Initialized! Start playing.&quot;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void startPlay() &#123;</span><br><span class="line">        System.out.println(&quot;Football Game Started. Enjoy the game!&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">public class TemplatePatternDemo &#123;</span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line"></span><br><span class="line">        Game game = new Cricket();</span><br><span class="line">        game.play();</span><br><span class="line">        System.out.println();</span><br><span class="line">        game = new Football();</span><br><span class="line">        game.play();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-]]></content>
-      
-        <categories>
-            
-            <category> 设计模式 </category>
-            
-        </categories>
-        
-        
-        <tags>
-            
-            <tag> Java </tag>
-            
-            <tag> 设计模式 </tag>
-            
-        </tags>
-        
-    </entry>
-    
-    <entry>
-      <title><![CDATA[设计模式-观察者模式]]></title>
-      <url>/2018/04/07/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F-%E8%A7%82%E5%AF%9F%E8%80%85%E6%A8%A1%E5%BC%8F/</url>
-      <content type="html"><![CDATA[<h1 id="设计模式-观察者模式"><a href="#设计模式-观察者模式" class="headerlink" title="设计模式-观察者模式"></a>设计模式-观察者模式</h1><p><img src="http://ov1nop9io.bkt.clouddn.com/observer_pattern_uml_diagram.jpg" alt="http://ov1nop9io.bkt.clouddn.com/observer_pattern_uml_diagram.jpg"></p>
-<p>&gt;</p>
-<blockquote>
-<ul>
-<li><p>观察者模式又被称作发布/订阅模式，定义了对象间一对多依赖，当一个对象改变状态时，它的所有依赖者都会收到通知并自动更新。</p>
-</li>
-<li><p>观察者模式属于行为型模式,主要解决一个对象状态改变给其他对象通知的问题，而且要考虑到易用和低耦合，保证高度的协作。</p>
-</li>
-<li><p>一个对象状态改变给其他对象通知的问题，而且要考虑到易用和低耦合，保证高度的协作。</p>
-</li>
-<li><p>应用场景如下：</p>
-<p>  a、对一个对象状态的更新，需要其他对象同步更新，而且其他对象的数量动态可变。<br>  b、对象仅需要将自己的更新通知给其他对象而不需要知道其他对象的细节。</p>
-</li>
-</ul>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">import java.util.ArrayList;</span><br><span class="line">import java.util.List;</span><br><span class="line"></span><br><span class="line">/**</span><br><span class="line"> 观察者模式使用三个类 Subject、Observer 和 Client。</span><br><span class="line"> Subject 对象带有绑定观察者到 Client 对象和从 Client 对象解绑观察者的方法。</span><br><span class="line"> 我们创建 Subject 类、Observer 抽象类和扩展了抽象类 Observer 的实体类。</span><br><span class="line"> */</span><br><span class="line">public class Subject &#123;</span><br><span class="line">    private List&lt;Observer&gt; observers = new ArrayList&lt;&gt;();</span><br><span class="line">    private int state;</span><br><span class="line"></span><br><span class="line">    public int getState() &#123;</span><br><span class="line">        return state;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void setState(int state) &#123;</span><br><span class="line">        this.state = state;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">    public void attach(Observer observer)&#123;</span><br><span class="line">        observers.add(observer);</span><br><span class="line">    &#125;</span><br><span class="line">    public void notifyAllObservers()&#123;</span><br><span class="line">        for (Observer observer : observers)&#123;</span><br><span class="line">            observer.update();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">public abstract class Observer &#123;</span><br><span class="line">    protected Subject subject;</span><br><span class="line">    public abstract void update();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">//实体观察者类</span><br><span class="line">public class OctalObserver extends Observer&#123;</span><br><span class="line">    public OctalObserver(Subject subject) &#123;</span><br><span class="line">        this.subject = subject;</span><br><span class="line">        this.subject.attach(this);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void update() &#123;</span><br><span class="line">        System.out.println( &quot;Octal String: &quot;</span><br><span class="line">                + Integer.toOctalString( subject.getState() ) );</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">//实体观察者类</span><br><span class="line">public class HexaObserver extends Observer&#123;</span><br><span class="line"></span><br><span class="line">    public HexaObserver(Subject subject)&#123;</span><br><span class="line">        this.subject = subject;</span><br><span class="line">        this.subject.attach(this);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void update() &#123;</span><br><span class="line">        System.out.println( &quot;Hex String: &quot;</span><br><span class="line">                + Integer.toHexString( subject.getState() ).toUpperCase() );</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">/**</span><br><span class="line"> * 实体观察者类</span><br><span class="line"> */</span><br><span class="line">public class BinaryObserver extends Observer&#123;</span><br><span class="line">    public BinaryObserver(Subject subject) &#123;</span><br><span class="line">        this.subject = subject;</span><br><span class="line">        this.subject.attach(this);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void update() &#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">public class ObserverPatternDemo &#123;</span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        Subject subject = new Subject();</span><br><span class="line"></span><br><span class="line">        new HexaObserver(subject);</span><br><span class="line">        new OctalObserver(subject);</span><br><span class="line">        new BinaryObserver(subject);</span><br><span class="line"></span><br><span class="line">        System.out.println(&quot;First state change: 15&quot;);</span><br><span class="line">        subject.setState(15);</span><br><span class="line">        System.out.println(&quot;Second state change: 10&quot;);</span><br><span class="line">        subject.setState(10);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 ]]></content>
       
         <categories>
@@ -1446,128 +1551,6 @@ org.springframework.boot.autoconfigure.webservices.WebServicesAutoConfiguration
     </entry>
     
     <entry>
-      <title><![CDATA[Android四大组件学习笔记总结]]></title>
-      <url>/2018/03/11/Android%E5%9B%9B%E5%A4%A7%E7%BB%84%E4%BB%B6%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%E6%80%BB%E7%BB%93/</url>
-      <content type="html"><![CDATA[<h1 id="Android四大组件学习笔记总结"><a href="#Android四大组件学习笔记总结" class="headerlink" title="Android四大组件学习笔记总结"></a>Android四大组件学习笔记总结</h1><p>Android四大组件分别是Activity，Service，ContentProvider，BroadcastReceiver。</p>
-<h2 id="Activity"><a href="#Activity" class="headerlink" title="Activity"></a>Activity</h2><h3 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h3><blockquote>
-<p>Android中，activity是所有程序的根本，所有程序的流程都运行在activity之中，activity可以算是开发者遇到的最频繁，也是android当中最基本的模块之一。在android的程序中，activity一般代表手机屏幕的一屏。如果把手机比作一个浏览器，那么activity就相当于一个网页。在activity当中可以添加一些Button、Checkbox等控件，可以看到activity概念和网页的概念相当类似。</p>
-<p>一般一个android应用是由多个activity组成的，这多个activity之间可以进行相互跳转。例如，按下一个Button按钮后，可能会跳转到其他的activity，与网页跳转稍微有点不一样的是，activity之间的跳转有可能返回值。例如，从activity A跳转到activity B，那么当activity B运行结束时，有可能会给activity A一个返回值。这样做在很多时候是相当方便的。</p>
-<p>当打开一个新的屏幕时，之前一个屏幕会被置为暂停状态，并且压入历史堆栈中。用户可以通过回退操作返回到以前打开过的屏幕。可以选择性的一处一些没有必要保留的屏幕，因为Android会把每个应用的开始到当前的每个屏幕保存在堆栈中。</p>
-</blockquote>
-<h3 id="生命周期及方法"><a href="#生命周期及方法" class="headerlink" title="生命周期及方法"></a>生命周期及方法</h3><h4 id="生命周期"><a href="#生命周期" class="headerlink" title="生命周期"></a>生命周期</h4><p><img src="http://ov1nop9io.bkt.clouddn.com/%E6%9C%AA%E5%91%BD%E5%90%8D%E5%9B%BE%E7%89%87.png" alt="enter image description here"></p>
-<blockquote>
-<p>一个activity的生命周期就像我们一样，从出生到童年，青年，中年，老年<br>    最后入土.Activity从创建到销毁有多种状态，从一种状态到另一种状态时会激发相应的回调方法，从onCreate(),<br>    onStart(),onPause(),onResume(),onstop(),onDestroy(),到onRestart()等方法.</p>
-</blockquote>
-<h4 id="方法"><a href="#方法" class="headerlink" title="方法"></a>方法</h4><blockquote>
-<p>onCreat()方法，谷歌官方的解释是：当这个界面第一次创建的时候执行这个方法，当然<br>   一般情况下，在一个应用中这个方法只会执行一次，（横竖屏切换），既然这个方法最先执行，那我们就可以在<br>   这个方法体里面做一些初始化的操作，如 初始化view(setCountentView(view)),寻找控件 findViewById(id)，<br>   初始化一些数据等等。<br>        执行完oncreate方法界面展示后，即当Activity变成可见的时候，开始执行onStart()方法 ，这个方法和<br>  onStop()方法对应。这个方法的用处不怎么大。<br>        onResume()方法，当一个界面可以和用户交互，获取到焦点的的时候，执行这个方法，什么是和用户交互？<br>  比如说，你点击屏幕上的按钮，图片等等，activity会给出不同的反应。<br>        onPause()方法和onResume()方法对应，即activity不能和用户交互的，activity失去焦点，界面上的view<br>  不能被点击的时候执行。<br>       onStop()方法，当activity不可见的时候，执行这个方法，如从一个activity跳转到另一个activity时，跳转<br>  前的activity被跳转后的activity遮挡，就会执行onStop()这个方法<br>       onRestart()方法，从第一个activity跳转到第二个activity，再返回第一个 activity时，就会执行这个方法<br>  界面重新变得可见就会执行这个方法。<br>       onDestroy()方法，当一个activity销毁的时候调用这个方法，与onCreate()对应。</p>
-</blockquote>
-<h3 id="用法"><a href="#用法" class="headerlink" title="用法"></a>用法</h3><blockquote>
-<p>  （1）一个Activity通常就是一个单独的屏幕（窗口）。<br>（2）Activity之间通过Intent进行通信。<br>（3）android应用中每一个Activity都必须要在AndroidManifest.xml配置文件中声明，否则系统将不识别也不执行该Activity。</p>
-</blockquote>
-<h3 id="启动模式"><a href="#启动模式" class="headerlink" title="启动模式"></a>启动模式</h3><blockquote>
-<p>(1)标准 standard，大部分应用都是这个标准启动模式。 </p>
-<p> (2)singleTop 单一顶部模式   当我们把Activity配置成 singleTop启动模式的时候 ,当我们在开启这个Activity的时候 就会检查当前任务栈的栈顶是否有这个实例存在,如果存在就不会创建新的实例,而是直接复用这个实例   </p>
-<p> (3)singleTask 当我们 把Activity设置成singleTask启动模式 会检查当前任务栈 是否有实例开启 ,如果有实例开启,就会直接复用这个实例 ,并且会把这个实例上面其他的Activity 也清空,当前任务栈只有一个实例存在   </p>
-<p>(4)singleinstance :如果把一个Activity配置这种启动模式,系统会为这个Activity单独创建一个任务栈,这个Activity在自己的任务栈里面存在 </p>
-</blockquote>
-<h2 id="Service"><a href="#Service" class="headerlink" title="Service"></a>Service</h2><h3 id="概述-1"><a href="#概述-1" class="headerlink" title="概述"></a>概述</h3><blockquote>
-<p>Service是android系统中的一种组件，跟activity的级别差不多，但是他不能自己运行，只能后台运行，并且可以和其他组件进行交互。Service是没有界面长生命周期的代码。Service是一种程序，可以运行很长时间的，但是却没有用户界面。这么说有点枯燥，来看个例子。打开一个音乐播放器的程序，这时如果想上网，那么打开Android浏览器，这时虽然已经进入浏览器这个程序，但是歌曲播放并没有停止，而是在后台继续一首接一首的播放，其实这个播放就是由播放音乐的Service进行控制。当然这个播放音乐的Service也可以停止。例如，当播放列表里的歌曲都结束，或用户按下了停止音乐播放的快捷键等。Service可以在很多场合的应用中使用，如播放多媒体时用户启动了其他Activity，这时程序要在后台继续播放，比如检测SD卡上文件的变化，或在后台记录地理信息位置的改变等，而服务却藏在后台。</p>
-</blockquote>
-<h3 id="生命周期-1"><a href="#生命周期-1" class="headerlink" title="生命周期"></a>生命周期</h3><p><img src="http://ov1nop9io.bkt.clouddn.com/QQ%E6%88%AA%E5%9B%BE20180311223711.png" alt="enter image description here"></p>
-<h3 id="用法-1"><a href="#用法-1" class="headerlink" title="用法"></a>用法</h3><blockquote>
-<p>（1）service用于在后台完成用户指定的操作。service分为两种：</p>
-<p>（a）started（启动）：当应用程序组件（如activity）调用startService()方法启动服务时，服务处于started状态。</p>
-<p>（b）bound（绑定）：当应用程序组件调用bindService()方法绑定到服务时，服务处于bound状态。</p>
-</blockquote>
-<h3 id="开启Service两种方式："><a href="#开启Service两种方式：" class="headerlink" title="开启Service两种方式："></a>开启Service两种方式：</h3><blockquote>
-<p>（1）Context.starService（）：Service会经历onCreat  ——&gt;onStar(如果Service还没有运行，则Android先调用onCreat()，然后调用onStar（），所以一个Service的onStar方能会重复调用多次)；如果是调用者自己直接退出而没有调用StopService，服务会一直在后台运行。该服务的调用者再启动起来后可以通过stopService关闭服务。注意，多次调用Context.starService（）不会被嵌套（即使会有相应的onStar（）方法被调用），所以无论同一个服务被启动多少次，一旦调用Context.stopService（）或者StopSelf（），都会被停止。</p>
-<p>说明：传递给starService（）的Intent对象会传递给onStar()方法。调用顺序为onCreat——onStar（可调用多次）——onDestroy.</p>
-<p>（2）Context.bindService()：服务会经历onCreate（）——onBind（），onBind将返回给客户端一个IBind接口实例，IBind允许客户端回调服务的方法，比如得到服务运行的状态或其他操作。这个时候把调用者（Context，如Activity）会和服务绑定在一起，Context退出了，服务就会调用onUnbind——onDestroy相应退出，所谓绑定在一起就是“共存亡”了。</p>
-<p>(3)我们在开发的过程中还必须注意Service实例只会有一个，也就是说如果当前要启动的Service已经存在了那么就不会再次创建该Service当然也不会调用onCreate()方法；</p>
-<p>  一个Service可以被多个客户进行绑定，只有所有绑定对象都执行了onBind()方法后该Service才会销毁，不过如果有一个用户执行了onStart()方法，那么这个时候如果其他所有的bind客户都执行了unBind()。 该Service也不会销毁,很多应用都是用startService和bindService混合开启服务,比如音乐播放器，第三方支付等这时我们可能会有一个疑问：既然有StartService开启服务，为什么还要用bindService开启服务？目的就是为了使用bindserivce调用服务里面的方法这时就出现了解决进程间的通信问题：IPC.</p>
-</blockquote>
-<h2 id="ContentProvider"><a href="#ContentProvider" class="headerlink" title="ContentProvider"></a>ContentProvider</h2><h3 id="概述-2"><a href="#概述-2" class="headerlink" title="概述"></a>概述</h3><blockquote>
-<p>内容提供者（Content Provider）是Android提供的第三方应用数据的访问方案。</p>
-<p>在Android中，对数据的保护是很严密的，除了放在SD卡中的数据，一个应用所持有的数据库、文件等内容，都是不允许其他直接访问的。Android当然不会真的把每一个应用都做成一座“孤岛”，它为所有应用都准备可一扇窗，这就是Content Provider。应用想对外提供的数据，可以通过派生Content Provider类，封装成一枚Content Provider。每个Content Provider都用一个uri作为独立的标识，形如：content://com.xxxxx。所有应用看着像REST的样子，但实际上它比REST更为灵活。和REST类似，uri也可以有两种类型，一种是带id的；另一种是列表的，但实现者不需要按照这个模式来做，给id的uri也可以返回列表类型的数据。</p>
-</blockquote>
-<h3 id="用法-2"><a href="#用法-2" class="headerlink" title="用法"></a>用法</h3><blockquote>
-<p>（1）android平台提供了Content Provider使一个应用程序的指定数据集提供给其他应用程序。其他应用可以通过ContentResolver类从该内容提供者中获取或存入数据。</p>
-<p>（2）只有需要在多个应用程序间共享数据是才需要内容提供者。例如，通讯录数据被多个应用程序使用，且必须存储在一个内容提供者中。它的好处是统一数据访问方式。</p>
-<p>（3）ContentProvider实现数据共享。ContentProvider用于保存和获取数据，并使其对所有应用程序可见。这是不同应用程序间共享数据的唯一方式，因为android没有提供所有应用共同访问的公共存储区。</p>
-<p>（4）开发人员不会直接使用ContentProvider类的对象，大多数是通过ContentResolver对象实现对ContentProvider的操作。</p>
-<p>（5）ContentProvider使用URI来唯一标识其数据集，这里的URI以content://作为前缀，表示该数据由ContentProvider来管理。</p>
-</blockquote>
-<h2 id="BroadcastReceiver"><a href="#BroadcastReceiver" class="headerlink" title="BroadcastReceiver"></a>BroadcastReceiver</h2><h3 id="概述-3"><a href="#概述-3" class="headerlink" title="概述"></a>概述</h3><blockquote>
-<p>在Android中，广播是一种广泛运用的在应用程序之间传输信息的机制。而广播接收器是对发送出来的广播进行过滤接受并响应的一类组件。可以使用广播接收器来让应用对一个外部时间做出响应。<br>（1）你的应用可以使用它对外部事件进行过滤，只对感兴趣的外部事件(如当电话呼入时，或者数据网络可用时)进行接收并做出响应。广播接收器没有用户界面。然而，它们可以启动一个activity或serice来响应它们收到的信息，或者用NotificationManager来通知用户。通知可以用很多种方式来吸引用户的注意力，例如闪动背灯、震动、播放声音等。一般来说是在状态栏上放一个持久的图标，用户可以打开它并获取消息广播接收器不NotificationManager来通知用户这些事情发生了。<br>（2）广播接收者的注册有两种方法，分别是程序动态注册和AndroidManifest文件中进行静态注册,即广播接收器既可以在AndroidManifest.xml中注册，也可以在运行时的代码中使用Context.registerReceive（）进行注册。<br>（3）动态注册广播接收器特点是当用来注册的Activity关掉后，广播也就失效了。静态注册无需担忧广播接收器是否被关闭，只要设备是开启状态，广播接收器也是打开着的。也就是说哪怕app本身未启动，该app订阅的广播在触发时也会对它起作用只要是注册了，当事件来临时，即使程序没有启动，系统也在需要的时候启动程序。各种应用还可以通过使用Context.sendBroadcast（）将它们自己的Intent广播给其他应用程序。</p>
-</blockquote>
-<h3 id="有序广播和无序广播"><a href="#有序广播和无序广播" class="headerlink" title="有序广播和无序广播"></a>有序广播和无序广播</h3><blockquote>
-<p>有序广播和无序广播</p>
-</blockquote>
-<pre><code> 内部通信实现机制：通过Android系统的Binder机制实现通信的
-
-无序广播：sendBroadcast()方法发送的广播为无序广播，无序广播逻辑上可以被任何广播接受者接收到，优点是效率高。缺点是一个接收者不能将处理结果传递给下一个接收者，传递的数据在传输过程中不能被修改，并无法终止广播的传播。
-
- 有序广播：sendOrderedBroadcast()方法发送的广播为有序广播，有序广播依次传播，列如有三个广播接收者A,B,C, 优先级是A&gt;B&gt;C，
-  此时发送一条广播，那这个消息先传给A，再传给B， 最后传给C，每个接收者都有权终止广播，比如B终止广播，C就无法接受到，
-  此外A接收到广播后可以对结果对象进行操作，当广播传给B时，B可以从结果对象中获取A存入的数据。在通过context.sendOrderedBroadcast(intent, receiverPermission, resultReceiver, scheduler,initialCode, initialData, initialExtras);时我们可以指定resultReceiver广播接收者，这个接收者我们可以认为是最终接收者，通常情况下如果比他优先级更高的接收者如果没有终止广播，那么他的onReceive方法会被执行两次，第一次是正常的按照优先级顺序执行，第二次是作为最终接收者接收，如果比他优先级高的接收者终止了广播，那么他依然能接收到广播。
-
-在我们的项目中经常使用广播接收者接收系统通知，比如开机启动，sd卡挂载，低电量，外拨电话，锁屏等等，
-
-如果我们做的是播放器，那么监听到用户锁屏后我们应该将我们的播放器暂停等。
-</code></pre><blockquote>
-<p>需要注意的地方：</p>
-</blockquote>
-<pre><code>1.BroadcastReceiver的生命周期是非常短暂的，在接收广播的时候创建，onReceiver()方法结束之后销毁。               2. 广播接收者中不要做一些耗时的工作，否则会弹出Application No Response（应用无响应anr）错误对话框,，一般耗时的较长的操作最好放在服务中完成。
-
-
-
-    3.最好也不要在广播接收者中创建子线程做耗时操作,因为广播接收者被销毁后进程就成为空进程，而空进程很容易被系统杀掉。     
-
-
-
-   Android中引入广播机制的用意 ：
-
-    1.程序间互通消息(例如在自己的应用程序内监听系统的来电)
-
-    2.效率上(参考UDP的广播协议在局域网的方便性)
-</code></pre><h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><blockquote>
-<p>（1）4大组件的注册</p>
-</blockquote>
-<p> 4大基本组件都需要注册才能使用，每个Activity、service、Content Provider都需要在AndroidManifest文件中进行配置。AndroidManifest文件中未进行声明的activity、服务以及内容提供者将不为系统所见，从而也就不可用。而broadcast receiver广播接收者的注册分静态注册（在AndroidManifest文件中进行配置）和通过代码动态创建并以调用Context.registerReceiver()的方式注册至系统。需要注意的是在AndroidManifest文件中进行配置的广播接收者会随系统的启动而一直处于活跃状态，只要接收到感兴趣的广播就会触发（即使程序未运行）。</p>
-<blockquote>
-<p>（2）4大组件的激活</p>
-</blockquote>
-<p>内容提供者的激活：当接收到ContentResolver发出的请求后，内容提供者被激活。而其它三种组件activity、服务和广播接收器被一种叫做intent的异步消息所激活。</p>
-<blockquote>
-<p>（3）4大组件的关闭</p>
-</blockquote>
-<p>内容提供者仅在响应ContentResolver提出请求的时候激活。而一个广播接收器仅在响应广播信息的时候激活。所以，没有必要去显式的关闭这些组件。Activity关闭：可以通过调用它的finish()方法来关闭一个activity。服务关闭：对于通过startService()方法启动的服务要调用Context.stopService()方法关闭服务，使用bindService()方法启动的服务要调用Contex.unbindService()方法关闭服务。</p>
-<blockquote>
-<p>（4）android中的任务（activity栈）</p>
-</blockquote>
-<p>（a）任务其实就是activity的栈，它由一个或多个Activity组成，共同完成一个完整的用户体验。栈底的是启动整个任务的Activity，栈顶的是当前运行的用户可以交互的Activity，当一个activity启动另外一个的时候，新的activity就被压入栈，并成为当前运行的activity。而前一个activity仍保持在栈之中。当用户按下BACK键的时候，当前activity出栈，而前一个恢复为当前运行的activity。栈中保存的其实是对象，栈中的Activity永远不会重排，只会压入或弹出。</p>
-<p>（b）任务中的所有activity是作为一个整体进行移动的。整个的任务（即activity栈）可以移到前台，或退至后台。</p>
-<p>（c）Android系统是一个多任务(Multi-Task)的操作系统，可以在用手机听音乐的同时，也执行其他多个程序。每多执行一个应用程序，就会多耗费一些系统内存，当同时执行的程序过多，或是关闭的程序没有正确释放掉内存，系统就会觉得越来越慢，甚至不稳定。为了解决这个问题，Android引入了一个新的机制，即生命周期(Life Cycle)。</p>
-]]></content>
-      
-        <categories>
-            
-            <category> Android </category>
-            
-        </categories>
-        
-        
-        <tags>
-            
-            <tag> Android </tag>
-            
-            <tag> Java </tag>
-            
-        </tags>
-        
-    </entry>
-    
-    <entry>
       <title><![CDATA[Spring AOP与IoC]]></title>
       <url>/2018/03/11/Spring%20AOP%E4%B8%8EIoC/</url>
       <content type="html"><![CDATA[<h1 id="Spring-AOP与IoC"><a href="#Spring-AOP与IoC" class="headerlink" title="Spring AOP与IoC"></a>Spring AOP与IoC</h1><h2 id="Spring框架简介"><a href="#Spring框架简介" class="headerlink" title="Spring框架简介"></a>Spring框架简介</h2><p>Spring是一个开源框架，Spring是于2003 年兴起的一个轻量级的Java 开发框架，由Rod Johnson 在其著作Expert One-On-One J2EE Development and Design中阐述的部分理念和原型衍生而来。它是为了解决企业应用开发的复杂性而创建的。Spring使用基本的JavaBean来完成以前只可能由EJB完成的事情。然而，Spring的用途不仅限于服务器端的开发。从简单性、可测试性和松耦合的角度而言，任何Java应用都可以从Spring中受益。<strong>简单来说，Spring是一个轻量级的控制反转（IoC）和面向切面（AOP）的容器框架。</strong></p>
@@ -1684,6 +1667,128 @@ org.springframework.boot.autoconfigure.webservices.WebServicesAutoConfiguration
             <tag> Java </tag>
             
             <tag> Spring </tag>
+            
+        </tags>
+        
+    </entry>
+    
+    <entry>
+      <title><![CDATA[Android四大组件学习笔记总结]]></title>
+      <url>/2018/03/11/Android%E5%9B%9B%E5%A4%A7%E7%BB%84%E4%BB%B6%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%E6%80%BB%E7%BB%93/</url>
+      <content type="html"><![CDATA[<h1 id="Android四大组件学习笔记总结"><a href="#Android四大组件学习笔记总结" class="headerlink" title="Android四大组件学习笔记总结"></a>Android四大组件学习笔记总结</h1><p>Android四大组件分别是Activity，Service，ContentProvider，BroadcastReceiver。</p>
+<h2 id="Activity"><a href="#Activity" class="headerlink" title="Activity"></a>Activity</h2><h3 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h3><blockquote>
+<p>Android中，activity是所有程序的根本，所有程序的流程都运行在activity之中，activity可以算是开发者遇到的最频繁，也是android当中最基本的模块之一。在android的程序中，activity一般代表手机屏幕的一屏。如果把手机比作一个浏览器，那么activity就相当于一个网页。在activity当中可以添加一些Button、Checkbox等控件，可以看到activity概念和网页的概念相当类似。</p>
+<p>一般一个android应用是由多个activity组成的，这多个activity之间可以进行相互跳转。例如，按下一个Button按钮后，可能会跳转到其他的activity，与网页跳转稍微有点不一样的是，activity之间的跳转有可能返回值。例如，从activity A跳转到activity B，那么当activity B运行结束时，有可能会给activity A一个返回值。这样做在很多时候是相当方便的。</p>
+<p>当打开一个新的屏幕时，之前一个屏幕会被置为暂停状态，并且压入历史堆栈中。用户可以通过回退操作返回到以前打开过的屏幕。可以选择性的一处一些没有必要保留的屏幕，因为Android会把每个应用的开始到当前的每个屏幕保存在堆栈中。</p>
+</blockquote>
+<h3 id="生命周期及方法"><a href="#生命周期及方法" class="headerlink" title="生命周期及方法"></a>生命周期及方法</h3><h4 id="生命周期"><a href="#生命周期" class="headerlink" title="生命周期"></a>生命周期</h4><p><img src="http://ov1nop9io.bkt.clouddn.com/%E6%9C%AA%E5%91%BD%E5%90%8D%E5%9B%BE%E7%89%87.png" alt="enter image description here"></p>
+<blockquote>
+<p>一个activity的生命周期就像我们一样，从出生到童年，青年，中年，老年<br>    最后入土.Activity从创建到销毁有多种状态，从一种状态到另一种状态时会激发相应的回调方法，从onCreate(),<br>    onStart(),onPause(),onResume(),onstop(),onDestroy(),到onRestart()等方法.</p>
+</blockquote>
+<h4 id="方法"><a href="#方法" class="headerlink" title="方法"></a>方法</h4><blockquote>
+<p>onCreat()方法，谷歌官方的解释是：当这个界面第一次创建的时候执行这个方法，当然<br>   一般情况下，在一个应用中这个方法只会执行一次，（横竖屏切换），既然这个方法最先执行，那我们就可以在<br>   这个方法体里面做一些初始化的操作，如 初始化view(setCountentView(view)),寻找控件 findViewById(id)，<br>   初始化一些数据等等。<br>        执行完oncreate方法界面展示后，即当Activity变成可见的时候，开始执行onStart()方法 ，这个方法和<br>  onStop()方法对应。这个方法的用处不怎么大。<br>        onResume()方法，当一个界面可以和用户交互，获取到焦点的的时候，执行这个方法，什么是和用户交互？<br>  比如说，你点击屏幕上的按钮，图片等等，activity会给出不同的反应。<br>        onPause()方法和onResume()方法对应，即activity不能和用户交互的，activity失去焦点，界面上的view<br>  不能被点击的时候执行。<br>       onStop()方法，当activity不可见的时候，执行这个方法，如从一个activity跳转到另一个activity时，跳转<br>  前的activity被跳转后的activity遮挡，就会执行onStop()这个方法<br>       onRestart()方法，从第一个activity跳转到第二个activity，再返回第一个 activity时，就会执行这个方法<br>  界面重新变得可见就会执行这个方法。<br>       onDestroy()方法，当一个activity销毁的时候调用这个方法，与onCreate()对应。</p>
+</blockquote>
+<h3 id="用法"><a href="#用法" class="headerlink" title="用法"></a>用法</h3><blockquote>
+<p>  （1）一个Activity通常就是一个单独的屏幕（窗口）。<br>（2）Activity之间通过Intent进行通信。<br>（3）android应用中每一个Activity都必须要在AndroidManifest.xml配置文件中声明，否则系统将不识别也不执行该Activity。</p>
+</blockquote>
+<h3 id="启动模式"><a href="#启动模式" class="headerlink" title="启动模式"></a>启动模式</h3><blockquote>
+<p>(1)标准 standard，大部分应用都是这个标准启动模式。 </p>
+<p> (2)singleTop 单一顶部模式   当我们把Activity配置成 singleTop启动模式的时候 ,当我们在开启这个Activity的时候 就会检查当前任务栈的栈顶是否有这个实例存在,如果存在就不会创建新的实例,而是直接复用这个实例   </p>
+<p> (3)singleTask 当我们 把Activity设置成singleTask启动模式 会检查当前任务栈 是否有实例开启 ,如果有实例开启,就会直接复用这个实例 ,并且会把这个实例上面其他的Activity 也清空,当前任务栈只有一个实例存在   </p>
+<p>(4)singleinstance :如果把一个Activity配置这种启动模式,系统会为这个Activity单独创建一个任务栈,这个Activity在自己的任务栈里面存在 </p>
+</blockquote>
+<h2 id="Service"><a href="#Service" class="headerlink" title="Service"></a>Service</h2><h3 id="概述-1"><a href="#概述-1" class="headerlink" title="概述"></a>概述</h3><blockquote>
+<p>Service是android系统中的一种组件，跟activity的级别差不多，但是他不能自己运行，只能后台运行，并且可以和其他组件进行交互。Service是没有界面长生命周期的代码。Service是一种程序，可以运行很长时间的，但是却没有用户界面。这么说有点枯燥，来看个例子。打开一个音乐播放器的程序，这时如果想上网，那么打开Android浏览器，这时虽然已经进入浏览器这个程序，但是歌曲播放并没有停止，而是在后台继续一首接一首的播放，其实这个播放就是由播放音乐的Service进行控制。当然这个播放音乐的Service也可以停止。例如，当播放列表里的歌曲都结束，或用户按下了停止音乐播放的快捷键等。Service可以在很多场合的应用中使用，如播放多媒体时用户启动了其他Activity，这时程序要在后台继续播放，比如检测SD卡上文件的变化，或在后台记录地理信息位置的改变等，而服务却藏在后台。</p>
+</blockquote>
+<h3 id="生命周期-1"><a href="#生命周期-1" class="headerlink" title="生命周期"></a>生命周期</h3><p><img src="http://ov1nop9io.bkt.clouddn.com/QQ%E6%88%AA%E5%9B%BE20180311223711.png" alt="enter image description here"></p>
+<h3 id="用法-1"><a href="#用法-1" class="headerlink" title="用法"></a>用法</h3><blockquote>
+<p>（1）service用于在后台完成用户指定的操作。service分为两种：</p>
+<p>（a）started（启动）：当应用程序组件（如activity）调用startService()方法启动服务时，服务处于started状态。</p>
+<p>（b）bound（绑定）：当应用程序组件调用bindService()方法绑定到服务时，服务处于bound状态。</p>
+</blockquote>
+<h3 id="开启Service两种方式："><a href="#开启Service两种方式：" class="headerlink" title="开启Service两种方式："></a>开启Service两种方式：</h3><blockquote>
+<p>（1）Context.starService（）：Service会经历onCreat  ——&gt;onStar(如果Service还没有运行，则Android先调用onCreat()，然后调用onStar（），所以一个Service的onStar方能会重复调用多次)；如果是调用者自己直接退出而没有调用StopService，服务会一直在后台运行。该服务的调用者再启动起来后可以通过stopService关闭服务。注意，多次调用Context.starService（）不会被嵌套（即使会有相应的onStar（）方法被调用），所以无论同一个服务被启动多少次，一旦调用Context.stopService（）或者StopSelf（），都会被停止。</p>
+<p>说明：传递给starService（）的Intent对象会传递给onStar()方法。调用顺序为onCreat——onStar（可调用多次）——onDestroy.</p>
+<p>（2）Context.bindService()：服务会经历onCreate（）——onBind（），onBind将返回给客户端一个IBind接口实例，IBind允许客户端回调服务的方法，比如得到服务运行的状态或其他操作。这个时候把调用者（Context，如Activity）会和服务绑定在一起，Context退出了，服务就会调用onUnbind——onDestroy相应退出，所谓绑定在一起就是“共存亡”了。</p>
+<p>(3)我们在开发的过程中还必须注意Service实例只会有一个，也就是说如果当前要启动的Service已经存在了那么就不会再次创建该Service当然也不会调用onCreate()方法；</p>
+<p>  一个Service可以被多个客户进行绑定，只有所有绑定对象都执行了onBind()方法后该Service才会销毁，不过如果有一个用户执行了onStart()方法，那么这个时候如果其他所有的bind客户都执行了unBind()。 该Service也不会销毁,很多应用都是用startService和bindService混合开启服务,比如音乐播放器，第三方支付等这时我们可能会有一个疑问：既然有StartService开启服务，为什么还要用bindService开启服务？目的就是为了使用bindserivce调用服务里面的方法这时就出现了解决进程间的通信问题：IPC.</p>
+</blockquote>
+<h2 id="ContentProvider"><a href="#ContentProvider" class="headerlink" title="ContentProvider"></a>ContentProvider</h2><h3 id="概述-2"><a href="#概述-2" class="headerlink" title="概述"></a>概述</h3><blockquote>
+<p>内容提供者（Content Provider）是Android提供的第三方应用数据的访问方案。</p>
+<p>在Android中，对数据的保护是很严密的，除了放在SD卡中的数据，一个应用所持有的数据库、文件等内容，都是不允许其他直接访问的。Android当然不会真的把每一个应用都做成一座“孤岛”，它为所有应用都准备可一扇窗，这就是Content Provider。应用想对外提供的数据，可以通过派生Content Provider类，封装成一枚Content Provider。每个Content Provider都用一个uri作为独立的标识，形如：content://com.xxxxx。所有应用看着像REST的样子，但实际上它比REST更为灵活。和REST类似，uri也可以有两种类型，一种是带id的；另一种是列表的，但实现者不需要按照这个模式来做，给id的uri也可以返回列表类型的数据。</p>
+</blockquote>
+<h3 id="用法-2"><a href="#用法-2" class="headerlink" title="用法"></a>用法</h3><blockquote>
+<p>（1）android平台提供了Content Provider使一个应用程序的指定数据集提供给其他应用程序。其他应用可以通过ContentResolver类从该内容提供者中获取或存入数据。</p>
+<p>（2）只有需要在多个应用程序间共享数据是才需要内容提供者。例如，通讯录数据被多个应用程序使用，且必须存储在一个内容提供者中。它的好处是统一数据访问方式。</p>
+<p>（3）ContentProvider实现数据共享。ContentProvider用于保存和获取数据，并使其对所有应用程序可见。这是不同应用程序间共享数据的唯一方式，因为android没有提供所有应用共同访问的公共存储区。</p>
+<p>（4）开发人员不会直接使用ContentProvider类的对象，大多数是通过ContentResolver对象实现对ContentProvider的操作。</p>
+<p>（5）ContentProvider使用URI来唯一标识其数据集，这里的URI以content://作为前缀，表示该数据由ContentProvider来管理。</p>
+</blockquote>
+<h2 id="BroadcastReceiver"><a href="#BroadcastReceiver" class="headerlink" title="BroadcastReceiver"></a>BroadcastReceiver</h2><h3 id="概述-3"><a href="#概述-3" class="headerlink" title="概述"></a>概述</h3><blockquote>
+<p>在Android中，广播是一种广泛运用的在应用程序之间传输信息的机制。而广播接收器是对发送出来的广播进行过滤接受并响应的一类组件。可以使用广播接收器来让应用对一个外部时间做出响应。<br>（1）你的应用可以使用它对外部事件进行过滤，只对感兴趣的外部事件(如当电话呼入时，或者数据网络可用时)进行接收并做出响应。广播接收器没有用户界面。然而，它们可以启动一个activity或serice来响应它们收到的信息，或者用NotificationManager来通知用户。通知可以用很多种方式来吸引用户的注意力，例如闪动背灯、震动、播放声音等。一般来说是在状态栏上放一个持久的图标，用户可以打开它并获取消息广播接收器不NotificationManager来通知用户这些事情发生了。<br>（2）广播接收者的注册有两种方法，分别是程序动态注册和AndroidManifest文件中进行静态注册,即广播接收器既可以在AndroidManifest.xml中注册，也可以在运行时的代码中使用Context.registerReceive（）进行注册。<br>（3）动态注册广播接收器特点是当用来注册的Activity关掉后，广播也就失效了。静态注册无需担忧广播接收器是否被关闭，只要设备是开启状态，广播接收器也是打开着的。也就是说哪怕app本身未启动，该app订阅的广播在触发时也会对它起作用只要是注册了，当事件来临时，即使程序没有启动，系统也在需要的时候启动程序。各种应用还可以通过使用Context.sendBroadcast（）将它们自己的Intent广播给其他应用程序。</p>
+</blockquote>
+<h3 id="有序广播和无序广播"><a href="#有序广播和无序广播" class="headerlink" title="有序广播和无序广播"></a>有序广播和无序广播</h3><blockquote>
+<p>有序广播和无序广播</p>
+</blockquote>
+<pre><code> 内部通信实现机制：通过Android系统的Binder机制实现通信的
+
+无序广播：sendBroadcast()方法发送的广播为无序广播，无序广播逻辑上可以被任何广播接受者接收到，优点是效率高。缺点是一个接收者不能将处理结果传递给下一个接收者，传递的数据在传输过程中不能被修改，并无法终止广播的传播。
+
+ 有序广播：sendOrderedBroadcast()方法发送的广播为有序广播，有序广播依次传播，列如有三个广播接收者A,B,C, 优先级是A&gt;B&gt;C，
+  此时发送一条广播，那这个消息先传给A，再传给B， 最后传给C，每个接收者都有权终止广播，比如B终止广播，C就无法接受到，
+  此外A接收到广播后可以对结果对象进行操作，当广播传给B时，B可以从结果对象中获取A存入的数据。在通过context.sendOrderedBroadcast(intent, receiverPermission, resultReceiver, scheduler,initialCode, initialData, initialExtras);时我们可以指定resultReceiver广播接收者，这个接收者我们可以认为是最终接收者，通常情况下如果比他优先级更高的接收者如果没有终止广播，那么他的onReceive方法会被执行两次，第一次是正常的按照优先级顺序执行，第二次是作为最终接收者接收，如果比他优先级高的接收者终止了广播，那么他依然能接收到广播。
+
+在我们的项目中经常使用广播接收者接收系统通知，比如开机启动，sd卡挂载，低电量，外拨电话，锁屏等等，
+
+如果我们做的是播放器，那么监听到用户锁屏后我们应该将我们的播放器暂停等。
+</code></pre><blockquote>
+<p>需要注意的地方：</p>
+</blockquote>
+<pre><code>1.BroadcastReceiver的生命周期是非常短暂的，在接收广播的时候创建，onReceiver()方法结束之后销毁。               2. 广播接收者中不要做一些耗时的工作，否则会弹出Application No Response（应用无响应anr）错误对话框,，一般耗时的较长的操作最好放在服务中完成。
+
+
+
+    3.最好也不要在广播接收者中创建子线程做耗时操作,因为广播接收者被销毁后进程就成为空进程，而空进程很容易被系统杀掉。     
+
+
+
+   Android中引入广播机制的用意 ：
+
+    1.程序间互通消息(例如在自己的应用程序内监听系统的来电)
+
+    2.效率上(参考UDP的广播协议在局域网的方便性)
+</code></pre><h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><blockquote>
+<p>（1）4大组件的注册</p>
+</blockquote>
+<p> 4大基本组件都需要注册才能使用，每个Activity、service、Content Provider都需要在AndroidManifest文件中进行配置。AndroidManifest文件中未进行声明的activity、服务以及内容提供者将不为系统所见，从而也就不可用。而broadcast receiver广播接收者的注册分静态注册（在AndroidManifest文件中进行配置）和通过代码动态创建并以调用Context.registerReceiver()的方式注册至系统。需要注意的是在AndroidManifest文件中进行配置的广播接收者会随系统的启动而一直处于活跃状态，只要接收到感兴趣的广播就会触发（即使程序未运行）。</p>
+<blockquote>
+<p>（2）4大组件的激活</p>
+</blockquote>
+<p>内容提供者的激活：当接收到ContentResolver发出的请求后，内容提供者被激活。而其它三种组件activity、服务和广播接收器被一种叫做intent的异步消息所激活。</p>
+<blockquote>
+<p>（3）4大组件的关闭</p>
+</blockquote>
+<p>内容提供者仅在响应ContentResolver提出请求的时候激活。而一个广播接收器仅在响应广播信息的时候激活。所以，没有必要去显式的关闭这些组件。Activity关闭：可以通过调用它的finish()方法来关闭一个activity。服务关闭：对于通过startService()方法启动的服务要调用Context.stopService()方法关闭服务，使用bindService()方法启动的服务要调用Contex.unbindService()方法关闭服务。</p>
+<blockquote>
+<p>（4）android中的任务（activity栈）</p>
+</blockquote>
+<p>（a）任务其实就是activity的栈，它由一个或多个Activity组成，共同完成一个完整的用户体验。栈底的是启动整个任务的Activity，栈顶的是当前运行的用户可以交互的Activity，当一个activity启动另外一个的时候，新的activity就被压入栈，并成为当前运行的activity。而前一个activity仍保持在栈之中。当用户按下BACK键的时候，当前activity出栈，而前一个恢复为当前运行的activity。栈中保存的其实是对象，栈中的Activity永远不会重排，只会压入或弹出。</p>
+<p>（b）任务中的所有activity是作为一个整体进行移动的。整个的任务（即activity栈）可以移到前台，或退至后台。</p>
+<p>（c）Android系统是一个多任务(Multi-Task)的操作系统，可以在用手机听音乐的同时，也执行其他多个程序。每多执行一个应用程序，就会多耗费一些系统内存，当同时执行的程序过多，或是关闭的程序没有正确释放掉内存，系统就会觉得越来越慢，甚至不稳定。为了解决这个问题，Android引入了一个新的机制，即生命周期(Life Cycle)。</p>
+]]></content>
+      
+        <categories>
+            
+            <category> Android </category>
+            
+        </categories>
+        
+        
+        <tags>
+            
+            <tag> Android </tag>
+            
+            <tag> Java </tag>
             
         </tags>
         
