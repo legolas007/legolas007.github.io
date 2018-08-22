@@ -1456,7 +1456,7 @@ org.springframework.boot.autoconfigure.webservices.WebServicesAutoConfiguration
 <thead>
 <tr>
 <th></th>
-<th><code>int a ;   // 语句1 a = 8 ;   // 语句2int b = 9 ;     // 语句3int c = a + b ; // 语句4</code></th>
+<th><code>int a ;   // 语句1                                                                   a = 8 ;   // 语句2                                                               int b = 9 ;     // 语句3                                                                            int c = a + b ; // 语句4</code></th>
 </tr>
 </thead>
 <tbody>
@@ -1472,10 +1472,14 @@ org.springframework.boot.autoconfigure.webservices.WebServicesAutoConfiguration
 <p><strong>解决方案为：给instance的声明加上volatile关键字</strong></p>
 <p>volatile关键字的一个作用是禁止指令重排，把instance声明为volatile之后，对它的写操作就会有一个内存屏障，这样，在它的赋值完成之前，就不用会调用读操作。</p>
 <p>注意：volatile阻止的不是singleton = new Singleton()这句话内部[1-2-3]的指令重排，而是保证了在一个写操作（[1-2-3]）完成之前，不会调用读操作（if (instance == null)）。</p>
-<h2 id="其它方法"><a href="#其它方法" class="headerlink" title="其它方法"></a><strong>其它方法</strong></h2><h3 id="静态内部类："><a href="#静态内部类：" class="headerlink" title="静态内部类："></a><strong>静态内部类：</strong></h3><p><img src="https://mmbiz.qpic.cn/mmbiz_png/UtWdDgynLdZ7NxNoNaGic8BtCNGiauTUVEyqxIwa9yYicJcTdvJAfPu4C02IQicbWPbsKYEZdQLbdusntZcwgJiaLQQ/640?tp=webp&amp;wxfrom=5&amp;wx_lazy=1" alt="img"></p>
+<h2 id="其它方法"><a href="#其它方法" class="headerlink" title="其它方法"></a><strong>其它方法</strong></h2><h3 id="静态内部类："><a href="#静态内部类：" class="headerlink" title="静态内部类："></a><strong>静态内部类：</strong></h3></blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Singleton</span></span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Singleton</span></span>&#123;</span><br><span class="line">         <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Singleton INSTANCE = <span class="keyword">new</span> Singleton();</span><br><span class="line">    &#125; </span><br><span class="line">  	<span class="function"><span class="keyword">private</span> <span class="title">Singleton</span><span class="params">()</span></span>&#123;&#125;</span><br><span class="line">  	<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> Singleton <span class="title">getInstance</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> SingletonHolder.INSTANCE;</span><br><span class="line">  	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
 <p>这种写法的巧妙之处在于：对于内部类SingletonHolder，它是一个饿汉式的单例实现，在SingletonHolder初始化的时候会由ClassLoader来保证同步，使INSTANCE是一个真单例。</p>
 <p>同时，由于SingletonHolder是一个内部类，只在外部类的Singleton的getInstance()中被使用，所以它被加载的时机也就是在getInstance()方法第一次被调用的时候。<br>它利用了ClassLoader来保证了同步，同时又能让开发者控制类加载的时机。从内部看是一个饿汉式的单例，但是从外部看来，又的确是懒汉式的实现</p>
-<h3 id="枚举："><a href="#枚举：" class="headerlink" title="枚举："></a><strong>枚举：</strong></h3><p><img src="https://mmbiz.qpic.cn/mmbiz_png/UtWdDgynLdZ7NxNoNaGic8BtCNGiauTUVE9uernxbKh8JzIpKtH5Ph7vccr1Fr7cmy1MQVfQSL87deUFFnWkDtGg/640?tp=webp&amp;wxfrom=5&amp;wx_lazy=1" alt="img"></p>
+<h3 id="枚举："><a href="#枚举：" class="headerlink" title="枚举："></a><strong>枚举：</strong></h3></blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">enum</span> SingleInstance&#123;</span><br><span class="line">    INSTANCE;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">fun</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="comment">//do something</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;<span class="comment">//使用SingleInstance.INSTANCE.fun();</span></span><br></pre></td></tr></table></figure>
+<blockquote>
 <p>因为自动序列化机制，保证了线程的绝对安全。</p>
 <p>这种写法在功能上与共有域方法相近，但是它更简洁，无偿地提供了序列化机制，绝对防止对此实例化，即使是在面对复杂的序列化或者反射攻击的时候。虽然这中方法还没有广泛采用，但是单元素的枚举类型已经成为实现Singleton的最佳方法。</p>
 </blockquote>
