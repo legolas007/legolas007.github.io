@@ -6,7 +6,7 @@
       <title><![CDATA[Zookeeper实现分布式锁]]></title>
       <url>/2018/10/03/Zookeeper%E5%AE%9E%E7%8E%B0%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/</url>
       <content type="html"><![CDATA[<h1 id="Zookeeper实现分布式锁"><a href="#Zookeeper实现分布式锁" class="headerlink" title="Zookeeper实现分布式锁"></a>Zookeeper实现分布式锁</h1><h2 id="Zookeeper节点"><a href="#Zookeeper节点" class="headerlink" title="Zookeeper节点"></a>Zookeeper节点</h2><p>节点是zookeeper中数据存储的基础结构，zk的数据模型就是基于好多个节点的树结构，但zk规定每个节点的引用规则是<strong>路径引用</strong>。每个节点中包含子节点引用、存储数据、访问权限以及节点元数据等四部分。 zookeeper对于自身节点的监听者提供事件通知功能 。</p>
-<h2 id="节点类型"><a href="#节点类型" class="headerlink" title="节点类型"></a>节点类型</h2><p>k中提供了四种类型的节点，各种类型节点及其区别如下：</p>
+<h2 id="节点类型"><a href="#节点类型" class="headerlink" title="节点类型"></a>节点类型</h2><p>Zookeeper中提供了四种类型的节点，各种类型节点及其区别如下：</p>
 <ul>
 <li>持久节点（PERSISTENT）：节点创建后，就一直存在，直到有删除操作来主动清除这个节点</li>
 <li>持久顺序节点（PERSISTENT_SEQUENTIAL）：保留持久节点的特性，额外的特性是，每个节点会为其第一层子节点维护一个顺序，记录每个子节点创建的先后顺序，ZK会自动为给定节点名加上一个数字后缀（自增的），作为新的节点名。</li>
