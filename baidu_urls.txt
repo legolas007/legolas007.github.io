@@ -19,14 +19,14 @@ http://www.usherblog.site/2018/04/08/设计模式-迭代器模式/
 http://www.usherblog.site/2018/04/08/Java7、8、9新特性/
 http://www.usherblog.site/2018/04/07/设计模式-抽象工厂模式/
 http://www.usherblog.site/2018/04/07/设计模式-观察者模式/
-http://www.usherblog.site/2018/04/07/设计模式-简单工厂模式/
-http://www.usherblog.site/2018/04/07/设计模式-模板方法模式/
 http://www.usherblog.site/2018/04/07/设计模式-工厂方法模式/
+http://www.usherblog.site/2018/04/07/设计模式-简单工厂模式/
 http://www.usherblog.site/2018/04/07/设计模式-策略模式/
+http://www.usherblog.site/2018/04/07/设计模式-模板方法模式/
 http://www.usherblog.site/2018/04/06/设计模式-单例模式/
 http://www.usherblog.site/2018/03/25/Redis集群的伪分布式搭建/
-http://www.usherblog.site/2018/03/11/Spring AOP与IoC/
 http://www.usherblog.site/2018/03/11/Android四大组件学习笔记总结/
+http://www.usherblog.site/2018/03/11/Spring AOP与IoC/
 http://www.usherblog.site/2018/02/24/JVM/
 http://www.usherblog.site/2018/02/13/Hbase-深入浅出/
 http://www.usherblog.site/2018/02/02/ItemCF 基于物品的协同过滤算法/
