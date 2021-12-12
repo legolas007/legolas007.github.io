@@ -1,255 +1,37 @@
-<!DOCTYPE html><html lang="zh-Hans" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>Tomcat调优和JVM优化 | Usher_Ou's Blog</title><meta name="keywords" content="Java,JVM,Tomcat"><meta name="author" content="Usher"><meta name="copyright" content="Usher"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="Tomcat调优和JVM优化Tomcat本身优化工作方式选择 为了提升性能，首先就要对代码进行动静分离，让 Tomcat 只负责 jsp 文件的解析工作。如采用 Apache 和 Tomcat 的整合方式，他们之间的连接方案有三种选择，JK、http_proxy 和 ajp_proxy。相对于 JK 的连接方式，后两种在配置上比较简单的，灵活性方面也一点都不逊色。但就稳定性而言不像JK 这样久经考">
-<meta property="og:type" content="article">
-<meta property="og:title" content="Tomcat调优和JVM优化">
-<meta property="og:url" content="http://www.usherblog.site/2018/07/22/Tomcat%E8%B0%83%E4%BC%98%E5%92%8CJVM%E4%BC%98%E5%8C%96/index.html">
-<meta property="og:site_name" content="Usher_Ou&#39;s Blog">
-<meta property="og:description" content="Tomcat调优和JVM优化Tomcat本身优化工作方式选择 为了提升性能，首先就要对代码进行动静分离，让 Tomcat 只负责 jsp 文件的解析工作。如采用 Apache 和 Tomcat 的整合方式，他们之间的连接方案有三种选择，JK、http_proxy 和 ajp_proxy。相对于 JK 的连接方式，后两种在配置上比较简单的，灵活性方面也一点都不逊色。但就稳定性而言不像JK 这样久经考">
-<meta property="og:locale">
-<meta property="og:image" content="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg">
-<meta property="article:published_time" content="2018-07-22T11:27:56.000Z">
-<meta property="article:modified_time" content="2018-07-22T14:19:05.543Z">
-<meta property="article:author" content="Usher">
-<meta property="article:tag" content="Java">
-<meta property="article:tag" content="JVM">
-<meta property="article:tag" content="Tomcat">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://www.usherblog.site/2018/07/22/Tomcat%E8%B0%83%E4%BC%98%E5%92%8CJVM%E4%BC%98%E5%8C%96/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
-  root: '/',
-  algolia: undefined,
-  localSearch: undefined,
-  translate: undefined,
-  noticeOutdate: undefined,
-  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
-  copy: {
-    success: 'Copy successfully',
-    error: 'Copy error',
-    noSupport: 'The browser does not support'
-  },
-  relativeDate: {
-    homepage: false,
-    post: false
-  },
-  runtime: '',
-  date_suffix: {
-    just: 'Just',
-    min: 'minutes ago',
-    hour: 'hours ago',
-    day: 'days ago',
-    month: 'months ago'
-  },
-  copyright: undefined,
-  lightbox: 'fancybox',
-  Snackbar: undefined,
-  source: {
-    justifiedGallery: {
-      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.js',
-      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.css'
-    }
-  },
-  isPhotoFigcaption: false,
-  islazyload: false,
-  isAnchor: false
-}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
-  title: 'Tomcat调优和JVM优化',
-  isPost: true,
-  isHome: false,
-  isHighlightShrink: false,
-  isToc: true,
-  postUpdate: '2018-07-22 22:19:05'
-}</script><noscript><style type="text/css">
-  #nav {
-    opacity: 1
-  }
-  .justified-gallery img {
-    opacity: 1
-  }
-
-  #recent-posts time,
-  #post-meta time {
-    display: inline !important
-  }
-</style></noscript><script>(win=>{
-    win.saveToLocal = {
-      set: function setWithExpiry(key, value, ttl) {
-        if (ttl === 0) return
-        const now = new Date()
-        const expiryDay = ttl * 86400000
-        const item = {
-          value: value,
-          expiry: now.getTime() + expiryDay,
-        }
-        localStorage.setItem(key, JSON.stringify(item))
-      },
-
-      get: function getWithExpiry(key) {
-        const itemStr = localStorage.getItem(key)
-
-        if (!itemStr) {
-          return undefined
-        }
-        const item = JSON.parse(itemStr)
-        const now = new Date()
-
-        if (now.getTime() > item.expiry) {
-          localStorage.removeItem(key)
-          return undefined
-        }
-        return item.value
-      }
-    }
-  
-    win.getScript = url => new Promise((resolve, reject) => {
-      const script = document.createElement('script')
-      script.src = url
-      script.async = true
-      script.onerror = reject
-      script.onload = script.onreadystatechange = function() {
-        const loadState = this.readyState
-        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
-        script.onload = script.onreadystatechange = null
-        resolve()
-      }
-      document.head.appendChild(script)
-    })
-  
-      win.activateDarkMode = function () {
-        document.documentElement.setAttribute('data-theme', 'dark')
-        if (document.querySelector('meta[name="theme-color"]') !== null) {
-          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
-        }
-      }
-      win.activateLightMode = function () {
-        document.documentElement.setAttribute('data-theme', 'light')
-        if (document.querySelector('meta[name="theme-color"]') !== null) {
-          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
-        }
-      }
-      const t = saveToLocal.get('theme')
-    
-          if (t === 'dark') activateDarkMode()
-          else if (t === 'light') activateLightMode()
-        
-      const asideStatus = saveToLocal.get('aside-status')
-      if (asideStatus !== undefined) {
-        if (asideStatus === 'hide') {
-          document.documentElement.classList.add('hide-aside')
-        } else {
-          document.documentElement.classList.remove('hide-aside')
-        }
-      }
-    
-    const detectApple = () => {
-      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
-        document.documentElement.classList.add('apple')
-      }
-    }
-    detectApple()
-    })(window)</script><meta name="generator" content="Hexo 5.4.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data is-center"><div class="data-item"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">41</div></a></div><div class="data-item"><a href="/tags/"><div class="headline">Tags</div><div class="length-num">26</div></a></div><div class="data-item"><a href="/categories/"><div class="headline">Categories</div><div class="length-num">16</div></a></div></div><hr/></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg')"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">Usher_Ou's Blog</a></span><div id="menus"><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">Tomcat调优和JVM优化</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2018-07-22T11:27:56.000Z" title="Created 2018-07-22 19:27:56">2018-07-22</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2018-07-22T14:19:05.543Z" title="Updated 2018-07-22 22:19:05">2018-07-22</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/JVM/">JVM</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="Tomcat调优和JVM优化"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post View:</span><span id="busuanzi_value_page_pv"></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h1 id="Tomcat调优和JVM优化"><a href="#Tomcat调优和JVM优化" class="headerlink" title="Tomcat调优和JVM优化"></a>Tomcat调优和JVM优化</h1><h3 id="Tomcat本身优化"><a href="#Tomcat本身优化" class="headerlink" title="Tomcat本身优化"></a>Tomcat本身优化</h3><h4 id="工作方式选择"><a href="#工作方式选择" class="headerlink" title="工作方式选择"></a>工作方式选择</h4><blockquote>
-<p>为了提升性能，首先就要对代码进行动静分离，让 Tomcat 只负责 jsp 文件的解析工作。如采用 Apache 和 Tomcat 的整合方式，他们之间的连接方案有三种选择，JK、http_proxy 和 ajp_proxy。相对于 JK 的连接方式，后两种在配置上比较简单的，灵活性方面也一点都不逊色。但就稳定性而言不像JK 这样久经考验，所以建议采用 JK 的连接方式。 </p>
-</blockquote>
-<h4 id="Connector-连接器的配置"><a href="#Connector-连接器的配置" class="headerlink" title="Connector 连接器的配置"></a>Connector 连接器的配置</h4><blockquote>
-<p>之前文件介绍过的 Tomcat 连接器的三种方式： bio、nio 和 apr，三种方式性能差别很大，apr 的性能最优， bio 的性能最差。而 Tomcat 7 使用的 Connector  默认就启用的 Apr 协议，但需要系统安装 Apr 库，否则就会使用 bio 方式。</p>
-</blockquote>
-<h3 id="配置文件设置"><a href="#配置文件设置" class="headerlink" title="配置文件设置"></a>配置文件设置</h3><h4 id="常见异常-java-lang-OutOfMemoryError-Java-heap-space"><a href="#常见异常-java-lang-OutOfMemoryError-Java-heap-space" class="headerlink" title="常见异常-java.lang.OutOfMemoryError: Java heap space"></a>常见异常-java.lang.OutOfMemoryError: Java heap space</h4><blockquote>
-<p>JVM堆的设置是指java程序运行过程中JVM可以调配使用的内存空间的设置.JVM在启动的时候会自动设置Heap size的值，其初始空间(即-Xms)是物理内存的1/64，最大空间(-Xmx)是物理内存的1/4。可以利用JVM提供的-Xmn -Xms -Xmx等选项可进行设置。Heap size 的大小是Young Generation 和Tenured Generaion 之和。</p>
-<p><strong>在JVM中如果98％的时间是用于GC且可用的Heap size 不足2％的时候将抛出此异常信息</strong>。</p>
-<p><strong>Heap Size 最大不要超过可用物理内存的80％，一般的要将-Xms和-Xmx选项设置为相同，而-Xmn为1/4的-Xmx值。</strong> </p>
-</blockquote>
-<blockquote>
-<p>通常情况下，这种问题出现在实际的生产环境中.产生这种问题的原因是tomcat使用较少的内存给进程,通过配置TOmcat的配置文件(Windows 下的catalina.bat或Linux下的catalina.sh)可以解决这种问题.这种解决方法是通过增加JVM的栈内存实现的.也就是说，JVM通常不去调用垃圾回收器，所以服务器可以更多关注处理web请求，并要求尽快完成。要更改文件(catalina.sh) 位于<code>&quot;\tomcat server folder\bin\catalina.sh&quot;</code></p>
-</blockquote>
-<p><strong>Linux下修改JVM内存大小:</strong></p>
-<p>要添加在tomcat 的bin 下catalina.sh 里，位置cygwin=false前 。</p>
-<p><code># OS specific support. $var _must_ be set to either true or false.</code></p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">JAVA_OPTS=&quot;-Xms256m -Xmx512m -Xss1024K -XX:PermSize=128m -XX:MaxPermSize=256m -XX:+UseConcMarkSweepGC\ </span><br><span class="line"></span><br><span class="line">-XX:+UseCMSCompactAtFullCollection -XX:CMSMaxAbortablePrecleanTime=500\ </span><br><span class="line"></span><br><span class="line">-XX:+CMSClassUnloadingEnabled -XX:+CMSClassUnloadingEnabled -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager&quot;</span><br></pre></td></tr></table></figure>
-
-<p><code>cygwin=false</code></p>
-<h5 id="参数解释"><a href="#参数解释" class="headerlink" title="参数解释"></a>参数解释</h5><blockquote>
-<p>-server:tomcat默认是以一种叫java –client的模式来运行的,server即意味着你的tomcat是以真实的production的模式在运行的性能更优</p>
-<p>-Xms–Xmx:JVM内存设置，JVM初始分配的堆内存由-Xms指定，默认是物理内存的1/64；JVM最大分配的堆内存由-Xmx指定，默认是物理内存的1/4。默认空余堆内存小于40%时，JVM就会增大堆直到-Xmx的最大限制；</p>
-<p> 空余堆内存大于70%时，JVM会减少堆直到-Xms的最小限制，建议把最大和最小设置成一样有利于JVM的垃圾回收机制</p>
-<p>–Xmn:设置新生代，整个堆大小=新生代大小 + 年老代大小 + 持久代大小。此值对系统性能影响较大，Sun官方推荐配置为整个堆的3/8</p>
-<p>-XX:每当JDK版本升级时，你的JVM都会使用最新加入的优化技术</p>
-<p>-XX:PermSize:设置非堆内存初始值，默认是物理内存的1/64</p>
-<p>-XX:MaxPermSize:设置永生代内存初始大小，即最大非堆内存的大小，默认是物理内存的1/4</p>
-<p>-XX:+UseConcMarkSweepGC:CMS gc，这一特性只有jdk1.5即后续版本才具有的功能，它使用的是gc估算触发和heap占用触发</p>
-<p>-XX:+UseCMSCompactAtFullCollection:在使用concurrent gc 的情况下, 防止 memoryfragmention, 对live object 进行整理, 使 memory 碎片减少</p>
-<p>-XX:+UseParNewGC:对新生代采用多线程并行回收，这样收得快</p>
-<p>-XX:+CMSClassUnloadingEnabled:CMS收集器默认不会对永久代进行垃圾回收</p>
-<p>-XX:CMSMaxAbortablePrecleanTime:CMS GC需要经过较多步骤才能完成一次GC的动作，在minor GC较为频繁的情况下，很有可能造成CMS GC尚未完成，从而造成concurrent mode failure,可以通过-XX: CMSMaxAbortablePrecleanTime设置较小的值，以保证CMS GC尽快完成对象的回收，避免concurrent mode failure的现象，尤其是在JDK 5.0+、6.0+的有些版本在CMS-concurrent-abortable-preclean-start和CMS-concurrent-abortable-preclean这两步间有可能会耗费很长的时间，导致可回收的旧生代的对象很长时间后才被回收，这是Sun JDK CMS GC的一个bug</p>
-</blockquote>
-<p><strong>在重启你的Tomcat服务器之后，这些配置的更改才会有效。</strong></p>
-<p> #### 常见异常-java.lang.OutOfMemoryError: PermGen space   </p>
-<blockquote>
-<p>PermGen space 的全称是 Permanent Generation space，是指内存的永久保存区域。为什么会内存溢出，这是由于这块内存主要是被 JVM 存放Class 和 Meta 信息的，Class 在被 Load 的时候被放入 PermGen space 区域，它和存放 Instance 的 Heap 区域不同，sun 的 GC 不会在主程序运行期对 PermGen space 进行清理，所以如果你的 APP 会载入很多 CLASS 的话，就很可能出现 PermGen space 溢出。</p>
-</blockquote>
-<p><strong>解决方法： 手动设置 MaxPermSize 大小</strong></p>
-<h4 id="常见异常-java-lang-StackOverflowError"><a href="#常见异常-java-lang-StackOverflowError" class="headerlink" title="常见异常-java.lang.StackOverflowError"></a>常见异常-java.lang.StackOverflowError</h4><blockquote>
-<p>栈溢出了，JVM 依然是采用栈式的虚拟机，这个和 C 与 Pascal 都是一样的。函数的调用过程都体现在堆栈和退栈上了。调用构造函数的 “层”太多了，以致于把栈区溢出了。通常来讲，一般栈区远远小于堆区的，因为函数调用过程往往不会多于上千层，而即便每个函数调用需要 1K 的空间（这个大约相当于在一个 C 函数内声明了 256 个 int 类型的变量），那么栈区也不过是需要 1MB 的空间。通常栈的大小是 1－2MB 的。</p>
-</blockquote>
-<p><strong>通常递归也不要递归的层次过多，很容易溢出。</strong></p>
-<p><strong>解决方法：修改程序。</strong></p>
-<h4 id="线程池设置"><a href="#线程池设置" class="headerlink" title="线程池设置"></a>线程池设置</h4><blockquote>
-<p>线程池指定Web请求负载的数量，因此，为获得更好的性能这部分应小心处理。可以通过调整连接器属性“maxThreads”完成设置。maxThreads的值应该根据流量的大小，如果值过低，将有没有足够的线程来处理所有的请求，请求将进入等待状态，只有当一个的处理线程释放后才被处理；如果设置的太大，Tomcat的启动将花费更多时间。因此它取决于我们给maxThreads设置一个正确的值。 </p>
-</blockquote>
-<p>Tomcat的server.xml配置文件 </p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">Connector</span>      <span class="attr">port</span>=<span class="string">&quot;8080&quot;</span><span class="attr">address</span>=<span class="string">&quot;localhost&quot;</span></span></span><br><span class="line"><span class="tag"></span></span><br><span class="line"><span class="tag"><span class="attr">maxThreads</span>=<span class="string">&quot;1000&quot;</span><span class="attr">maxHttpHeaderSize</span>=<span class="string">&quot;8192&quot;</span></span></span><br><span class="line"><span class="tag">           <span class="attr">minSpareThreads</span>=<span class="string">&quot;100&quot;</span></span></span><br><span class="line"><span class="tag"><span class="attr">maxProcessors</span>=<span class="string">&quot;1200&quot;</span> <span class="attr">acceptCount</span>=<span class="string">&quot;1000&quot;</span></span></span><br><span class="line"><span class="tag"><span class="attr">emptySessionPath</span>=<span class="string">&quot;true&quot;</span><span class="attr">protocol</span>=<span class="string">&quot;HTTP/1.1&quot;</span></span></span><br><span class="line"><span class="tag"></span></span><br><span class="line"><span class="tag"><span class="attr">enableLookups</span>=<span class="string">&quot;false&quot;</span><span class="attr">redirectPort</span>=<span class="string">&quot;8181&quot;</span><span class="attr">acceptCount</span>=<span class="string">&quot;100&quot;</span></span></span><br><span class="line"><span class="tag"></span></span><br><span class="line"><span class="tag"><span class="attr">connectionTimeout</span>=<span class="string">&quot;20000&quot;</span><span class="attr">disableUploadTimeout</span>=<span class="string">&quot;true&quot;</span>/&gt;</span></span><br></pre></td></tr></table></figure>
+{% extends '_layout.swig' %}
+{% import '_macro/post.swig' as post_template %}
+{% import '_macro/sidebar.swig' as sidebar_template %}
 
 
+{% block title %}{{ page.title }} | {{ config.title }}{% endblock %}
 
-<blockquote>
-<p>在上述配置中，maxThreads值设定为“250”，这指定可以由服务器处理的并发请求的最大数量。如果没有指定，这个属性的默认值为“200”。</p>
-<p>connectionTimeout:超时时间，单位毫秒，默认值为20000</p>
-<p>maxThreads:tomcat:起动的最大线程数，默认值为250</p>
-<p>minSpareThreads:Tomcat初始化时创建的线程数。默认值4</p>
-<p>maxProcessors:Tomcat运行时允许创建的最大线程数，默认值为75，一般根据实际生产环境修改</p>
-<p>acceptCount:当tomcat起动的线程数达到最大时，接受排队的请求个数，默认值为100,web server允许的最大连接数还受制于操作系统的内核参数设置，通常Windows是2000个左右，Linux是1000个左右，通常该值设置同maxThreads一样</p>
-<p>enableLookups:是否反查域名，默认值为true。为了提高处理能力，应设置为false</p>
-<p>compression:压缩传输，取值on/off/force，默认值off</p>
-<p>redirectPort:SSL的重定向端口，默认8443</p>
-</blockquote>
-<h4 id="Tomcat压缩"><a href="#Tomcat压缩" class="headerlink" title="Tomcat压缩"></a>Tomcat压缩</h4><p><strong>Tomcat有一个通过在server.xml配置文件中设置压缩的选项。压缩可以在connector像如下设置中完成，</strong></p>
-<p><strong>server.xml</strong></p>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">Connector</span>      <span class="attr">port</span>=<span class="string">&quot;8080&quot;</span><span class="attr">protocol</span>=<span class="string">&quot;HTTP/1.1&quot;</span></span></span><br><span class="line"><span class="tag"></span></span><br><span class="line"><span class="tag"><span class="attr">connectionTimeout</span>=<span class="string">&quot;20000&quot;</span></span></span><br><span class="line"><span class="tag"></span></span><br><span class="line"><span class="tag"><span class="attr">redirectPort</span>=<span class="string">&quot;8181&quot;</span><span class="attr">compression</span>=<span class="string">&quot;500&quot;</span></span></span><br><span class="line"><span class="tag"></span></span><br><span class="line"><span class="tag"><span class="attr">compressableMimeType</span>=<span class="string">&quot;text/html,text/xml,text/plain,application/octet-stream&quot;</span>/&gt;</span></span><br></pre></td></tr></table></figure>
+{% block page_class %}page-post-detail{% endblock %}
 
-<blockquote>
-<p>在前面的配置中，当文件的大小大于等于500bytes时才会压缩。如果当文件达到了大小但是却没有被压缩，那么设置属性compression=”on”。否则Tomcat默认设置是“off”。接下来我们将看看如何调优数据库。</p>
-</blockquote>
-<h3 id="JVM-常用参数详解："><a href="#JVM-常用参数详解：" class="headerlink" title="JVM 常用参数详解："></a>JVM 常用参数详解：</h3><blockquote>
-<p>-server：一定要作为第一个参数，在多个 CPU 时性能佳，还有一种叫 -client 的模式，特点是启动速度比较快，但运行时性能和内存管理效率不高，通常用于客户端应用程序或开发调试，在 32 位环境下直接运行 Java 程序默认启用该模式。Server 模式的特点是启动速度比较慢，但运行时性能和内存管理效率很高，适用于生产环境，在具有 64 位能力的 JDK 环境下默认启用该模式，可以不配置该参数。</p>
-<p>-Xms：表示 Java 初始化堆的大小，-Xms 与-Xmx 设成一样的值，避免 JVM 反复重新申请内存，导致性能大起大落，默认值为物理内存的 1/64，默认（MinHeapFreeRatio参数可以调整）空余堆内存小于 40% 时，JVM 就会增大堆直到 -Xmx 的最大限制。</p>
-<p>-Xmx：表示最大 Java 堆大小，当应用程序需要的内存超出堆的最大值时虚拟机就会提示内存溢出，并且导致应用服务崩溃，因此一般建议堆的最大值设置为可用内存的最大值的80%。如何知道我的 JVM 能够使用最大值，使用 java -Xmx512M -version 命令来进行测试，然后逐渐的增大 512 的值,如果执行正常就表示指定的内存大小可用，否则会打印错误信息，默认值为物理内存的 1/4，默认（MinHeapFreeRatio参数可以调整）空余堆内存大于 70% 时，JVM 会减少堆直到-Xms 的最小限制。</p>
-<p>-Xss：表示每个 Java 线程堆栈大小，JDK 5.0 以后每个线程堆栈大小为 1M，以前每个线程堆栈大小为 256K。根据应用的线程所需内存大小进行调整，在相同物理内存下，减小这个值能生成更多的线程，但是操作系统对一个进程内的线程数还是有限制的，不能无限生成，经验值在 3000~5000 左右。一般小的应用， 如果栈不是很深， 应该是128k 够用的，大的应用建议使用 256k 或 512K，一般不易设置超过 1M，要不然容易出现out ofmemory。这个选项对性能影响比较大，需要严格的测试。</p>
-<p>-XX:NewSize：设置新生代内存大小。</p>
-<p>-XX:MaxNewSize：设置最大新生代新生代内存大小</p>
-<p>-XX:PermSize：设置持久代内存大小</p>
-<p>-XX:MaxPermSize：设置最大值持久代内存大小，永久代不属于堆内存，堆内存只包含新生代和老年代。</p>
-<p>-XX:+AggressiveOpts：作用如其名（aggressive），启用这个参数，则每当 JDK 版本升级时，你的 JVM 都会使用最新加入的优化技术（如果有的话）。</p>
-<p>-XX:+UseBiasedLocking：启用一个优化了的线程锁，我们知道在我们的appserver，每个http请求就是一个线程，有的请求短有的请求长，就会有请求排队的现象，甚至还会出现线程阻塞，这个优化了的线程锁使得你的appserver内对线程处理自动进行最优调配。</p>
-<p>-XX:+DisableExplicitGC：在 程序代码中不允许有显示的调用“System.gc()”。每次在到操作结束时手动调用 System.gc() 一下，付出的代价就是系统响应时间严重降低，就和关于 Xms，Xmx 里的解释的原理一样，这样去调用 GC 导致系统的 JVM 大起大落。</p>
-<p>-XX:+UseConcMarkSweepGC：设置年老代为并发收集，即 CMS gc，这一特性只有 jdk1.5</p>
-<p>后续版本才具有的功能，它使用的是 gc 估算触发和 heap 占用触发。我们知道频频繁的 GC 会造面 JVM</p>
-<p>的大起大落从而影响到系统的效率，因此使用了 CMS GC 后可以在 GC 次数增多的情况下，每次 GC 的响应时间却很短，比如说使用了 CMS</p>
-<p>GC 后经过 jprofiler 的观察，GC 被触发次数非常多，而每次 GC 耗时仅为几毫秒。</p>
-<p>-XX:+UseParNewGC：对新生代采用多线程并行回收，这样收得快，注意最新的 JVM 版本，当使用 -XX:+UseConcMarkSweepGC 时，-XX:UseParNewGC 会自动开启。因此，如果年轻代的并行 GC 不想开启，可以通过设置 -XX：-UseParNewGC 来关掉。</p>
-<p>-XX:MaxTenuringThreshold：设置垃圾最大年龄。如果设置为0的话，则新生代对象不经过 Survivor 区，直接进入老年代。对于老年代比较多的应用（需要大量常驻内存的应用），可以提高效率。如果将此值设置为一 个较大值，则新生代对象会在 Survivor 区进行多次复制，这样可以增加对象在新生代的存活时间，增加在新生代即被回收的概率，减少Full GC的频率，这样做可以在某种程度上提高服务稳定性。该参数只有在串行 GC 时才有效，这个值的设置是根据本地的 jprofiler 监控后得到的一个理想的值，不能一概而论原搬照抄。</p>
-<p>-XX:+CMSParallelRemarkEnabled：在使用 UseParNewGC 的情况下，尽量减少 mark 的时间。</p>
-<p>-XX:+UseCMSCompactAtFullCollection：在使用 concurrent gc 的情况下，防止 memoryfragmention，对 live object 进行整理，使 memory 碎片减少。</p>
-<p>-XX:LargePageSizeInBytes：指定 <a target="_blank" rel="noopener" href="http://lib.csdn.net/base/java">Java </a>heap 的分页页面大小，内存页的大小不可设置过大， 会影响 Perm 的大小。</p>
-<p>-XX:+UseFastAccessorMethods：使用 get，set 方法转成本地代码，原始类型的快速优化。</p>
-<p>-XX:+UseCMSInitiatingOccupancyOnly：只有在 oldgeneration 在使用了初始化的比例后 concurrent collector 启动收集。</p>
-<p>-Duser.timezone=Asia/Shanghai：设置用户所在时区。</p>
-<p>-Djava.awt.headless=true：这个参数一般我们都是放在最后使用的，这全参数的作用是这样的，有时我们会在我们的 J2EE 工程中使用一些图表工具如：jfreechart，用于在 web 网页输出 GIF/JPG 等流，在 winodws 环境下，一般我们的 app server 在输出图形时不会碰到什么问题，但是在linux/unix 环境下经常会碰到一个 exception 导致你在 winodws 开发环境下图片显示的好好可是在 linux/unix 下却显示不出来，因此加上这个参数以免避这样的情况出现。</p>
-<p>-Xmn：新生代的内存空间大小，注意：此处的大小是（eden+ 2 survivor space)。与 jmap -heap 中显示的 New gen 是不同的。整个堆大小 = 新生代大小 + 老生代大小 + 永久代大小。在保证堆大小不变的情况下，增大新生代后，将会减小老生代大小。此值对系统性能影响较大，Sun官方推荐配置为整个堆的 3/8。</p>
-<p>-XX:CMSInitiatingOccupancyFraction：当堆满之后，并行收集器便开始进行垃圾收集，例如，当没有足够的空间来容纳新分配或提升的对象。对于 CMS 收集器，长时间等待是不可取的，因为在并发垃圾收集期间应用持续在运行（并且分配对象）。因此，为了在应用程序使用完内存之前完成垃圾收集周期，CMS 收集器要比并行收集器更先启动。因为不同的应用会有不同对象分配模式，JVM 会收集实际的对象分配（和释放）的运行时数据，并且分析这些数据，来决定什么时候启动一次 CMS 垃圾收集周期。这个参数设置有很大技巧，基本上满足(Xmx-Xmn)<em>(100-CMSInitiatingOccupancyFraction)/100 &gt;= Xmn 就不会出现 promotion failed。例如在应用中 Xmx 是6000，Xmn 是 512，那么 Xmx-Xmn 是 5488M，也就是老年代有 5488M，CMSInitiatingOccupancyFraction=90 说明老年代到 90% 满的时候开始执行对老年代的并发垃圾回收（CMS），这时还 剩 10% 的空间是 5488</em>10% = 548M，所以即使 Xmn（也就是新生代共512M）里所有对象都搬到老年代里，548M 的空间也足够了，所以只要满足上面的公式，就不会出现垃圾回收时的 promotion failed，因此这个参数的设置必须与 Xmn 关联在一起。</p>
-<p>-XX:+CMSIncrementalMode：该标志将开启 CMS 收集器的增量模式。增量模式经常暂停 CMS 过程，以便对应用程序线程作出完全的让步。因此，收集器将花更长的时间完成整个收集周期。因此，只有通过测试后发现正常 CMS 周期对应用程序线程干扰太大时，才应该使用增量模式。由于现代服务器有足够的处理器来适应并发的垃圾收集，所以这种情况发生得很少，用于但 CPU情况。</p>
-<p>-XX:NewRatio：年轻代（包括 Eden 和两个 Survivor 区）与年老代的比值（除去持久代），-XX:NewRatio=4 表示年轻代与年老代所占比值为 1:4，年轻代占整个堆栈的 1/5，Xms=Xmx 并且设置了 Xmn 的情况下，该参数不需要进行设置。</p>
-<p>-XX:SurvivorRatio：Eden 区与 Survivor 区的大小比值，设置为 8，表示 2 个 Survivor 区（JVM 堆内存年轻代中默认有 2 个大小相等的 Survivor 区）与 1 个 Eden 区的比值为 2:8，即 1 个 Survivor 区占整个年轻代大小的 1/10。</p>
-<p>-XX:+UseSerialGC：设置串行收集器。</p>
-<p>-XX:+UseParallelGC：设置为并行收集器。此配置仅对年轻代有效。即年轻代使用并行收集，而年老代仍使用串行收集。</p>
-<p>-XX:+UseParallelOldGC：配置年老代垃圾收集方式为并行收集，JDK6.0 开始支持对年老代并行收集。</p>
-<p>-XX:ConcGCThreads：早期 JVM 版本也叫-XX:ParallelCMSThreads，定义并发 CMS 过程运行时的线程数。比如 value=4 意味着 CMS 周期的所有阶段都以 4 个线程来执行。尽管更多的线程会加快并发 CMS 过程，但其也会带来额外的同步开销。因此，对于特定的应用程序，应该通过测试来判断增加 CMS 线程数是否真的能够带来性能的提升。如果还标志未设置，JVM 会根据并行收集器中的 -XX:ParallelGCThreads 参数的值来计算出默认的并行 CMS 线程数。</p>
-<p>-XX:ParallelGCThreads：配置并行收集器的线程数，即：同时有多少个线程一起进行垃圾回收，此值建议配置与 CPU 数目相等。</p>
-<p>-XX:OldSize：设置 JVM 启动分配的老年代内存大小，类似于新生代内存的初始大小 -XX:NewSize。</p>
-</blockquote>
-</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Usher</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="http://www.usherblog.site/2018/07/22/Tomcat%E8%B0%83%E4%BC%98%E5%92%8CJVM%E4%BC%98%E5%8C%96/">http://www.usherblog.site/2018/07/22/Tomcat%E8%B0%83%E4%BC%98%E5%92%8CJVM%E4%BC%98%E5%8C%96/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Java/">Java</a><a class="post-meta__tags" href="/tags/JVM/">JVM</a><a class="post-meta__tags" href="/tags/Tomcat/">Tomcat</a></div><div class="post_share"><div class="social-share" data-image="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/social-share.js/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2018/08/05/Redis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81%E5%AE%9E%E7%8E%B0%E9%AB%98%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6%E5%AE%9E%E8%B7%B5/"><img class="prev-cover" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">Previous Post</div><div class="prev_info">Redis分布式锁实现高并发控制实践</div></div></a></div><div class="next-post pull-right"><a href="/2018/05/20/%E5%9F%BA%E4%BA%8ENetty%E5%AE%9E%E7%8E%B0%E8%81%8A%E5%A4%A9%E5%AE%A4/"><img class="next-cover" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">Next Post</div><div class="next_info">基于Netty实现聊天室</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>Related Articles</span></div><div class="relatedPosts-list"><div><a href="/2018/02/24/JVM/" title="JVM学习笔记"><img class="cover" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2018-02-24</div><div class="title">JVM学习笔记</div></div></a></div><div><a href="/2018/04/28/ForkJoinPool/" title="ForkJoinPool"><img class="cover" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2018-04-28</div><div class="title">ForkJoinPool</div></div></a></div><div><a href="/2018/03/11/Android%E5%9B%9B%E5%A4%A7%E7%BB%84%E4%BB%B6%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%E6%80%BB%E7%BB%93/" title="Android四大组件学习笔记总结"><img class="cover" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2018-03-11</div><div class="title">Android四大组件学习笔记总结</div></div></a></div><div><a href="/2021/12/12/Java7%E3%80%818%E3%80%819%E6%96%B0%E7%89%B9%E6%80%A7/" title="Java7/8/9语法新特性"><img class="cover" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-12-12</div><div class="title">Java7/8/9语法新特性</div></div></a></div><div><a href="/2018/04/18/LRU%E7%BC%93%E5%AD%98%E5%AE%9E%E7%8E%B0-LinkedHashMap/" title="LRU缓存实现-LinkedHashMap"><img class="cover" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2018-04-18</div><div class="title">LRU缓存实现-LinkedHashMap</div></div></a></div><div><a href="/2018/05/19/NIO%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%E5%8F%8A%E5%AE%9E%E7%8E%B0%E7%AE%80%E5%8D%95%E8%81%8A%E5%A4%A9%E5%AE%A4/" title="NIO学习笔记及实现简单聊天室"><img class="cover" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2018-05-19</div><div class="title">NIO学习笔记及实现简单聊天室</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">Usher</div><div class="author-info__description">Honor To The End</div></div><div class="card-info-data is-center"><div class="card-info-data-item"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">41</div></a></div><div class="card-info-data-item"><a href="/tags/"><div class="headline">Tags</div><div class="length-num">26</div></a></div><div class="card-info-data-item"><a href="/categories/"><div class="headline">Categories</div><div class="length-num">16</div></a></div></div><a class="button--animated" id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn card-announcement-animation"></i><span>Announcement</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Catalog</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Tomcat%E8%B0%83%E4%BC%98%E5%92%8CJVM%E4%BC%98%E5%8C%96"><span class="toc-number">1.</span> <span class="toc-text">Tomcat调优和JVM优化</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Tomcat%E6%9C%AC%E8%BA%AB%E4%BC%98%E5%8C%96"><span class="toc-number">1.0.1.</span> <span class="toc-text">Tomcat本身优化</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%B7%A5%E4%BD%9C%E6%96%B9%E5%BC%8F%E9%80%89%E6%8B%A9"><span class="toc-number">1.0.1.1.</span> <span class="toc-text">工作方式选择</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Connector-%E8%BF%9E%E6%8E%A5%E5%99%A8%E7%9A%84%E9%85%8D%E7%BD%AE"><span class="toc-number">1.0.1.2.</span> <span class="toc-text">Connector 连接器的配置</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E8%AE%BE%E7%BD%AE"><span class="toc-number">1.0.2.</span> <span class="toc-text">配置文件设置</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%B8%B8%E8%A7%81%E5%BC%82%E5%B8%B8-java-lang-OutOfMemoryError-Java-heap-space"><span class="toc-number">1.0.2.1.</span> <span class="toc-text">常见异常-java.lang.OutOfMemoryError: Java heap space</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#%E5%8F%82%E6%95%B0%E8%A7%A3%E9%87%8A"><span class="toc-number">1.0.2.1.1.</span> <span class="toc-text">参数解释</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%B8%B8%E8%A7%81%E5%BC%82%E5%B8%B8-java-lang-StackOverflowError"><span class="toc-number">1.0.2.2.</span> <span class="toc-text">常见异常-java.lang.StackOverflowError</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%BA%BF%E7%A8%8B%E6%B1%A0%E8%AE%BE%E7%BD%AE"><span class="toc-number">1.0.2.3.</span> <span class="toc-text">线程池设置</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Tomcat%E5%8E%8B%E7%BC%A9"><span class="toc-number">1.0.2.4.</span> <span class="toc-text">Tomcat压缩</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#JVM-%E5%B8%B8%E7%94%A8%E5%8F%82%E6%95%B0%E8%AF%A6%E8%A7%A3%EF%BC%9A"><span class="toc-number">1.0.3.</span> <span class="toc-text">JVM 常用参数详解：</span></a></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Post</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2021/12/12/%E5%AD%A6%E4%B9%A0Maven%E9%81%87%E5%88%B0%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9D%91/" title="学习Maven遇到的一些坑"><img src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="学习Maven遇到的一些坑"/></a><div class="content"><a class="title" href="/2021/12/12/%E5%AD%A6%E4%B9%A0Maven%E9%81%87%E5%88%B0%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9D%91/" title="学习Maven遇到的一些坑">学习Maven遇到的一些坑</a><time datetime="2021-12-12T10:39:23.313Z" title="Created 2021-12-12 18:39:23">2021-12-12</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/12/12/%E5%A4%A7%E6%95%B0%E6%8D%AE01/" title="大数据01"><img src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="大数据01"/></a><div class="content"><a class="title" href="/2021/12/12/%E5%A4%A7%E6%95%B0%E6%8D%AE01/" title="大数据01">大数据01</a><time datetime="2021-12-12T10:39:23.309Z" title="Created 2021-12-12 18:39:23">2021-12-12</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/12/12/JavaScript%E7%BB%A7%E6%89%BF%E6%96%B9%E5%BC%8F/" title="JavaScript继承方式"><img src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="JavaScript继承方式"/></a><div class="content"><a class="title" href="/2021/12/12/JavaScript%E7%BB%A7%E6%89%BF%E6%96%B9%E5%BC%8F/" title="JavaScript继承方式">JavaScript继承方式</a><time datetime="2021-12-12T10:39:23.272Z" title="Created 2021-12-12 18:39:23">2021-12-12</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/12/12/Java7%E3%80%818%E3%80%819%E6%96%B0%E7%89%B9%E6%80%A7/" title="Java7/8/9语法新特性"><img src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Java7/8/9语法新特性"/></a><div class="content"><a class="title" href="/2021/12/12/Java7%E3%80%818%E3%80%819%E6%96%B0%E7%89%B9%E6%80%A7/" title="Java7/8/9语法新特性">Java7/8/9语法新特性</a><time datetime="2021-12-12T10:39:23.270Z" title="Created 2021-12-12 18:39:23">2021-12-12</time></div></div><div class="aside-list-item"><div class="content"><a class="title" href="/2021/12/12/hello-world/" title="Hello World">Hello World</a><time datetime="2021-12-12T09:59:49.925Z" title="Created 2021-12-12 17:59:49">2021-12-12</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2021 By Usher</div><div class="framework-info"><span>Framework </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Read Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light And Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle between single-column and double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="Setting"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table Of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back To Top"><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
+
+{% block content %}
+
+  <div id="posts" class="posts-expand">
+    {{ post_template.render(page) }}
+
+    <div class="post-spread">
+      {% if theme.jiathis %}
+        {% include '_partials/share/jiathis.swig' %}
+      {% elseif theme.baidushare %}
+        {% include '_partials/share/baidushare.swig' %}
+      {% elseif theme.add_this_id %}
+        {% include '_partials/share/add-this.swig' %}
+      {% elseif theme.duoshuo_shortname and theme.duoshuo_share %}
+        {% include '_partials/share/duoshuo_share.swig' %}
+      {% endif %}
+    </div>
+  </div>
+
+{% endblock %}
+
+{% block sidebar %}
+  {{ sidebar_template.render(true) }}
+{% endblock %}
+
+{% block script_extra %}
+  {% include '_scripts/pages/post-details.swig' %}
+{% endblock %}

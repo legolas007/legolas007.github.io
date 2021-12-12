@@ -1,226 +1,37 @@
-<!DOCTYPE html><html lang="zh-Hans" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>Docker部署Spring Boot应用 | Usher_Ou's Blog</title><meta name="keywords" content="Docker,Spring Boot"><meta name="author" content="Usher"><meta name="copyright" content="Usher"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="Docker部署Spring Boot应用  Docker是一个开源的引擎，可以轻松的为任何应用创建一个轻量级的、可移植的、自给自足的容器。开发者在笔记本上编译测试通过的容器可以批量地在生产环境中部署，包括VMs（虚拟机）、bare metal、OpenStack 集群和其他的基础应用平台。 使用Docker我们可以很方便的部署Spring Boot应用。  首先构建一个简单的 Spring Bo">
-<meta property="og:type" content="article">
-<meta property="og:title" content="Docker部署Spring Boot应用">
-<meta property="og:url" content="http://www.usherblog.site/2018/05/09/Docker%E9%83%A8%E7%BD%B2Spring-Boot%E5%BA%94%E7%94%A8/index.html">
-<meta property="og:site_name" content="Usher_Ou&#39;s Blog">
-<meta property="og:description" content="Docker部署Spring Boot应用  Docker是一个开源的引擎，可以轻松的为任何应用创建一个轻量级的、可移植的、自给自足的容器。开发者在笔记本上编译测试通过的容器可以批量地在生产环境中部署，包括VMs（虚拟机）、bare metal、OpenStack 集群和其他的基础应用平台。 使用Docker我们可以很方便的部署Spring Boot应用。  首先构建一个简单的 Spring Bo">
-<meta property="og:locale">
-<meta property="og:image" content="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg">
-<meta property="article:published_time" content="2018-05-09T11:27:56.000Z">
-<meta property="article:modified_time" content="2018-05-09T04:06:48.869Z">
-<meta property="article:author" content="Usher">
-<meta property="article:tag" content="Docker">
-<meta property="article:tag" content="Spring Boot">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://www.usherblog.site/2018/05/09/Docker%E9%83%A8%E7%BD%B2Spring-Boot%E5%BA%94%E7%94%A8/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
-  root: '/',
-  algolia: undefined,
-  localSearch: undefined,
-  translate: undefined,
-  noticeOutdate: undefined,
-  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
-  copy: {
-    success: 'Copy successfully',
-    error: 'Copy error',
-    noSupport: 'The browser does not support'
-  },
-  relativeDate: {
-    homepage: false,
-    post: false
-  },
-  runtime: '',
-  date_suffix: {
-    just: 'Just',
-    min: 'minutes ago',
-    hour: 'hours ago',
-    day: 'days ago',
-    month: 'months ago'
-  },
-  copyright: undefined,
-  lightbox: 'fancybox',
-  Snackbar: undefined,
-  source: {
-    justifiedGallery: {
-      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.js',
-      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.css'
-    }
-  },
-  isPhotoFigcaption: false,
-  islazyload: false,
-  isAnchor: false
-}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
-  title: 'Docker部署Spring Boot应用',
-  isPost: true,
-  isHome: false,
-  isHighlightShrink: false,
-  isToc: true,
-  postUpdate: '2018-05-09 12:06:48'
-}</script><noscript><style type="text/css">
-  #nav {
-    opacity: 1
-  }
-  .justified-gallery img {
-    opacity: 1
-  }
-
-  #recent-posts time,
-  #post-meta time {
-    display: inline !important
-  }
-</style></noscript><script>(win=>{
-    win.saveToLocal = {
-      set: function setWithExpiry(key, value, ttl) {
-        if (ttl === 0) return
-        const now = new Date()
-        const expiryDay = ttl * 86400000
-        const item = {
-          value: value,
-          expiry: now.getTime() + expiryDay,
-        }
-        localStorage.setItem(key, JSON.stringify(item))
-      },
-
-      get: function getWithExpiry(key) {
-        const itemStr = localStorage.getItem(key)
-
-        if (!itemStr) {
-          return undefined
-        }
-        const item = JSON.parse(itemStr)
-        const now = new Date()
-
-        if (now.getTime() > item.expiry) {
-          localStorage.removeItem(key)
-          return undefined
-        }
-        return item.value
-      }
-    }
-  
-    win.getScript = url => new Promise((resolve, reject) => {
-      const script = document.createElement('script')
-      script.src = url
-      script.async = true
-      script.onerror = reject
-      script.onload = script.onreadystatechange = function() {
-        const loadState = this.readyState
-        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
-        script.onload = script.onreadystatechange = null
-        resolve()
-      }
-      document.head.appendChild(script)
-    })
-  
-      win.activateDarkMode = function () {
-        document.documentElement.setAttribute('data-theme', 'dark')
-        if (document.querySelector('meta[name="theme-color"]') !== null) {
-          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
-        }
-      }
-      win.activateLightMode = function () {
-        document.documentElement.setAttribute('data-theme', 'light')
-        if (document.querySelector('meta[name="theme-color"]') !== null) {
-          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
-        }
-      }
-      const t = saveToLocal.get('theme')
-    
-          if (t === 'dark') activateDarkMode()
-          else if (t === 'light') activateLightMode()
-        
-      const asideStatus = saveToLocal.get('aside-status')
-      if (asideStatus !== undefined) {
-        if (asideStatus === 'hide') {
-          document.documentElement.classList.add('hide-aside')
-        } else {
-          document.documentElement.classList.remove('hide-aside')
-        }
-      }
-    
-    const detectApple = () => {
-      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
-        document.documentElement.classList.add('apple')
-      }
-    }
-    detectApple()
-    })(window)</script><meta name="generator" content="Hexo 5.4.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data is-center"><div class="data-item"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">41</div></a></div><div class="data-item"><a href="/tags/"><div class="headline">Tags</div><div class="length-num">26</div></a></div><div class="data-item"><a href="/categories/"><div class="headline">Categories</div><div class="length-num">16</div></a></div></div><hr/></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg')"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">Usher_Ou's Blog</a></span><div id="menus"><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">Docker部署Spring Boot应用</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2018-05-09T11:27:56.000Z" title="Created 2018-05-09 19:27:56">2018-05-09</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2018-05-09T04:06:48.869Z" title="Updated 2018-05-09 12:06:48">2018-05-09</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Docker/">Docker</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="Docker部署Spring Boot应用"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post View:</span><span id="busuanzi_value_page_pv"></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h1 id="Docker部署Spring-Boot应用"><a href="#Docker部署Spring-Boot应用" class="headerlink" title="Docker部署Spring Boot应用"></a>Docker部署Spring Boot应用</h1><blockquote>
-<p> Docker是一个开源的引擎，可以轻松的为任何应用创建一个轻量级的、可移植的、自给自足的容器。开发者在笔记本上编译测试通过的容器可以批量地在生产环境中部署，包括VMs（虚拟机）、<a target="_blank" rel="noopener" href="http://www.whatis.com.cn/word_5275.htm">bare metal</a>、OpenStack 集群和其他的基础应用平台。 使用Docker我们可以很方便的部署Spring Boot应用。</p>
-</blockquote>
-<p>首先构建一个简单的 Spring Boot 项目，然后给项目添加 Docker 支持，最后对项目进行部署</p>
-<h2 id="Spring-Boot-项目"><a href="#Spring-Boot-项目" class="headerlink" title="Spring Boot 项目"></a>Spring Boot 项目</h2><blockquote>
-<p>在pom.xml文件中添加web和测试依赖</p>
-</blockquote>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">&lt;dependencies&gt;</span><br><span class="line">     &lt;dependency&gt;</span><br><span class="line">	&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;</span><br><span class="line">	&lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line">	&lt;dependency&gt;</span><br><span class="line">		&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;</span><br><span class="line">		&lt;artifactId&gt;spring-boot-starter-test&lt;/artifactId&gt;</span><br><span class="line">		&lt;scope&gt;test&lt;/scope&gt;</span><br><span class="line">	&lt;/dependency&gt;</span><br><span class="line">&lt;/dependencies&gt;</span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>创建一个Controller来验证是否部署成功</p>
-</blockquote>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RestController</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DockerController</span> </span>&#123;</span><br><span class="line">	</span><br><span class="line">    <span class="meta">@RequestMapping(&quot;/&quot;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">index</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;Docker &amp;&amp; Spring Boot&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="Spring-Boot-项目添加-Docker-支持"><a href="#Spring-Boot-项目添加-Docker-支持" class="headerlink" title="Spring Boot 项目添加 Docker 支持"></a>Spring Boot 项目添加 Docker 支持</h2><blockquote>
-<p>在pom.xml中添加Docker镜像名称及插件</p>
-</blockquote>
-<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">properties</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">docker.image.prefix</span>&gt;</span>springboot<span class="tag">&lt;/<span class="name">docker.image.prefix</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">properties</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">build</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">plugins</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">plugin</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-boot-maven-plugin<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;/<span class="name">plugin</span>&gt;</span></span><br><span class="line">		<span class="comment">&lt;!-- Docker maven plugin --&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">plugin</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.spotify<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>docker-maven-plugin<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">version</span>&gt;</span>1.0.0<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;<span class="name">imageName</span>&gt;</span>$&#123;docker.image.prefix&#125;/$&#123;project.artifactId&#125;<span class="tag">&lt;/<span class="name">imageName</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;<span class="name">dockerDirectory</span>&gt;</span>src/main/docker<span class="tag">&lt;/<span class="name">dockerDirectory</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;<span class="name">resources</span>&gt;</span></span><br><span class="line">					<span class="tag">&lt;<span class="name">resource</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;<span class="name">targetPath</span>&gt;</span>/<span class="tag">&lt;/<span class="name">targetPath</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;<span class="name">directory</span>&gt;</span>$&#123;project.build.directory&#125;<span class="tag">&lt;/<span class="name">directory</span>&gt;</span></span><br><span class="line">						<span class="tag">&lt;<span class="name">include</span>&gt;</span>$&#123;project.build.finalName&#125;.jar<span class="tag">&lt;/<span class="name">include</span>&gt;</span></span><br><span class="line">					<span class="tag">&lt;/<span class="name">resource</span>&gt;</span></span><br><span class="line">				<span class="tag">&lt;/<span class="name">resources</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;/<span class="name">plugin</span>&gt;</span></span><br><span class="line">		<span class="comment">&lt;!-- Docker maven plugin --&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">plugins</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">build</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>在src/main/docker 下创建DockerFile文件</p>
-</blockquote>
-<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">#第一行必须指令基于的基础镜像</span><br><span class="line">FROM openjdk:<span class="number">8</span>-jdk-alpine</span><br><span class="line">#创建一个可以从本地主机或其他容器挂载的挂载点，一般用来存放数据库和需要保持的数据等。</span><br><span class="line">VOLUME /tmp</span><br><span class="line">#该命令将复制指定的 到容器中的,并且重命名</span><br><span class="line">ADD spring-boot-docker<span class="number">-1.0</span>.jar app.jar</span><br><span class="line">#配置容器启动后执行的命令，并且不可被 docker run 提供的参数覆盖</span><br><span class="line">ENTRYPOINT [<span class="string">&quot;java&quot;</span>,<span class="string">&quot;-Djava.security.egd=file:/dev/./urandom&quot;</span>,<span class="string">&quot;-jar&quot;</span>,<span class="string">&quot;/app.jar&quot;</span>]</span><br></pre></td></tr></table></figure>
-
-<h2 id="构建打包环境"><a href="#构建打包环境" class="headerlink" title="构建打包环境"></a>构建打包环境</h2><blockquote>
-<p>以 Centos 7 为例</p>
-</blockquote>
-<h3 id="安装-Docker-环境"><a href="#安装-Docker-环境" class="headerlink" title="安装 Docker 环境"></a>安装 Docker 环境</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">安装</span><br><span class="line">yum install docker</span><br><span class="line"></span><br><span class="line">启动</span><br><span class="line">service docker start</span><br><span class="line"></span><br><span class="line">镜像加速</span><br><span class="line">vi  /etc/docker/daemon.json</span><br><span class="line">&#123;</span><br><span class="line">  &quot;registry-mirrors&quot;: [&quot;http://hub-mirror.c.163.com&quot;]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>输入<code>docker version</code> 返回版本信息则安装正常</p>
-</blockquote>
-<h3 id="安装MAVEN"><a href="#安装MAVEN" class="headerlink" title="安装MAVEN"></a>安装MAVEN</h3><ol>
-<li><p>下载安装文件<br>wget <a target="_blank" rel="noopener" href="http://mirrors.tuna.tsinghua.edu.cn/apache/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz">http://mirrors.tuna.tsinghua.edu.cn/apache/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz</a></p>
-</li>
-<li><p>解压安装：<br>tar -zxvf apache-maven-3.3.9-bin.tar.gz </p>
-<p>mv apache-maven-3.3.9 /usr/local/maven3</p>
-</li>
-</ol>
-<blockquote>
-<p> 修改环境变量， 在<code>/etc/profile </code>最后添加以下几行</p>
-</blockquote>
-<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">MAVEN_HOME</span>=<span class="string">/usr/local/maven3</span></span><br><span class="line"><span class="attr">export</span> <span class="string">MAVEN_HOME</span></span><br><span class="line"><span class="attr">export</span> <span class="string">PATH=$&#123;PATH&#125;:$&#123;MAVEN_HOME&#125;/bin</span></span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p> 执行<code>source /etc/profile</code>使环境变量生效。</p>
-</blockquote>
-<blockquote>
-<p>输入<code>mvn -version</code> 返回版本信息则安装正常。</p>
-</blockquote>
-<h2 id="使用-Docker-部署-Spring-Boot-项目"><a href="#使用-Docker-部署-Spring-Boot-项目" class="headerlink" title="使用 Docker 部署 Spring Boot 项目"></a>使用 Docker 部署 Spring Boot 项目</h2><blockquote>
-<p> 将项目 拷贝服务器中，进入项目路径下进行打包测试</p>
-</blockquote>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">#打包</span><br><span class="line">mvn package</span><br><span class="line">#启动</span><br><span class="line">java -jar target/spring-boot-docker-1.0.jar</span><br></pre></td></tr></table></figure>
+{% extends '_layout.swig' %}
+{% import '_macro/post.swig' as post_template %}
+{% import '_macro/sidebar.swig' as sidebar_template %}
 
 
+{% block title %}{{ page.title }} | {{ config.title }}{% endblock %}
+
+{% block page_class %}page-post-detail{% endblock %}
 
 
-<blockquote>
-<p>如果打包失败，跳过test打包</p>
-<p>mvn package -Dmaven.test.skip=true    </p>
-<p>看到 Spring Boot 的启动日志后表明环境配置没有问题，接下来我们使用 DockerFile 构建镜像</p>
-<p>mvn package docker:build</p>
-</blockquote>
-<blockquote>
-<p> 使用<code>docker images</code>命令查看构建好的镜像：</p>
-</blockquote>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">docker images</span><br><span class="line">REPOSITORY                      TAG                 IMAGE ID            CREATED             SIZE</span><br><span class="line">springboot/spring-boot-docker   latest              99ce9468da74        6 seconds ago       117.5 MB</span><br></pre></td></tr></table></figure>
+{% block content %}
 
-<blockquote>
-<p>运行该镜像</p>
-</blockquote>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -p 8080:8080 -t springboot/spring-boot-docker</span><br></pre></td></tr></table></figure>
+  <div id="posts" class="posts-expand">
+    {{ post_template.render(page) }}
 
-<blockquote>
-<p> 使用<code>docker ps</code>查看正在运行的镜像：</p>
-</blockquote>
-<blockquote>
-<p> 然后访问浏览器。<a target="_blank" rel="noopener" href="http://192.168.x.x:8080/">http://192.168.x.x:8080/</a></p>
-</blockquote>
-<h3 id="部署完成"><a href="#部署完成" class="headerlink" title="部署完成"></a>部署完成</h3></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Usher</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="http://www.usherblog.site/2018/05/09/Docker%E9%83%A8%E7%BD%B2Spring-Boot%E5%BA%94%E7%94%A8/">http://www.usherblog.site/2018/05/09/Docker%E9%83%A8%E7%BD%B2Spring-Boot%E5%BA%94%E7%94%A8/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Docker/">Docker</a><a class="post-meta__tags" href="/tags/Spring-Boot/">Spring Boot</a></div><div class="post_share"><div class="social-share" data-image="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/social-share.js/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2018/05/19/NIO%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%E5%8F%8A%E5%AE%9E%E7%8E%B0%E7%AE%80%E5%8D%95%E8%81%8A%E5%A4%A9%E5%AE%A4/"><img class="prev-cover" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">Previous Post</div><div class="prev_info">NIO学习笔记及实现简单聊天室</div></div></a></div><div class="next-post pull-right"><a href="/2018/04/28/ForkJoinPool/"><img class="next-cover" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">Next Post</div><div class="next_info">ForkJoinPool</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>Related Articles</span></div><div class="relatedPosts-list"><div><a href="/2018/04/16/Spring%20Boot%E5%90%AF%E5%8A%A8%E9%85%8D%E7%BD%AE%E5%8E%9F%E7%90%86/" title="Spring Boot启动配置原理"><img class="cover" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2018-04-16</div><div class="title">Spring Boot启动配置原理</div></div></a></div><div><a href="/2018/04/13/Spring-Boot%E8%87%AA%E5%8A%A8%E9%85%8D%E7%BD%AE%E5%8E%9F%E7%90%86/" title="Spring Boot自动配置原理"><img class="cover" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2018-04-13</div><div class="title">Spring Boot自动配置原理</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">Usher</div><div class="author-info__description">Honor To The End</div></div><div class="card-info-data is-center"><div class="card-info-data-item"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">41</div></a></div><div class="card-info-data-item"><a href="/tags/"><div class="headline">Tags</div><div class="length-num">26</div></a></div><div class="card-info-data-item"><a href="/categories/"><div class="headline">Categories</div><div class="length-num">16</div></a></div></div><a class="button--animated" id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn card-announcement-animation"></i><span>Announcement</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Catalog</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Docker%E9%83%A8%E7%BD%B2Spring-Boot%E5%BA%94%E7%94%A8"><span class="toc-number">1.</span> <span class="toc-text">Docker部署Spring Boot应用</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Spring-Boot-%E9%A1%B9%E7%9B%AE"><span class="toc-number">1.1.</span> <span class="toc-text">Spring Boot 项目</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Spring-Boot-%E9%A1%B9%E7%9B%AE%E6%B7%BB%E5%8A%A0-Docker-%E6%94%AF%E6%8C%81"><span class="toc-number">1.2.</span> <span class="toc-text">Spring Boot 项目添加 Docker 支持</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9E%84%E5%BB%BA%E6%89%93%E5%8C%85%E7%8E%AF%E5%A2%83"><span class="toc-number">1.3.</span> <span class="toc-text">构建打包环境</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%89%E8%A3%85-Docker-%E7%8E%AF%E5%A2%83"><span class="toc-number">1.3.1.</span> <span class="toc-text">安装 Docker 环境</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%89%E8%A3%85MAVEN"><span class="toc-number">1.3.2.</span> <span class="toc-text">安装MAVEN</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8-Docker-%E9%83%A8%E7%BD%B2-Spring-Boot-%E9%A1%B9%E7%9B%AE"><span class="toc-number">1.4.</span> <span class="toc-text">使用 Docker 部署 Spring Boot 项目</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%83%A8%E7%BD%B2%E5%AE%8C%E6%88%90"><span class="toc-number">1.4.1.</span> <span class="toc-text">部署完成</span></a></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Post</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2021/12/12/%E5%AD%A6%E4%B9%A0Maven%E9%81%87%E5%88%B0%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9D%91/" title="学习Maven遇到的一些坑"><img src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="学习Maven遇到的一些坑"/></a><div class="content"><a class="title" href="/2021/12/12/%E5%AD%A6%E4%B9%A0Maven%E9%81%87%E5%88%B0%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9D%91/" title="学习Maven遇到的一些坑">学习Maven遇到的一些坑</a><time datetime="2021-12-12T10:39:23.313Z" title="Created 2021-12-12 18:39:23">2021-12-12</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/12/12/%E5%A4%A7%E6%95%B0%E6%8D%AE01/" title="大数据01"><img src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="大数据01"/></a><div class="content"><a class="title" href="/2021/12/12/%E5%A4%A7%E6%95%B0%E6%8D%AE01/" title="大数据01">大数据01</a><time datetime="2021-12-12T10:39:23.309Z" title="Created 2021-12-12 18:39:23">2021-12-12</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/12/12/JavaScript%E7%BB%A7%E6%89%BF%E6%96%B9%E5%BC%8F/" title="JavaScript继承方式"><img src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="JavaScript继承方式"/></a><div class="content"><a class="title" href="/2021/12/12/JavaScript%E7%BB%A7%E6%89%BF%E6%96%B9%E5%BC%8F/" title="JavaScript继承方式">JavaScript继承方式</a><time datetime="2021-12-12T10:39:23.272Z" title="Created 2021-12-12 18:39:23">2021-12-12</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2021/12/12/Java7%E3%80%818%E3%80%819%E6%96%B0%E7%89%B9%E6%80%A7/" title="Java7/8/9语法新特性"><img src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Java7/8/9语法新特性"/></a><div class="content"><a class="title" href="/2021/12/12/Java7%E3%80%818%E3%80%819%E6%96%B0%E7%89%B9%E6%80%A7/" title="Java7/8/9语法新特性">Java7/8/9语法新特性</a><time datetime="2021-12-12T10:39:23.270Z" title="Created 2021-12-12 18:39:23">2021-12-12</time></div></div><div class="aside-list-item"><div class="content"><a class="title" href="/2021/12/12/hello-world/" title="Hello World">Hello World</a><time datetime="2021-12-12T09:59:49.925Z" title="Created 2021-12-12 17:59:49">2021-12-12</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2021 By Usher</div><div class="framework-info"><span>Framework </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Read Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light And Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle between single-column and double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="Setting"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table Of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back To Top"><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
+    <div class="post-spread">
+      {% if theme.jiathis %}
+        {% include '_partials/share/jiathis.swig' %}
+      {% elseif theme.baidushare %}
+        {% include '_partials/share/baidushare.swig' %}
+      {% elseif theme.add_this_id %}
+        {% include '_partials/share/add-this.swig' %}
+      {% elseif theme.duoshuo_shortname and theme.duoshuo_share %}
+        {% include '_partials/share/duoshuo_share.swig' %}
+      {% endif %}
+    </div>
+  </div>
+
+{% endblock %}
+
+{% block sidebar %}
+  {{ sidebar_template.render(true) }}
+{% endblock %}
+
+{% block script_extra %}
+  {% include '_scripts/pages/post-details.swig' %}
+{% endblock %}
