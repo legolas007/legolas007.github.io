@@ -463,20 +463,6 @@
   </url>
   
   <url>
-    <loc>http://www.usherblog.site/tags/Linux/</loc>
-    <lastmod>2021-12-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>http://www.usherblog.site/tags/NIO/</loc>
-    <lastmod>2021-12-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
     <loc>http://www.usherblog.site/tags/%E9%AB%98%E5%B9%B6%E5%8F%91/</loc>
     <lastmod>2021-12-13</lastmod>
     <changefreq>weekly</changefreq>
@@ -485,6 +471,20 @@
   
   <url>
     <loc>http://www.usherblog.site/tags/Redis/</loc>
+    <lastmod>2021-12-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>http://www.usherblog.site/tags/Linux/</loc>
+    <lastmod>2021-12-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>http://www.usherblog.site/tags/NIO/</loc>
     <lastmod>2021-12-13</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -619,6 +619,13 @@
   </url>
   
   <url>
+    <loc>http://www.usherblog.site/categories/Redis/</loc>
+    <lastmod>2021-12-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
     <loc>http://www.usherblog.site/categories/Linux/</loc>
     <lastmod>2021-12-13</lastmod>
     <changefreq>weekly</changefreq>
@@ -627,13 +634,6 @@
   
   <url>
     <loc>http://www.usherblog.site/categories/Java/</loc>
-    <lastmod>2021-12-13</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
-    <loc>http://www.usherblog.site/categories/Redis/</loc>
     <lastmod>2021-12-13</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
