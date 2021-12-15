@@ -2,6 +2,15 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://www.usherblog.site/2021/12/15/%E4%B8%A4%E9%98%B6%E6%AE%B5%E6%8F%90%E4%BA%A4%E3%80%81%E4%B8%89%E9%98%B6%E6%AE%B5%E6%8F%90%E4%BA%A4%E7%9A%84%E7%90%86%E8%A7%A3/</loc>
+    
+    <lastmod>2021-12-15</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>http://www.usherblog.site/2021/12/15/12%E6%9D%A1%E9%9D%9E%E5%B8%B8%E6%9C%89%E7%94%A8%E7%9A%84SQL%E6%8A%80%E5%B7%A7%EF%BC%8C%E5%BB%BA%E8%AE%AE%E6%94%B6%E8%97%8F/</loc>
     
     <lastmod>2021-12-14</lastmod>
@@ -636,6 +645,20 @@
     <priority>0.2</priority>
   </url>
   
+  <url>
+    <loc>http://www.usherblog.site/tags/%E5%88%86%E5%B8%83%E5%BC%8F/</loc>
+    <lastmod>2021-12-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>http://www.usherblog.site/tags/%E4%BA%8B%E5%8A%A1/</loc>
+    <lastmod>2021-12-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
 
   
   <url>
@@ -759,6 +782,13 @@
   
   <url>
     <loc>http://www.usherblog.site/categories/Mysql/</loc>
+    <lastmod>2021-12-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>http://www.usherblog.site/categories/%E5%88%86%E5%B8%83%E5%BC%8F/</loc>
     <lastmod>2021-12-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
