@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>http://www.usherblog.site/2022/01/04/Spring-Boot-WebFlux-Quick-Start/</loc>
+    <lastmod>2022-01-04</lastmod>
+  </url>
+  <url>
     <loc>http://www.usherblog.site/2022/01/01/%E4%BD%BF%E7%94%A8-LocalDateTime-%E8%80%8C%E4%B8%8D%E6%98%AF-Date/</loc>
     <lastmod>2022-01-01</lastmod>
   </url>
