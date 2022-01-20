@@ -1,0 +1,269 @@
+<!DOCTYPE html><html lang="zh-Hans" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>HBase RowKey设计 | Usher_Ou's Blog</title><meta name="keywords" content="大数据"><meta name="author" content="Usher"><meta name="copyright" content="Usher"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="在HBase中，定位一条数据（即一个Cell）需要4个维度的限定：行键（RowKey）、列族（Column Family）、列限定符（Column Qualifier）、时间戳（Timestamp）。其中，RowKey是最容易出现问题的。除了根据业务和查询需求来设计之外，还需要注意以下三点。 1. 打散RowKeyHBase中的行是按照RowKey字典序排序的。 这对Scan操作非常友好，因为Ro">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HBase RowKey设计">
+<meta property="og:url" content="http://www.usherblog.site/2022/01/20/HBase-RowKey%E8%AE%BE%E8%AE%A1/index.html">
+<meta property="og:site_name" content="Usher_Ou&#39;s Blog">
+<meta property="og:description" content="在HBase中，定位一条数据（即一个Cell）需要4个维度的限定：行键（RowKey）、列族（Column Family）、列限定符（Column Qualifier）、时间戳（Timestamp）。其中，RowKey是最容易出现问题的。除了根据业务和查询需求来设计之外，还需要注意以下三点。 1. 打散RowKeyHBase中的行是按照RowKey字典序排序的。 这对Scan操作非常友好，因为Ro">
+<meta property="og:locale">
+<meta property="og:image" content="https://tva1.sinaimg.cn/large/005P73H4gy1gxclqqeek6j312w0m8wnu.jpg">
+<meta property="article:published_time" content="2022-01-20T14:25:23.000Z">
+<meta property="article:modified_time" content="2022-01-20T14:27:02.995Z">
+<meta property="article:author" content="Usher">
+<meta property="article:tag" content="大数据">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://tva1.sinaimg.cn/large/005P73H4gy1gxclqqeek6j312w0m8wnu.jpg"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://www.usherblog.site/2022/01/20/HBase-RowKey%E8%AE%BE%E8%AE%A1/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/node-snackbar/dist/snackbar.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.css" media="print" onload="this.media='all'"><script async="async" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><script>(adsbygoogle = window.adsbygoogle || []).push({
+  google_ad_client: 'ca-pub-5019695460390847',
+  enable_page_level_ads: 'true'
+});</script><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: 'days',
+  date_suffix: {
+    just: 'Just',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: {"chs_to_cht":"Traditional Chinese Activated Manually","cht_to_chs":"Simplified Chinese Activated Manually","day_to_night":"Dark Mode Activated Manually","night_to_day":"Light Mode Activated Manually","bgLight":"#49b1f5","bgDark":"#121212","position":"bottom-left"},
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'HBase RowKey设计',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: false,
+  postUpdate: '2022-01-20 22:27:02'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="baidu_union_verify" content="7aa3d4669bd0cb824cffa7f17c7ae1ca"><script async src="https://www.googletagmanager.com/gtag/js?id=G-NM1VS5D757"></script><script>  window.dataLayer = window.dataLayer || [];  function gtag(){dataLayer.push(arguments);}  gtag('js', new Date());  gtag('config', 'G-NM1VS5D757');</script><meta name="google-site-verification" content="e1Ufu68xXNJlblUj28b-YCuR4TGw52w2EpQjq0HhO14" /><script>var _hmt=_hmt||[];(function(){var hm=document.createElement("script");hm.src="https://hm.baidu.com/hm.js?9dac5a1d54c53caffecf4954d4041153";var s=document.getElementsByTagName("script")[0];s.parentNode.insertBefore(hm,s)})();</script><meta name="baidu-site-verification" content="code-SfwtUQCUG9" /><script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5019695460390847"crossorigin="anonymous"></script><meta name="generator" content="Hexo 5.4.0"></head><body><div id="web_bg"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxcmaek0tpj308w08wgls.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data is-center"><div class="data-item"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">77</div></a></div><div class="data-item"><a href="/tags/"><div class="headline">Tags</div><div class="length-num">36</div></a></div><div class="data-item"><a href="/categories/"><div class="headline">Categories</div><div class="length-num">24</div></a></div></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">Usher_Ou's Blog</a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">HBase RowKey设计</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2022-01-20T14:25:23.000Z" title="Created 2022-01-20 22:25:23">2022-01-20</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2022-01-20T14:27:02.995Z" title="Updated 2022-01-20 22:27:02">2022-01-20</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%A4%A7%E6%95%B0%E6%8D%AE/">大数据</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">Word count:</span><span class="word-count">1.1k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">Reading time:</span><span>3min</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="HBase RowKey设计"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post View:</span><span id="busuanzi_value_page_pv"></span></span></div></div></div><article class="post-content" id="article-container"><p>在HBase中，定位一条数据（即一个Cell）需要4个维度的限定：行键（RowKey）、列族（Column Family）、列限定符（Column Qualifier）、时间戳（Timestamp）。其中，RowKey是最容易出现问题的。除了根据业务和查询需求来设计之外，还需要注意以下三点。</p>
+<p><strong>1. 打散RowKey</strong><br>HBase中的行是按照RowKey字典序排序的。</p>
+<p>这对Scan操作非常友好，因为RowKey相近的行总是存储在相近的位置，顺序读的效率比随机读要高。</p>
+<p>但是，如果大量的读写操作总是集中在某个RowKey范围，那么就会造成Region热点，拖累RegionServer的性能。</p>
+<p>因此，要适当地将RowKey打散。</p>
+<p><strong>加盐（salting）+哈希（hashing）</strong><br>这里的“加盐”与密码学中的“加盐”不是一回事。</p>
+<p>它是指在RowKey的前面增加一些前缀。</p>
+<p>加盐的前缀种类越多，RowKey就被打得越散。</p>
+<p>前缀不可以是随机的，因为必须要让客户端能够完整地重构RowKey。</p>
+<p>我们一般会拿原RowKey或其一部分计算hash值，然后再对hash值做运算作为前缀。</p>
+<p><strong>反转固定格式的数值</strong><br>以手机号为例，手机号的前缀变化比较少（如152、185等），但后半部分变化很多。</p>
+<p>如果将它反转过来，可以有效地避免热点。</p>
+<p>不过其缺点就是失去了有序性。</p>
+<p><strong>反转时间</strong><br>这个操作严格来讲不算“打散”，但可以调整数据的时间排序。</p>
+<p>如果将时间按照字典序排列，最近产生的数据会排在旧数据后面。</p>
+<p>如果用一个大值减去时间（比如用99999999减去yyyyMMdd，或者Long.MAX_VALUE减去时间戳），最新的数据就可以排在前面了。</p>
+<p>**<br>**</p>
+<p><strong>2. 控制RowKey长度</strong><br>在HBase中，RowKey、列族、列名等都是以byte[]形式传输的。</p>
+<p>RowKey的最大长度限制为64KB，但在实际应用中最多不会超过100B。</p>
+<p>设计短RowKey有以下两方面考虑：</p>
+<p>在HBase的底层存储HFile中，RowKey是KeyValue结构中的一个域。假设RowKey长度100B，那么1000万条数据中，只算RowKey就占用掉将近1G空间，会影响HFile的存储效率。</p>
+<p><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gyki90ko0zj30j509yjrv.jpg" alt="图片"></p>
+<p>HBase中设计有MemStore和BlockCache，分别对应列族/Store级别的写入缓存，和RegionServer级别的读取缓存。如果RowKey过长，缓存中存储数据的密度就会降低，影响数据落地或查询效率。</p>
+<p><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gyki8hmwwbj30jj0a03yz.jpg" alt="图片"></p>
+<p>另外，我们目前使用的服务器操作系统都是64位系统，内存是按照8B对齐的，因此设计RowKey时一般做成8B的整数倍，如16B或者24B，可以提高寻址效率。</p>
+<p>同样地，列族、列名的命名在保证可读的情况下也应尽量短。HBase官方不推荐使用3个以上列族，因此实际上列族命名几乎都用一个字母，比如‘c’或‘f’。</p>
+<p>\3. <strong>保证RowKey唯一性</strong></p>
+<p>这个就是显而易见的了，不再赘述。</p>
+<p><strong>举个例子</strong><br>我们的业务中，有一部分是用户在日历上记录自己的行为。需要储存在RowKey中的维度有：用户ID（uid，不会超过十亿）、日历上的日期（date，yyyyMMdd格式）、记录行为的类型（type，0~99之间）。记录的详细数据则存储在列f:data中。根据查询逻辑，我们设计的RowKey格式如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">9~79809782~05~0008839540</span><br></pre></td></tr></table></figure>
+
+<p>长度正好是24B。以字符‘<del>’为分界（‘</del>’的ASCII码是最大的，方便），各个部分的含义如下：</p>
+<ul>
+<li><code>uid.toString().hashCode() % 10</code></li>
+<li><code>99999999 - date</code></li>
+<li><code>StringUtils.leftPad(type, 2, &quot;0&quot;)</code></li>
+<li><code>StringUtils.leftPad(uid, 10, &quot;0&quot;)</code></li>
+</ul>
+<p>基于这种设计，我们在建表阶段就可以将其预分区，使得数据在一开始就均匀分布在不同的Region上。建表语句参考：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">create &#x27;user_calendar_record&#x27;, &#123;  NAME =&gt; &#x27;f&#x27;,  VERSIONS =&gt; &#x27;1&#x27;,  BLOCKCACHE =&gt; &#x27;true&#x27;,  BLOCKSIZE =&gt; &#x27;65536&#x27;,   BLOOMFILTER =&gt; &#x27;row&#x27;,  COMPRESSION =&gt; &#x27;SNAPPY&#x27;&#125;, &#123;  SPLITS =&gt; [&#x27;1&#x27;, &#x27;2&#x27;, &#x27;3&#x27;, &#x27;4&#x27;, &#x27;5&#x27;, &#x27;6&#x27;, &#x27;7&#x27;, &#x27;8&#x27;, &#x27;9&#x27;]&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果不做预分区，那么表刚开始只会有一个Region。随着数据量增大，就会频繁触发Region split，影响效率。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined" rel="external nofollow noreferrer">Usher</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="http://www.usherblog.site/2022/01/20/HBase-RowKey%E8%AE%BE%E8%AE%A1/">http://www.usherblog.site/2022/01/20/HBase-RowKey%E8%AE%BE%E8%AE%A1/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener external nofollow noreferrer" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E5%A4%A7%E6%95%B0%E6%8D%AE/">大数据</a></div><div class="post_share"><div class="social-share" data-image="https://tva1.sinaimg.cn/large/005P73H4gy1gxclqqeek6j312w0m8wnu.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/social-share.js/dist/js/social-share.min.js" defer></script></div></div><div class="post-reward"><div class="reward-button button--animated"><i class="fas fa-qrcode"></i> Donate</div><div class="reward-main"><ul class="reward-all"><li class="reward-item"><a href="https://tva1.sinaimg.cn/mw690/005P73H4gy1gxcm78wfitj30v20wfq99.jpg" rel="external nofollow noreferrer" target="_blank"><img class="post-qr-code-img" src="https://tva1.sinaimg.cn/mw690/005P73H4gy1gxcm78wfitj30v20wfq99.jpg"/></a><div class="post-qr-code-desc"></div></li></ul></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/2022/01/20/HBase%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E6%8C%87%E5%8D%97/"><img class="next-cover" src="https://tva1.sinaimg.cn/large/005P73H4gy1gxcls4qjqtj31400p0gnh.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">Next Post</div><div class="next_info">HBase性能优化指南</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>Related Articles</span></div><div class="relatedPosts-list"><div><a href="/2018/01/24/Hadoop%20HDFS%E5%8E%9F%E7%90%86/" title="Hadoop HDFS原理"><img class="cover" src="https://tva1.sinaimg.cn/large/005P73H4gy1gxclrtmsz9j31400p0my3.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2018-01-24</div><div class="title">Hadoop HDFS原理</div></div></a></div><div><a href="/2018/01/23/HDFS%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E6%93%8D%E4%BD%9CJAVA-API/" title="HDFS文件系统操作JAVA-API"><img class="cover" src="https://tva1.sinaimg.cn/large/005P73H4gy1gxclr4dsubj30hi0a0406.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2018-01-23</div><div class="title">HDFS文件系统操作JAVA-API</div></div></a></div><div><a href="/2018/01/24/%E5%A4%A7%E6%95%B0%E6%8D%AE02/" title="CAP与BASE"><img class="cover" src="https://tva1.sinaimg.cn/large/005P73H4gy1gxcls4qjqtj31400p0gnh.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2018-01-24</div><div class="title">CAP与BASE</div></div></a></div><div><a href="/2022/01/19/%E8%B6%85%E8%AF%A6%E7%BB%86%E6%A2%B3%E7%90%86HBase%E6%A0%B8%E5%BF%83%E7%9F%A5%E8%AF%86%E7%82%B9/" title="超详细梳理HBase核心知识点"><img class="cover" src="https://tva1.sinaimg.cn/large/005P73H4gy1gxclr4dsubj30hi0a0406.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2022-01-19</div><div class="title">超详细梳理HBase核心知识点</div></div></a></div><div><a href="/2022/01/20/HBase%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E6%8C%87%E5%8D%97/" title="HBase性能优化指南"><img class="cover" src="https://tva1.sinaimg.cn/large/005P73H4gy1gxcls4qjqtj31400p0gnh.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2022-01-20</div><div class="title">HBase性能优化指南</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxcmaek0tpj308w08wgls.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">Usher</div><div class="author-info__description">Honor To The End</div></div><div class="card-info-data is-center"><div class="card-info-data-item"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">77</div></a></div><div class="card-info-data-item"><a href="/tags/"><div class="headline">Tags</div><div class="length-num">36</div></a></div><div class="card-info-data-item"><a href="/categories/"><div class="headline">Categories</div><div class="length-num">24</div></a></div></div><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/legolas007" rel="external nofollow noreferrer" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="https://www.letaotao.site/" rel="external nofollow noreferrer" target="_blank" title="最好用的网址导航"><i class="fas fa-blog"></i></a></div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Post</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2022/01/20/HBase-RowKey%E8%AE%BE%E8%AE%A1/" title="HBase RowKey设计"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxclqqeek6j312w0m8wnu.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="HBase RowKey设计"/></a><div class="content"><a class="title" href="/2022/01/20/HBase-RowKey%E8%AE%BE%E8%AE%A1/" title="HBase RowKey设计">HBase RowKey设计</a><time datetime="2022-01-20T14:25:23.000Z" title="Created 2022-01-20 22:25:23">2022-01-20</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/01/20/HBase%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E6%8C%87%E5%8D%97/" title="HBase性能优化指南"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxcls4qjqtj31400p0gnh.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="HBase性能优化指南"/></a><div class="content"><a class="title" href="/2022/01/20/HBase%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E6%8C%87%E5%8D%97/" title="HBase性能优化指南">HBase性能优化指南</a><time datetime="2022-01-20T13:45:18.000Z" title="Created 2022-01-20 21:45:18">2022-01-20</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/01/19/%E8%B6%85%E8%AF%A6%E7%BB%86%E6%A2%B3%E7%90%86HBase%E6%A0%B8%E5%BF%83%E7%9F%A5%E8%AF%86%E7%82%B9/" title="超详细梳理HBase核心知识点"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxclr4dsubj30hi0a0406.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="超详细梳理HBase核心知识点"/></a><div class="content"><a class="title" href="/2022/01/19/%E8%B6%85%E8%AF%A6%E7%BB%86%E6%A2%B3%E7%90%86HBase%E6%A0%B8%E5%BF%83%E7%9F%A5%E8%AF%86%E7%82%B9/" title="超详细梳理HBase核心知识点">超详细梳理HBase核心知识点</a><time datetime="2022-01-19T03:09:35.000Z" title="Created 2022-01-19 11:09:35">2022-01-19</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/01/17/Elasticsearch%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E5%AE%9E%E6%88%98%E6%8C%87%E5%8D%97/" title="Elasticsearch性能优化实战指南"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxclqqeek6j312w0m8wnu.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Elasticsearch性能优化实战指南"/></a><div class="content"><a class="title" href="/2022/01/17/Elasticsearch%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E5%AE%9E%E6%88%98%E6%8C%87%E5%8D%97/" title="Elasticsearch性能优化实战指南">Elasticsearch性能优化实战指南</a><time datetime="2022-01-17T13:51:14.000Z" title="Created 2022-01-17 21:51:14">2022-01-17</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/01/17/ElasticSearch-%E7%B4%A2%E5%BC%95%E8%AE%BE%E7%BD%AE%E6%80%BB%E7%BB%93/" title="ElasticSearch 索引设置总结"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxy2jvyp2kj31hc0u07n8.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="ElasticSearch 索引设置总结"/></a><div class="content"><a class="title" href="/2022/01/17/ElasticSearch-%E7%B4%A2%E5%BC%95%E8%AE%BE%E7%BD%AE%E6%80%BB%E7%BB%93/" title="ElasticSearch 索引设置总结">ElasticSearch 索引设置总结</a><time datetime="2022-01-17T13:45:35.000Z" title="Created 2022-01-17 21:45:35">2022-01-17</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2018 - 2022 By Usher</div><div class="framework-info"><span>Framework </span><a target="_blank" rel="noopener external nofollow noreferrer" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Read Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light And Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle between single-column and double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="Setting"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="Back To Top"><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.js"></script><script src="https://cdn.jsdelivr.net/npm/node-snackbar/dist/snackbar.min.js"></script><div class="js-pjax"></div><script src="https://cdn.jsdelivr.net/npm/pjax/pjax.min.js"></script><script>let pjaxSelectors = [
+  'title',
+  '#config-diff',
+  '#body-wrap',
+  '#rightside-config-hide',
+  '#rightside-config-show',
+  '.js-pjax'
+]
+
+if (false) {
+  pjaxSelectors.unshift('meta[property="og:image"]', 'meta[property="og:title"]', 'meta[property="og:url"]')
+}
+
+var pjax = new Pjax({
+  elements: 'a:not([target="_blank"]):not([href="/music/"]):not([href="/no-pjax/"])',
+  selectors: pjaxSelectors,
+  cacheBust: false,
+  analytics: false,
+  scrollRestoration: false
+})
+
+document.addEventListener('pjax:send', function () {
+
+  // removeEventListener scroll 
+  window.removeEventListener('scroll', window.tocScrollFn)
+  window.removeEventListener('scroll', scrollCollect)
+
+  typeof preloader === 'object' && preloader.initLoading()
+  
+  if (window.aplayers) {
+    for (let i = 0; i < window.aplayers.length; i++) {
+      if (!window.aplayers[i].options.fixed) {
+        window.aplayers[i].destroy()
+      }
+    }
+  }
+
+  typeof typed === 'object' && typed.destroy()
+
+  //reset readmode
+  const $bodyClassList = document.body.classList
+  $bodyClassList.contains('read-mode') && $bodyClassList.remove('read-mode')
+
+})
+
+document.addEventListener('pjax:complete', function () {
+  window.refreshFn()
+
+  document.querySelectorAll('script[data-pjax]').forEach(item => {
+    const newScript = document.createElement('script')
+    const content = item.text || item.textContent || item.innerHTML || ""
+    Array.from(item.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value))
+    newScript.appendChild(document.createTextNode(content))
+    item.parentNode.replaceChild(newScript, item)
+  })
+
+  GLOBAL_CONFIG.islazyload && window.lazyLoadInstance.update()
+
+  typeof chatBtnFn === 'function' && chatBtnFn()
+  typeof panguInit === 'function' && panguInit()
+
+  // google analytics
+  typeof gtag === 'function' && gtag('config', '', {'page_path': window.location.pathname});
+
+  // baidu analytics
+  typeof _hmt === 'object' && _hmt.push(['_trackPageview',window.location.pathname]);
+
+  typeof loadMeting === 'function' && document.getElementsByClassName('aplayer').length && loadMeting()
+
+  // prismjs
+  typeof Prism === 'object' && Prism.highlightAll()
+
+  typeof preloader === 'object' && preloader.endLoading()
+})
+
+document.addEventListener('pjax:error', (e) => {
+  if (e.request.status === 404) {
+    pjax.loadUrl('/404.html')
+  }
+})</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
