@@ -1,0 +1,556 @@
+<!DOCTYPE html><html lang="zh-Hans" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>Geohash算法 | Usher_Ou's Blog</title><meta name="keywords" content="搜索"><meta name="author" content="Usher"><meta name="copyright" content="Usher"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="用户附近位置计算经纬度与物理距离介绍经纬度是经度与纬度的合称组成一个坐标系统，称为地理坐标系统，它是一种利用三度空间的球面来定义地球上的空间的球面坐标系统，能够标示地球上的任何一个位置。  在一定误差范围内，通常情况下，经纬线和米的换算为：经度或者纬度0.00001度，约等于1米。以下表格列出更细致的换算关系：    在纬度相等的情况下 在经度相等的情况下    经度每隔0.00001度，距离相差">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Geohash算法">
+<meta property="og:url" content="http://www.usherblog.site/2022/01/25/Geohash%E7%AE%97%E6%B3%95/index.html">
+<meta property="og:site_name" content="Usher_Ou&#39;s Blog">
+<meta property="og:description" content="用户附近位置计算经纬度与物理距离介绍经纬度是经度与纬度的合称组成一个坐标系统，称为地理坐标系统，它是一种利用三度空间的球面来定义地球上的空间的球面坐标系统，能够标示地球上的任何一个位置。  在一定误差范围内，通常情况下，经纬线和米的换算为：经度或者纬度0.00001度，约等于1米。以下表格列出更细致的换算关系：    在纬度相等的情况下 在经度相等的情况下    经度每隔0.00001度，距离相差">
+<meta property="og:locale">
+<meta property="og:image" content="https://tva1.sinaimg.cn/large/005P73H4gy1gxclr4dsubj30hi0a0406.jpg">
+<meta property="article:published_time" content="2022-01-25T15:55:11.000Z">
+<meta property="article:modified_time" content="2022-01-25T16:00:52.298Z">
+<meta property="article:author" content="Usher">
+<meta property="article:tag" content="搜索">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://tva1.sinaimg.cn/large/005P73H4gy1gxclr4dsubj30hi0a0406.jpg"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://www.usherblog.site/2022/01/25/Geohash%E7%AE%97%E6%B3%95/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/node-snackbar/dist/snackbar.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.css" media="print" onload="this.media='all'"><script async="async" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><script>(adsbygoogle = window.adsbygoogle || []).push({
+  google_ad_client: 'ca-pub-5019695460390847',
+  enable_page_level_ads: 'true'
+});</script><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: 'days',
+  date_suffix: {
+    just: 'Just',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: {"chs_to_cht":"Traditional Chinese Activated Manually","cht_to_chs":"Simplified Chinese Activated Manually","day_to_night":"Dark Mode Activated Manually","night_to_day":"Light Mode Activated Manually","bgLight":"#49b1f5","bgDark":"#121212","position":"bottom-left"},
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Geohash算法',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2022-01-26 00:00:52'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="baidu_union_verify" content="7aa3d4669bd0cb824cffa7f17c7ae1ca"><script async src="https://www.googletagmanager.com/gtag/js?id=G-NM1VS5D757"></script><script>  window.dataLayer = window.dataLayer || [];  function gtag(){dataLayer.push(arguments);}  gtag('js', new Date());  gtag('config', 'G-NM1VS5D757');</script><meta name="google-site-verification" content="e1Ufu68xXNJlblUj28b-YCuR4TGw52w2EpQjq0HhO14" /><script>var _hmt=_hmt||[];(function(){var hm=document.createElement("script");hm.src="https://hm.baidu.com/hm.js?9dac5a1d54c53caffecf4954d4041153";var s=document.getElementsByTagName("script")[0];s.parentNode.insertBefore(hm,s)})();</script><meta name="baidu-site-verification" content="code-SfwtUQCUG9" /><script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5019695460390847"crossorigin="anonymous"></script><meta name="generator" content="Hexo 5.4.0"></head><body><div id="web_bg"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxcmaek0tpj308w08wgls.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data is-center"><div class="data-item"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">80</div></a></div><div class="data-item"><a href="/tags/"><div class="headline">Tags</div><div class="length-num">38</div></a></div><div class="data-item"><a href="/categories/"><div class="headline">Categories</div><div class="length-num">25</div></a></div></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">Usher_Ou's Blog</a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">Geohash算法</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2022-01-25T15:55:11.000Z" title="Created 2022-01-25 23:55:11">2022-01-25</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2022-01-25T16:00:52.298Z" title="Updated 2022-01-26 00:00:52">2022-01-26</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E6%90%9C%E7%B4%A2/">搜索</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">Word count:</span><span class="word-count">2.5k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">Reading time:</span><span>8min</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="Geohash算法"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post View:</span><span id="busuanzi_value_page_pv"></span></span></div></div></div><article class="post-content" id="article-container"><h2 id="用户附近位置计算"><a href="#用户附近位置计算" class="headerlink" title="用户附近位置计算"></a>用户附近位置计算</h2><h3 id="经纬度与物理距离介绍"><a href="#经纬度与物理距离介绍" class="headerlink" title="经纬度与物理距离介绍"></a>经纬度与物理距离介绍</h3><p>经纬度是经度与纬度的合称组成一个<a target="_blank" rel="noopener external nofollow noreferrer" href="https://baike.baidu.com/item/%E5%9D%90%E6%A0%87%E7%B3%BB%E7%BB%9F/4725756">坐标系统</a>，称为地理坐标系统，它是一种<a target="_blank" rel="noopener external nofollow noreferrer" href="https://baike.baidu.com/item/%E5%88%A9%E7%94%A8/882910">利用</a>三度空间的<a target="_blank" rel="noopener external nofollow noreferrer" href="https://baike.baidu.com/item/%E7%90%83%E9%9D%A2/5889102">球面</a>来定义地球上的空间的球面坐标系统，能够标示地球上的任何一个<a target="_blank" rel="noopener external nofollow noreferrer" href="https://baike.baidu.com/item/%E4%BD%8D%E7%BD%AE/36166">位置</a>。</p>
+<p><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gyqcypmrrkj308o08oabg.jpg" alt="img"></p>
+<p>在一定误差范围内，通常情况下，经纬线和米的换算为：经度或者纬度0.00001度，约等于1米。以下表格列出更细致的换算关系：</p>
+<table>
+<thead>
+<tr>
+<th>在纬度相等的情况下</th>
+<th>在经度相等的情况下</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>经度每隔0.00001度，距离相差约1米；每隔0.0001度，距离相差约10米；每隔0.001度，距离相差约100米；每隔0.01度，距离相差约1000米；每隔0.1度，距离相差约10000米。</td>
+<td>纬度每隔0.00001度，距离相差约1.1米；每隔0.0001度，距离相差约11米；每隔0.001度，距离相差约111米；每隔0.01度，距离相差约1113米；每隔0.1度，距离相差约11132米。</td>
+</tr>
+</tbody></table>
+<h3 id="地图坐标系"><a href="#地图坐标系" class="headerlink" title="地图坐标系"></a>地图坐标系</h3><table>
+<thead>
+<tr>
+<th>WGS84坐标系</th>
+<th>地球坐标系，国际通用坐标系</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GCJ02坐标系</td>
+<td>火星坐标系，WGS84坐标系加密后的坐标系；Google国内地图、高德、QQ地图 使用</td>
+</tr>
+<tr>
+<td>BD09坐标系</td>
+<td>百度坐标系，GCJ02坐标系加密后的坐标系</td>
+</tr>
+</tbody></table>
+<p><strong>注：如果使用GCJ-02坐标系，Geohash函数和距离计算函数理论上都应在WGS84坐标系下使用，在火星坐标系下会存在一定的偏差，主要是火星坐标系的加偏处理带来的，经过查阅资料及抽样测试，认为该误差在可接受范围内。</strong></p>
+<h2 id="Geohash算法介绍"><a href="#Geohash算法介绍" class="headerlink" title="Geohash算法介绍"></a>Geohash算法介绍</h2><p>GeoHash是空间索引的一种方式，其基本原理是将地球理解为一个二维平面，通过把二维的空间经纬度数据编码为一个字符串，可以把平面递归分解成更小的子块，每个子块在一定经纬度范围内拥有相同的编码。</p>
+<p>以GeoHash方式建立空间索引，可以提高对空间poi数据进行经纬度检索的效率。</p>
+<p>编码规则为：先将纬度范围(-90, 90)平分成两个区间(-90, 0)和(0, 90)，如果目标维度位于前一个区间，则编码为0，否则编码为1，然后根据目标纬度所落的区间再平均分成两个区间进行编码，以此类推，直到精度满足要求，经度也用同样的算法，对(-180, 180)依次细分，然后合并经度和纬度的编码，奇数位放纬度，偶数位放经度，组成一串新的二进制编码，按照Base32进行编码。</p>
+<p><strong>示例</strong></p>
+<p>以当前所在办公区【两江国际】的位置坐标为例, <strong>经纬度为（104.059684，30.559545）</strong></p>
+<h3 id="第一步：将经纬度转换为二进制"><a href="#第一步：将经纬度转换为二进制" class="headerlink" title="第一步：将经纬度转换为二进制"></a>第一步：将经纬度转换为二进制</h3><table>
+<thead>
+<tr>
+<th>序号</th>
+<th>纬度范围</th>
+<th>划分区间0</th>
+<th>划分区间1</th>
+<th>30.559545所属区间</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>(-90, 90)</td>
+<td>(-90, 0.0)</td>
+<td>(0.0, 90)</td>
+<td>1</td>
+</tr>
+<tr>
+<td>2</td>
+<td>(0.0, 90)</td>
+<td>(0.0, 45.0)</td>
+<td>(45.0, 90)</td>
+<td>0</td>
+</tr>
+<tr>
+<td>3</td>
+<td>(0.0, 45.0)</td>
+<td>(0.0, 22.5)</td>
+<td>(22.5, 45.0)</td>
+<td>1</td>
+</tr>
+<tr>
+<td>4</td>
+<td>(22.5, 45.0)</td>
+<td>(22.5, 33.75)</td>
+<td>(33.75, 45.0)</td>
+<td>0</td>
+</tr>
+<tr>
+<td>5</td>
+<td>(22.5, 33.75)</td>
+<td>(22.5, 28.125)</td>
+<td>(28.125, 33.75)</td>
+<td>1</td>
+</tr>
+<tr>
+<td>6</td>
+<td>(28.125, 33.75)</td>
+<td>(28.125, 30.9375)</td>
+<td>(30.9375, 33.75)</td>
+<td>0</td>
+</tr>
+<tr>
+<td>7</td>
+<td>(28.125, 30.9375)</td>
+<td>(28.125, 29.53125)</td>
+<td>(29.53125, 30.9375)</td>
+<td>1</td>
+</tr>
+<tr>
+<td>8</td>
+<td>(29.53125, 30.9375)</td>
+<td>(29.53125, 30.234375)</td>
+<td>(30.234375, 30.9375)</td>
+<td>1</td>
+</tr>
+<tr>
+<td>9</td>
+<td>(30.234375, 30.9375)</td>
+<td>(30.234375, 30.5859375)</td>
+<td>(30.5859375, 30.9375)</td>
+<td>0</td>
+</tr>
+<tr>
+<td>10</td>
+<td>(30.234375, 30.5859375)</td>
+<td>(30.234375, 30.41015625)</td>
+<td>(30.41015625, 30.5859375)</td>
+<td>1</td>
+</tr>
+<tr>
+<td>11</td>
+<td>(30.41015625, 30.5859375)</td>
+<td>(30.41015625, 30.498046875)</td>
+<td>(30.498046875, 30.5859375)</td>
+<td>1</td>
+</tr>
+<tr>
+<td>12</td>
+<td>(30.498046875, 30.5859375)</td>
+<td>(30.498046875, 30.541992188)</td>
+<td>(30.541992188, 30.5859375)</td>
+<td>1</td>
+</tr>
+<tr>
+<td>13</td>
+<td>(30.541992188, 30.5859375)</td>
+<td>(30.541992188, 30.563964844)</td>
+<td>(30.563964844, 30.5859375)</td>
+<td>0</td>
+</tr>
+<tr>
+<td>14</td>
+<td>(30.541992188, 30.563964844)</td>
+<td>(30.541992188, 30.552978516)</td>
+<td>(30.552978516, 30.563964844)</td>
+<td>1</td>
+</tr>
+<tr>
+<td>15</td>
+<td>(30.552978516, 30.563964844)</td>
+<td>(30.552978516, 30.55847168)</td>
+<td>(30.55847168, 30.563964844)</td>
+<td>1</td>
+</tr>
+</tbody></table>
+<p><strong>最后得到维度的二进制编码为：101010110111011, 用同样的方式可以得到精度(<strong>104.059684</strong>)的二进制编码：110010011111111</strong></p>
+<h3 id="第二步：将经纬度的二进制编码合并"><a href="#第二步：将经纬度的二进制编码合并" class="headerlink" title="第二步：将经纬度的二进制编码合并"></a>第二步：将经纬度的二进制编码合并</h3><p><strong>从偶数0开始，经度占偶数位，纬度占奇数位。</strong></p>
+<table>
+<thead>
+<tr>
+<th>序号</th>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+<th>6</th>
+<th>7</th>
+<th>8</th>
+<th>9</th>
+<th>10</th>
+<th>11</th>
+<th>12</th>
+<th>13</th>
+<th>14</th>
+<th>15</th>
+<th>16</th>
+<th>17</th>
+<th>18</th>
+<th>19</th>
+<th>20</th>
+<th>21</th>
+<th>22</th>
+<th>23</th>
+<th>24</th>
+<th>25</th>
+<th>26</th>
+<th>27</th>
+<th>28</th>
+<th>29</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>编码</strong></td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+</tr>
+</tbody></table>
+<h3 id="第三步：将合并后的二进制数做Base32编码"><a href="#第三步：将合并后的二进制数做Base32编码" class="headerlink" title="第三步：将合并后的二进制数做Base32编码"></a>第三步：将合并后的二进制数做Base32编码</h3><p><strong>按照每5位一组，分成6组，每组计算其对应的十进制数值，按照Base32进行编码。</strong></p>
+<p>Base32编码表的其中一种如下，是用0-9、b-z（去掉a, i, l, o）这32个字母进行编码.</p>
+<p><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gyqczag7egj30z506cwir.jpg" alt="img"></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">11100</span> <span class="number">10011</span> <span class="number">00011</span> <span class="number">11011</span> <span class="number">11111</span> <span class="number">01111</span></span><br><span class="line"><span class="number">28</span>(w) <span class="number">19</span>(m) <span class="number">3</span>(<span class="number">3</span>)  <span class="number">27</span>(v) <span class="number">31</span>(z) <span class="number">15</span>(g)</span><br></pre></td></tr></table></figure>
+
+<p><strong>最终得到的经纬度编码为：wm3vzg</strong></p>
+<p>如上文二进制编码的计算过程，如果递归的次数越大，则生成的二进制编码越长，因此生成的geohash编码越长，位置越精确。目前Geohash使用的精度说明如下：</p>
+<p><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gyqd018zc3j30yd0id446.jpg" alt="img"></p>
+<p>GeoHash用一个字符串表示经度和纬度两个坐标, 比直接用经纬度的高效很多，而且使用者可以发布地址编码，既能表明自己位于某位置附近，又不至于暴露自己的精确坐标，有助于隐私保护。</p>
+<p><strong>编码过程中，通过二分范围匹配的方式来决定某个经纬坐标是编码为1还是0，因此某些邻近坐标的编码是相同的，因此GeoHash表示的并不是一个点，而是一个矩形区域。 GeoHash编码的前缀可以表示更大的区域。例如wm3vzg，它的前缀wm3vz表示包含编码wm3vzg在内的更大范围。 这个特性可以用于附近地点搜索。</strong></p>
+<p>如果把某个区域或整个地图上的地理位置都按照Geohash编码，则会得到一个网格，编码递归粒度越细，网格的矩形区域越小，geohash编码的长度越大，则Geohash编码越精确。 不同的编码长度，生成的网格与实际地理的精度如下(Geohash字符串编码长度对应网格大小）</p>
+<table>
+<thead>
+<tr>
+<th>字符串长度</th>
+<th>网格宽度</th>
+<th>网格高度</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>5000Km</td>
+<td>5000Km</td>
+</tr>
+<tr>
+<td>2</td>
+<td>1250Km</td>
+<td>625Km</td>
+</tr>
+<tr>
+<td>3</td>
+<td>156Km</td>
+<td>156Km</td>
+</tr>
+<tr>
+<td>4</td>
+<td>39.1Km</td>
+<td>19.5Km</td>
+</tr>
+<tr>
+<td>5</td>
+<td>4.89Km</td>
+<td>4.89Km</td>
+</tr>
+<tr>
+<td>6</td>
+<td>1.22Km</td>
+<td>0.61Km</td>
+</tr>
+<tr>
+<td>7</td>
+<td>153m</td>
+<td>153m</td>
+</tr>
+<tr>
+<td>8</td>
+<td>38.2m</td>
+<td>19.1m</td>
+</tr>
+<tr>
+<td>9</td>
+<td>4.77m</td>
+<td>4.77m</td>
+</tr>
+<tr>
+<td>10</td>
+<td>1.19m</td>
+<td>0.596m</td>
+</tr>
+</tbody></table>
+<h2 id="Geohash编码与网格"><a href="#Geohash编码与网格" class="headerlink" title="Geohash编码与网格"></a>Geohash编码与网格</h2><p>当前选取的编码长度为6，因此一个网格实际的地理差异在1.2公里与0.6公里，示例中两江国际对应的网格大致效果如图：</p>
+<p><img src="https://tva1.sinaimg.cn/mw690/005P73H4gy1gyqd0ossxcj31gv0uz1ky.jpg" alt="img"></p>
+<h3 id="邻近网格位置推算"><a href="#邻近网格位置推算" class="headerlink" title="邻近网格位置推算"></a>邻近网格位置推算</h3><h4 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h4><p>根据Geohash的编码规则将经纬度分解到二进制，结合地理常识，中心网格在南北（上下）方向上体现为纬度的变化，往北则维度的二进制加1，往南则维度的二进制减1，在东西（左右）方向上体现为经度的变化，往东则经度的二进制加1，往西则减1，可以计算出上下左右四个网格经纬度的二进制编码，再将加减得出的经纬度两两组合，计算出左上、左下、右上和右下四个网格的经纬度二进制编码，从而就可以根据Geohash的编码规则计算出周围八个网格的字符串。</p>
+<h4 id="正向推导"><a href="#正向推导" class="headerlink" title="正向推导"></a>正向推导</h4><p>以Geohash编码长度为6为基础，网格的宽高与实际距离换算为：1.2Km*0.6Km. </p>
+<p>参考上文提到的，在经度相同情况下，每隔0.001度，距离相差约111米。0.6Km换算为纬度为：0.005405405。 </p>
+<p>当前两江国际粗粒度的wgs84坐标(<strong>104.05503，30.562251),</strong> 纬度二进制编码：101010110111011，经度二进制编码：110010011111111, Geohash值为：wm3vzg</p>
+<p>正北方向近邻的网格维度为增加一个网格的高度，即纬度增加0.005405405，为：<strong>30.562251 +</strong> 0.005405405 = 30.567656405， 转换为二进制编码后为(可用工具快速转换)：<strong>101010110111100</strong></p>
+<p><strong>正好是原纬度的二进制编码101010110111011 加1后的结果（101010110111011 + 000000000000001</strong> = <strong>101010110111100）</strong></p>
+<h4 id="反向推导"><a href="#反向推导" class="headerlink" title="反向推导"></a>反向推导</h4><p>当前两江国际粗粒度的wgs84坐标(<strong>104.05503，30.562251),</strong> 纬度二进制编码：101010110111011，经度二进制编码：110010011111111, Geohash值为：wm3vzg</p>
+<p>基于当前坐标的网格，正北方向近邻的网格N，其纬度二进制加1后为：101010110111100，经度不变，其Geohash值为：<strong>wm3vzu</strong></p>
+<p>通过<a target="_blank" rel="noopener external nofollow noreferrer" href="http://geohash.co/">http://geohash.co/</a> 反向转换其经纬坐标为：(104.0570068359375,30.56671142578125）</p>
+<p>通过<a target="_blank" rel="noopener external nofollow noreferrer" href="https://www.box3.cn/tools/lbs.html">https://www.box3.cn/tools/lbs.html</a> 查询2个坐标的实际位置，误差在531m(符合精度范围）</p>
+<p><img src="https://tva1.sinaimg.cn/mw690/005P73H4gy1gyqd18y07gj31gq0jxjx0.jpg" alt="img"></p>
+<h3 id="邻近8个网格位置计算"><a href="#邻近8个网格位置计算" class="headerlink" title="邻近8个网格位置计算"></a>邻近8个网格位置计算</h3><table>
+<thead>
+<tr>
+<th><strong>Geohash编码：</strong>wm3vzs纬度二进制编码：101010110111100经度二进制编码：110010011111110公式：(Lat_bin + 1, Lon_bin - 1)</th>
+<th><strong>Geohash编码：</strong>wm3vzu纬度二进制编码：101010110111100经度二进制编码：110100101101010公式：(Lat_bin + 1, Lon_bin)</th>
+<th><strong>Geohash编码：</strong>wm6jbh纬度二进制编码：101010110111100经度二进制编码：110010100000000公式：(Lat_bin + 1, Lon_bin + 1)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Geohash编码：</strong>wm3vze纬度二进制编码：101010110111011经度二进制编码：110010011111110公式：(Lat_bin, Lon_bin - 1)</td>
+<td><strong>Geohash编码：</strong>wm3vzg纬度二进制编码：101010110111011经度二进制编码：110010011111111公式：(Lat_bin, Lon_bin)</td>
+<td><strong>Geohash编码：</strong>wm6jb5纬度二进制编码：101010110111011经度二进制编码：110010100000000公式：(Lat_bin, Lon_bin + 1)</td>
+</tr>
+<tr>
+<td><strong>Geohash编码：</strong>wm3vzd纬度二进制编码：101010110111010经度二进制编码：110010011111110公式：(Lat_bin - 1, Lon_bin - 1)</td>
+<td><strong>Geohash编码：</strong>wm3vzf纬度二进制编码：101010110111010经度二进制编码：110010011111111公式：(Lat_bin - 1, Lon_bin)</td>
+<td><strong>Geohash编码：</strong>wm6jb4纬度二进制编码：101010110111010经度二进制编码：110010100000000公式：(Lat_bin - 1, Lon_bin + 1)</td>
+</tr>
+</tbody></table>
+<h4 id="附近3公里网格模型"><a href="#附近3公里网格模型" class="headerlink" title="附近3公里网格模型"></a>附近3公里网格模型</h4><p><img src="https://tva1.sinaimg.cn/mw690/005P73H4gy1gyqd1vk6sqj30lc0h476w.jpg" alt="img"></p>
+<p>青色代表：用户位置的网格编码，红色代表：附近附近3公里的网格编码</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined" rel="external nofollow noreferrer">Usher</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="http://www.usherblog.site/2022/01/25/Geohash%E7%AE%97%E6%B3%95/">http://www.usherblog.site/2022/01/25/Geohash%E7%AE%97%E6%B3%95/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener external nofollow noreferrer" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E6%90%9C%E7%B4%A2/">搜索</a></div><div class="post_share"><div class="social-share" data-image="https://tva1.sinaimg.cn/large/005P73H4gy1gxclr4dsubj30hi0a0406.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/social-share.js/dist/js/social-share.min.js" defer></script></div></div><div class="post-reward"><div class="reward-button button--animated"><i class="fas fa-qrcode"></i> Donate</div><div class="reward-main"><ul class="reward-all"><li class="reward-item"><a href="https://tva1.sinaimg.cn/mw690/005P73H4gy1gxcm78wfitj30v20wfq99.jpg" rel="external nofollow noreferrer" target="_blank"><img class="post-qr-code-img" src="https://tva1.sinaimg.cn/mw690/005P73H4gy1gxcm78wfitj30v20wfq99.jpg"/></a><div class="post-qr-code-desc"></div></li></ul></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/2022/01/23/Zookeeper%E9%9D%A2%E8%AF%95%E9%A2%98%E6%80%BB%E7%BB%93/"><img class="next-cover" src="https://tva1.sinaimg.cn/large/005P73H4gy1gxclr4dsubj30hi0a0406.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">Next Post</div><div class="next_info">Zookeeper面试题总结</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxcmaek0tpj308w08wgls.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">Usher</div><div class="author-info__description">Honor To The End</div></div><div class="card-info-data is-center"><div class="card-info-data-item"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">80</div></a></div><div class="card-info-data-item"><a href="/tags/"><div class="headline">Tags</div><div class="length-num">38</div></a></div><div class="card-info-data-item"><a href="/categories/"><div class="headline">Categories</div><div class="length-num">25</div></a></div></div><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/legolas007" rel="external nofollow noreferrer" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="https://www.letaotao.site/" rel="external nofollow noreferrer" target="_blank" title="最好用的网址导航"><i class="fas fa-blog"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn card-announcement-animation"></i><span>Announcement</span></div><div class="announcement_content"><a target="_blank" rel="noopener external nofollow noreferrer" href="https://cloud.tencent.com/act/new?fromSource=gwzcw.4325959.4325959.4325959&utm_medium=cps&utm_id=gwzcw.4325959.4325959.4325959&cps_key=2f522acd2a77a0d5971aa8c1c42ece5d" style="color:#49b1f5">腾讯云2c4g8m仅需74元 <br>戳我享优惠！</a></div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Catalog</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%94%A8%E6%88%B7%E9%99%84%E8%BF%91%E4%BD%8D%E7%BD%AE%E8%AE%A1%E7%AE%97"><span class="toc-number">1.</span> <span class="toc-text">用户附近位置计算</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BB%8F%E7%BA%AC%E5%BA%A6%E4%B8%8E%E7%89%A9%E7%90%86%E8%B7%9D%E7%A6%BB%E4%BB%8B%E7%BB%8D"><span class="toc-number">1.1.</span> <span class="toc-text">经纬度与物理距离介绍</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9C%B0%E5%9B%BE%E5%9D%90%E6%A0%87%E7%B3%BB"><span class="toc-number">1.2.</span> <span class="toc-text">地图坐标系</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Geohash%E7%AE%97%E6%B3%95%E4%BB%8B%E7%BB%8D"><span class="toc-number">2.</span> <span class="toc-text">Geohash算法介绍</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%B8%80%E6%AD%A5%EF%BC%9A%E5%B0%86%E7%BB%8F%E7%BA%AC%E5%BA%A6%E8%BD%AC%E6%8D%A2%E4%B8%BA%E4%BA%8C%E8%BF%9B%E5%88%B6"><span class="toc-number">2.1.</span> <span class="toc-text">第一步：将经纬度转换为二进制</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%BA%8C%E6%AD%A5%EF%BC%9A%E5%B0%86%E7%BB%8F%E7%BA%AC%E5%BA%A6%E7%9A%84%E4%BA%8C%E8%BF%9B%E5%88%B6%E7%BC%96%E7%A0%81%E5%90%88%E5%B9%B6"><span class="toc-number">2.2.</span> <span class="toc-text">第二步：将经纬度的二进制编码合并</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%B8%89%E6%AD%A5%EF%BC%9A%E5%B0%86%E5%90%88%E5%B9%B6%E5%90%8E%E7%9A%84%E4%BA%8C%E8%BF%9B%E5%88%B6%E6%95%B0%E5%81%9ABase32%E7%BC%96%E7%A0%81"><span class="toc-number">2.3.</span> <span class="toc-text">第三步：将合并后的二进制数做Base32编码</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Geohash%E7%BC%96%E7%A0%81%E4%B8%8E%E7%BD%91%E6%A0%BC"><span class="toc-number">3.</span> <span class="toc-text">Geohash编码与网格</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%82%BB%E8%BF%91%E7%BD%91%E6%A0%BC%E4%BD%8D%E7%BD%AE%E6%8E%A8%E7%AE%97"><span class="toc-number">3.1.</span> <span class="toc-text">邻近网格位置推算</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%BB%93%E8%AE%BA"><span class="toc-number">3.1.1.</span> <span class="toc-text">结论</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%AD%A3%E5%90%91%E6%8E%A8%E5%AF%BC"><span class="toc-number">3.1.2.</span> <span class="toc-text">正向推导</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%8F%8D%E5%90%91%E6%8E%A8%E5%AF%BC"><span class="toc-number">3.1.3.</span> <span class="toc-text">反向推导</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%82%BB%E8%BF%918%E4%B8%AA%E7%BD%91%E6%A0%BC%E4%BD%8D%E7%BD%AE%E8%AE%A1%E7%AE%97"><span class="toc-number">3.2.</span> <span class="toc-text">邻近8个网格位置计算</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%99%84%E8%BF%913%E5%85%AC%E9%87%8C%E7%BD%91%E6%A0%BC%E6%A8%A1%E5%9E%8B"><span class="toc-number">3.2.1.</span> <span class="toc-text">附近3公里网格模型</span></a></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Post</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2022/01/25/Geohash%E7%AE%97%E6%B3%95/" title="Geohash算法"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxclr4dsubj30hi0a0406.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Geohash算法"/></a><div class="content"><a class="title" href="/2022/01/25/Geohash%E7%AE%97%E6%B3%95/" title="Geohash算法">Geohash算法</a><time datetime="2022-01-25T15:55:11.000Z" title="Created 2022-01-25 23:55:11">2022-01-25</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/01/23/Zookeeper%E9%9D%A2%E8%AF%95%E9%A2%98%E6%80%BB%E7%BB%93/" title="Zookeeper面试题总结"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxclr4dsubj30hi0a0406.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Zookeeper面试题总结"/></a><div class="content"><a class="title" href="/2022/01/23/Zookeeper%E9%9D%A2%E8%AF%95%E9%A2%98%E6%80%BB%E7%BB%93/" title="Zookeeper面试题总结">Zookeeper面试题总结</a><time datetime="2022-01-23T08:56:41.000Z" title="Created 2022-01-23 16:56:41">2022-01-23</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/01/22/HBase%E4%BC%98%E5%8C%96%E7%AC%94%E8%AE%B0/" title="HBase优化笔记"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxy2jvyp2kj31hc0u07n8.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="HBase优化笔记"/></a><div class="content"><a class="title" href="/2022/01/22/HBase%E4%BC%98%E5%8C%96%E7%AC%94%E8%AE%B0/" title="HBase优化笔记">HBase优化笔记</a><time datetime="2022-01-22T05:43:02.000Z" title="Created 2022-01-22 13:43:02">2022-01-22</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/01/20/HBase-RowKey%E8%AE%BE%E8%AE%A1/" title="HBase RowKey设计"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxclqqeek6j312w0m8wnu.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="HBase RowKey设计"/></a><div class="content"><a class="title" href="/2022/01/20/HBase-RowKey%E8%AE%BE%E8%AE%A1/" title="HBase RowKey设计">HBase RowKey设计</a><time datetime="2022-01-20T14:25:23.000Z" title="Created 2022-01-20 22:25:23">2022-01-20</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/01/20/HBase%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E6%8C%87%E5%8D%97/" title="HBase性能优化指南"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxcls4qjqtj31400p0gnh.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="HBase性能优化指南"/></a><div class="content"><a class="title" href="/2022/01/20/HBase%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E6%8C%87%E5%8D%97/" title="HBase性能优化指南">HBase性能优化指南</a><time datetime="2022-01-20T13:45:18.000Z" title="Created 2022-01-20 21:45:18">2022-01-20</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2018 - 2022 By Usher</div><div class="framework-info"><span>Framework </span><a target="_blank" rel="noopener external nofollow noreferrer" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Read Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light And Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle between single-column and double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="Setting"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table Of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back To Top"><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.js"></script><script src="https://cdn.jsdelivr.net/npm/node-snackbar/dist/snackbar.min.js"></script><div class="js-pjax"></div><script src="https://cdn.jsdelivr.net/npm/pjax/pjax.min.js"></script><script>let pjaxSelectors = [
+  'title',
+  '#config-diff',
+  '#body-wrap',
+  '#rightside-config-hide',
+  '#rightside-config-show',
+  '.js-pjax'
+]
+
+if (false) {
+  pjaxSelectors.unshift('meta[property="og:image"]', 'meta[property="og:title"]', 'meta[property="og:url"]')
+}
+
+var pjax = new Pjax({
+  elements: 'a:not([target="_blank"]):not([href="/music/"]):not([href="/no-pjax/"])',
+  selectors: pjaxSelectors,
+  cacheBust: false,
+  analytics: false,
+  scrollRestoration: false
+})
+
+document.addEventListener('pjax:send', function () {
+
+  // removeEventListener scroll 
+  window.removeEventListener('scroll', window.tocScrollFn)
+  window.removeEventListener('scroll', scrollCollect)
+
+  typeof preloader === 'object' && preloader.initLoading()
+  
+  if (window.aplayers) {
+    for (let i = 0; i < window.aplayers.length; i++) {
+      if (!window.aplayers[i].options.fixed) {
+        window.aplayers[i].destroy()
+      }
+    }
+  }
+
+  typeof typed === 'object' && typed.destroy()
+
+  //reset readmode
+  const $bodyClassList = document.body.classList
+  $bodyClassList.contains('read-mode') && $bodyClassList.remove('read-mode')
+
+})
+
+document.addEventListener('pjax:complete', function () {
+  window.refreshFn()
+
+  document.querySelectorAll('script[data-pjax]').forEach(item => {
+    const newScript = document.createElement('script')
+    const content = item.text || item.textContent || item.innerHTML || ""
+    Array.from(item.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value))
+    newScript.appendChild(document.createTextNode(content))
+    item.parentNode.replaceChild(newScript, item)
+  })
+
+  GLOBAL_CONFIG.islazyload && window.lazyLoadInstance.update()
+
+  typeof chatBtnFn === 'function' && chatBtnFn()
+  typeof panguInit === 'function' && panguInit()
+
+  // google analytics
+  typeof gtag === 'function' && gtag('config', '', {'page_path': window.location.pathname});
+
+  // baidu analytics
+  typeof _hmt === 'object' && _hmt.push(['_trackPageview',window.location.pathname]);
+
+  typeof loadMeting === 'function' && document.getElementsByClassName('aplayer').length && loadMeting()
+
+  // prismjs
+  typeof Prism === 'object' && Prism.highlightAll()
+
+  typeof preloader === 'object' && preloader.endLoading()
+})
+
+document.addEventListener('pjax:error', (e) => {
+  if (e.request.status === 404) {
+    pjax.loadUrl('/404.html')
+  }
+})</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
