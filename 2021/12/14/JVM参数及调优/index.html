@@ -1,0 +1,269 @@
+<!DOCTYPE html><html lang="zh-Hans" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>JVM参数及调优 | Usher_Ou's Blog</title><meta name="keywords" content="JVM"><meta name="author" content="Usher"><meta name="copyright" content="Usher"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="一、调优基本概念jvm性能调优的三个基本组件1.堆大小调整 2.垃圾收集器调整 3.JIT编译器  通常在调优java应用程序时，重点是一下两个目标之一 响应性：应用程序或系统对请求的数据进行相应的速度，对于专注于响应性的应用程序，长的暂停时间是不可接受的，重点是在短时间内做出回应。 吞吐量：侧重于在特定时间段内最大化应用程序的工作量，对于专注于吞吐量的应用程序，高暂停时间是可以接受的。由于高吞吐">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JVM参数及调优">
+<meta property="og:url" content="http://www.usherblog.site/2021/12/14/JVM%E5%8F%82%E6%95%B0%E5%8F%8A%E8%B0%83%E4%BC%98/index.html">
+<meta property="og:site_name" content="Usher_Ou&#39;s Blog">
+<meta property="og:description" content="一、调优基本概念jvm性能调优的三个基本组件1.堆大小调整 2.垃圾收集器调整 3.JIT编译器  通常在调优java应用程序时，重点是一下两个目标之一 响应性：应用程序或系统对请求的数据进行相应的速度，对于专注于响应性的应用程序，长的暂停时间是不可接受的，重点是在短时间内做出回应。 吞吐量：侧重于在特定时间段内最大化应用程序的工作量，对于专注于吞吐量的应用程序，高暂停时间是可以接受的。由于高吞吐">
+<meta property="og:locale">
+<meta property="og:image" content="https://tva1.sinaimg.cn/large/005P73H4gy1gxclr4dsubj30hi0a0406.jpg">
+<meta property="article:published_time" content="2021-12-14T14:41:46.000Z">
+<meta property="article:modified_time" content="2021-12-14T14:50:45.516Z">
+<meta property="article:author" content="Usher">
+<meta property="article:tag" content="JVM">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://tva1.sinaimg.cn/large/005P73H4gy1gxclr4dsubj30hi0a0406.jpg"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://www.usherblog.site/2021/12/14/JVM%E5%8F%82%E6%95%B0%E5%8F%8A%E8%B0%83%E4%BC%98/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/node-snackbar/dist/snackbar.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.css" media="print" onload="this.media='all'"><script async="async" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><script>(adsbygoogle = window.adsbygoogle || []).push({
+  google_ad_client: 'ca-pub-5019695460390847',
+  enable_page_level_ads: 'true'
+});</script><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: 'days',
+  date_suffix: {
+    just: 'Just',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: {"chs_to_cht":"Traditional Chinese Activated Manually","cht_to_chs":"Simplified Chinese Activated Manually","day_to_night":"Dark Mode Activated Manually","night_to_day":"Light Mode Activated Manually","bgLight":"#49b1f5","bgDark":"#121212","position":"bottom-left"},
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'JVM参数及调优',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2021-12-14 22:50:45'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="baidu_union_verify" content="7aa3d4669bd0cb824cffa7f17c7ae1ca"><script async src="https://www.googletagmanager.com/gtag/js?id=G-NM1VS5D757"></script><script>  window.dataLayer = window.dataLayer || [];  function gtag(){dataLayer.push(arguments);}  gtag('js', new Date());  gtag('config', 'G-NM1VS5D757');</script><meta name="google-site-verification" content="e1Ufu68xXNJlblUj28b-YCuR4TGw52w2EpQjq0HhO14" /><script>var _hmt=_hmt||[];(function(){var hm=document.createElement("script");hm.src="https://hm.baidu.com/hm.js?9dac5a1d54c53caffecf4954d4041153";var s=document.getElementsByTagName("script")[0];s.parentNode.insertBefore(hm,s)})();</script><meta name="baidu-site-verification" content="code-SfwtUQCUG9" /><script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5019695460390847"crossorigin="anonymous"></script><meta name="generator" content="Hexo 5.4.0"></head><body><div id="web_bg"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxcmaek0tpj308w08wgls.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data is-center"><div class="data-item"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">80</div></a></div><div class="data-item"><a href="/tags/"><div class="headline">Tags</div><div class="length-num">38</div></a></div><div class="data-item"><a href="/categories/"><div class="headline">Categories</div><div class="length-num">25</div></a></div></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">Usher_Ou's Blog</a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">JVM参数及调优</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2021-12-14T14:41:46.000Z" title="Created 2021-12-14 22:41:46">2021-12-14</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2021-12-14T14:50:45.516Z" title="Updated 2021-12-14 22:50:45">2021-12-14</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/JVM/">JVM</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">Word count:</span><span class="word-count">656</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">Reading time:</span><span>2min</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="JVM参数及调优"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post View:</span><span id="busuanzi_value_page_pv"></span></span></div></div></div><article class="post-content" id="article-container"><h2 id="一、调优基本概念"><a href="#一、调优基本概念" class="headerlink" title="一、调优基本概念"></a>一、调优基本概念</h2><h3 id="jvm性能调优的三个基本组件"><a href="#jvm性能调优的三个基本组件" class="headerlink" title="jvm性能调优的三个基本组件"></a>jvm性能调优的三个基本组件</h3><p>1.堆大小调整</p>
+<p>2.垃圾收集器调整</p>
+<p>3.JIT编译器</p>
+<p><img src="https://img-blog.csdnimg.cn/img_convert/749767d21e625b66267726fb961221ab.png" alt="img"></p>
+<p>通常在调优java应用程序时，重点是一下两个目标之一</p>
+<p><strong>响应性</strong>：应用程序或系统对请求的数据进行相应的速度，对于专注于响应性的应用程序，长的暂停时间是不可接受的，重点是在短时间内做出回应。</p>
+<p><strong>吞吐量</strong>：侧重于在特定时间段内最大化应用程序的工作量，对于专注于吞吐量的应用程序，高暂停时间是可以接受的。由于高吞吐量的应用程序在较长时间内专注于基准测试，因此不需要考虑快速响应时间。</p>
+<p><strong>用户代码执行时间/（用户代码执行时间+垃圾回收时间）</strong></p>
+<h2 id="二、JVM常用参数"><a href="#二、JVM常用参数" class="headerlink" title="二、JVM常用参数"></a>二、JVM常用参数</h2><p><img src="https://img-blog.csdnimg.cn/img_convert/ce39a68030081c118cce38762f1a2e48.png" alt="img"></p>
+<h2 id="三、GC调优思路"><a href="#三、GC调优思路" class="headerlink" title="三、GC调优思路"></a>三、GC调优思路</h2><p><img src="https://img-blog.csdnimg.cn/img_convert/ab05a526049bbb23f157b36e3cac3a6a.png" alt="img"></p>
+<h3 id="通用GC参数"><a href="#通用GC参数" class="headerlink" title="通用GC参数"></a>通用GC参数</h3><p><img src="https://img-blog.csdnimg.cn/img_convert/7ec7ad1db271338ed214e0eb7df6cda8.png" alt="img"></p>
+<p><img src="https://img-blog.csdnimg.cn/img_convert/7109cc2d187f21c198f6ba7de6348eeb.png" alt="img"></p>
+<p><img src="https://img-blog.csdnimg.cn/img_convert/705372585f940bb4648b7ef320b1eb3e.png" alt="img"></p>
+<p><img src="https://img-blog.csdnimg.cn/img_convert/8259d35e8e94abba907b21fee555aba4.png" alt="img"></p>
+<h2 id="四、JIT编译器优化参数"><a href="#四、JIT编译器优化参数" class="headerlink" title="四、JIT编译器优化参数"></a>四、JIT编译器优化参数</h2><p><img src="https://img-blog.csdnimg.cn/img_convert/4632668d684b5caa91b48a4be9ba981d.png" alt="img"></p>
+<h2 id="五、调优"><a href="#五、调优" class="headerlink" title="五、调优"></a>五、调优</h2><p>（1）根据需求进行JVM规划和预调优</p>
+<p>（2）优化运行JVM环境（慢、卡顿怎么优化)</p>
+<p>（3）解决JVM运行过程中出现的各种问题</p>
+<h3 id="调优，从规划开始"><a href="#调优，从规划开始" class="headerlink" title="调优，从规划开始"></a>调优，从规划开始</h3><p>1.调优，从业务场景开始</p>
+<p>2.无监控(压力测试，能看到结果)，不调优</p>
+<h4 id="步骤："><a href="#步骤：" class="headerlink" title="步骤："></a>步骤：</h4><p>（1）熟悉业务场景(没有最好的垃圾回收器，只有最合适的垃圾回收器)</p>
+<p>响应时间、停顿时间 【CMS、G1、ZGC】，需要给用户作响应</p>
+<p>吞吐量 = 用户时间/（用户时间+GC时间）【PS】</p>
+<p>（2）选择回收器组合</p>
+<p>（3）计算内存需求、经验值</p>
+<p>（4）选定CPU（越高越好）</p>
+<p>（5）设定年代大小、升级年龄</p>
+<p>（6）设定日志参数</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">-Xloggc:/opt/xxx/logs/xxx-xxx-gc-%t.log -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=5</span><br><span class="line">-XX:GCLogFileSize=20M -xx:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintGCCause</span><br></pre></td></tr></table></figure>
+
+<p>或者每天产生一个日志文件</p>
+<p>（7）观察日志情况</p>
+<h3 id="运行环境"><a href="#运行环境" class="headerlink" title="运行环境"></a>运行环境</h3><h4 id="1-系统CPU经常-100-，如何调优"><a href="#1-系统CPU经常-100-，如何调优" class="headerlink" title="1.系统CPU经常 100%，如何调优"></a>1.系统CPU经常 100%，如何调优</h4><p>CPU 100% 一定有线程在占用系统资源</p>
+<p>（1）找出哪个进程的 CPU 高 【top】</p>
+<p>（2）该进程中哪个线程的 CPU 高 【top -Hp】</p>
+<p>（3）导出该线程的堆栈 【jstack】</p>
+<p>（4）查找哪个方法（栈帧）的消耗时间 【jstack】</p>
+<p>（5）工作线程占比高、垃圾回收线程占比高</p>
+<h4 id="2-系统内存飙高，如何查找问题"><a href="#2-系统内存飙高，如何查找问题" class="headerlink" title="2.系统内存飙高，如何查找问题"></a>2.系统内存飙高，如何查找问题</h4><p>（1）导出堆内存 【jmap】</p>
+<p>（2）分析 【jhat 、jvisualvm、jprofiler】</p>
+<h4 id="怎么定位-OOM-问题："><a href="#怎么定位-OOM-问题：" class="headerlink" title="怎么定位 OOM 问题："></a>怎么定位 OOM 问题：</h4><p>1.已经上线的系统不用图形界面，用cmdline、arthas</p>
+<p>2.图形界面用在什么地方？测试，测试的时候进行监控（压测观察）</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined" rel="external nofollow noreferrer">Usher</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="http://www.usherblog.site/2021/12/14/JVM%E5%8F%82%E6%95%B0%E5%8F%8A%E8%B0%83%E4%BC%98/">http://www.usherblog.site/2021/12/14/JVM%E5%8F%82%E6%95%B0%E5%8F%8A%E8%B0%83%E4%BC%98/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener external nofollow noreferrer" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/JVM/">JVM</a></div><div class="post_share"><div class="social-share" data-image="https://tva1.sinaimg.cn/large/005P73H4gy1gxclr4dsubj30hi0a0406.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/social-share.js/dist/js/social-share.min.js" defer></script></div></div><div class="post-reward"><div class="reward-button button--animated"><i class="fas fa-qrcode"></i> Donate</div><div class="reward-main"><ul class="reward-all"><li class="reward-item"><a href="https://tva1.sinaimg.cn/mw690/005P73H4gy1gxcm78wfitj30v20wfq99.jpg" rel="external nofollow noreferrer" target="_blank"><img class="post-qr-code-img" src="https://tva1.sinaimg.cn/mw690/005P73H4gy1gxcm78wfitj30v20wfq99.jpg"/></a><div class="post-qr-code-desc"></div></li></ul></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2021/12/15/%E4%B8%A4%E9%98%B6%E6%AE%B5%E6%8F%90%E4%BA%A4%E3%80%81%E4%B8%89%E9%98%B6%E6%AE%B5%E6%8F%90%E4%BA%A4%E7%9A%84%E7%90%86%E8%A7%A3/"><img class="prev-cover" src="https://tva1.sinaimg.cn/large/005P73H4gy1gxy2jvyp2kj31hc0u07n8.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">Previous Post</div><div class="prev_info">两阶段提交、三阶段提交的理解</div></div></a></div><div class="next-post pull-right"><a href="/2021/12/14/%E8%AE%B0%E5%BD%95es%E4%B8%80%E6%AC%A1%E6%AD%BB%E9%94%81%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5/"><img class="next-cover" src="https://tva1.sinaimg.cn/large/005P73H4gy1gxclr4dsubj30hi0a0406.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">Next Post</div><div class="next_info">记录es一次死锁问题排查</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>Related Articles</span></div><div class="relatedPosts-list"><div><a href="/2021/12/14/Arthas%EF%BC%88%E9%98%BF%E5%B0%94%E8%90%A8%E6%96%AF%EF%BC%89%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B/" title="Arthas（阿尔萨斯）使用教程"><img class="cover" src="https://tva1.sinaimg.cn/large/005P73H4gy1gxclr4dsubj30hi0a0406.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-12-14</div><div class="title">Arthas（阿尔萨斯）使用教程</div></div></a></div><div><a href="/2018/07/22/Tomcat%E8%B0%83%E4%BC%98%E5%92%8CJVM%E4%BC%98%E5%8C%96/" title="Tomcat调优和JVM优化"><img class="cover" src="https://tva1.sinaimg.cn/large/005P73H4gy1gxy2jvyp2kj31hc0u07n8.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2018-07-22</div><div class="title">Tomcat调优和JVM优化</div></div></a></div><div><a href="/2018/02/24/JVM/" title="JVM学习笔记"><img class="cover" src="https://tva1.sinaimg.cn/large/005P73H4gy1gxclqqeek6j312w0m8wnu.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2018-02-24</div><div class="title">JVM学习笔记</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxcmaek0tpj308w08wgls.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">Usher</div><div class="author-info__description">Honor To The End</div></div><div class="card-info-data is-center"><div class="card-info-data-item"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">80</div></a></div><div class="card-info-data-item"><a href="/tags/"><div class="headline">Tags</div><div class="length-num">38</div></a></div><div class="card-info-data-item"><a href="/categories/"><div class="headline">Categories</div><div class="length-num">25</div></a></div></div><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/legolas007" rel="external nofollow noreferrer" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="https://www.letaotao.site/" rel="external nofollow noreferrer" target="_blank" title="最好用的网址导航"><i class="fas fa-blog"></i></a></div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Catalog</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E8%B0%83%E4%BC%98%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5"><span class="toc-number">1.</span> <span class="toc-text">一、调优基本概念</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#jvm%E6%80%A7%E8%83%BD%E8%B0%83%E4%BC%98%E7%9A%84%E4%B8%89%E4%B8%AA%E5%9F%BA%E6%9C%AC%E7%BB%84%E4%BB%B6"><span class="toc-number">1.1.</span> <span class="toc-text">jvm性能调优的三个基本组件</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81JVM%E5%B8%B8%E7%94%A8%E5%8F%82%E6%95%B0"><span class="toc-number">2.</span> <span class="toc-text">二、JVM常用参数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81GC%E8%B0%83%E4%BC%98%E6%80%9D%E8%B7%AF"><span class="toc-number">3.</span> <span class="toc-text">三、GC调优思路</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%9A%E7%94%A8GC%E5%8F%82%E6%95%B0"><span class="toc-number">3.1.</span> <span class="toc-text">通用GC参数</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81JIT%E7%BC%96%E8%AF%91%E5%99%A8%E4%BC%98%E5%8C%96%E5%8F%82%E6%95%B0"><span class="toc-number">4.</span> <span class="toc-text">四、JIT编译器优化参数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E8%B0%83%E4%BC%98"><span class="toc-number">5.</span> <span class="toc-text">五、调优</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%B0%83%E4%BC%98%EF%BC%8C%E4%BB%8E%E8%A7%84%E5%88%92%E5%BC%80%E5%A7%8B"><span class="toc-number">5.1.</span> <span class="toc-text">调优，从规划开始</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4%EF%BC%9A"><span class="toc-number">5.1.1.</span> <span class="toc-text">步骤：</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BF%90%E8%A1%8C%E7%8E%AF%E5%A2%83"><span class="toc-number">5.2.</span> <span class="toc-text">运行环境</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-%E7%B3%BB%E7%BB%9FCPU%E7%BB%8F%E5%B8%B8-100-%EF%BC%8C%E5%A6%82%E4%BD%95%E8%B0%83%E4%BC%98"><span class="toc-number">5.2.1.</span> <span class="toc-text">1.系统CPU经常 100%，如何调优</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-%E7%B3%BB%E7%BB%9F%E5%86%85%E5%AD%98%E9%A3%99%E9%AB%98%EF%BC%8C%E5%A6%82%E4%BD%95%E6%9F%A5%E6%89%BE%E9%97%AE%E9%A2%98"><span class="toc-number">5.2.2.</span> <span class="toc-text">2.系统内存飙高，如何查找问题</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%80%8E%E4%B9%88%E5%AE%9A%E4%BD%8D-OOM-%E9%97%AE%E9%A2%98%EF%BC%9A"><span class="toc-number">5.2.3.</span> <span class="toc-text">怎么定位 OOM 问题：</span></a></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Post</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2022/01/25/Geohash%E7%AE%97%E6%B3%95/" title="Geohash算法"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxclr4dsubj30hi0a0406.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Geohash算法"/></a><div class="content"><a class="title" href="/2022/01/25/Geohash%E7%AE%97%E6%B3%95/" title="Geohash算法">Geohash算法</a><time datetime="2022-01-25T15:55:11.000Z" title="Created 2022-01-25 23:55:11">2022-01-25</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/01/23/Zookeeper%E9%9D%A2%E8%AF%95%E9%A2%98%E6%80%BB%E7%BB%93/" title="Zookeeper面试题总结"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxclr4dsubj30hi0a0406.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Zookeeper面试题总结"/></a><div class="content"><a class="title" href="/2022/01/23/Zookeeper%E9%9D%A2%E8%AF%95%E9%A2%98%E6%80%BB%E7%BB%93/" title="Zookeeper面试题总结">Zookeeper面试题总结</a><time datetime="2022-01-23T08:56:41.000Z" title="Created 2022-01-23 16:56:41">2022-01-23</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/01/22/HBase%E4%BC%98%E5%8C%96%E7%AC%94%E8%AE%B0/" title="HBase优化笔记"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxy2jvyp2kj31hc0u07n8.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="HBase优化笔记"/></a><div class="content"><a class="title" href="/2022/01/22/HBase%E4%BC%98%E5%8C%96%E7%AC%94%E8%AE%B0/" title="HBase优化笔记">HBase优化笔记</a><time datetime="2022-01-22T05:43:02.000Z" title="Created 2022-01-22 13:43:02">2022-01-22</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/01/20/HBase-RowKey%E8%AE%BE%E8%AE%A1/" title="HBase RowKey设计"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxclqqeek6j312w0m8wnu.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="HBase RowKey设计"/></a><div class="content"><a class="title" href="/2022/01/20/HBase-RowKey%E8%AE%BE%E8%AE%A1/" title="HBase RowKey设计">HBase RowKey设计</a><time datetime="2022-01-20T14:25:23.000Z" title="Created 2022-01-20 22:25:23">2022-01-20</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/01/20/HBase%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E6%8C%87%E5%8D%97/" title="HBase性能优化指南"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxcls4qjqtj31400p0gnh.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="HBase性能优化指南"/></a><div class="content"><a class="title" href="/2022/01/20/HBase%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E6%8C%87%E5%8D%97/" title="HBase性能优化指南">HBase性能优化指南</a><time datetime="2022-01-20T13:45:18.000Z" title="Created 2022-01-20 21:45:18">2022-01-20</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2018 - 2022 By Usher</div><div class="framework-info"><span>Framework </span><a target="_blank" rel="noopener external nofollow noreferrer" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Read Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light And Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle between single-column and double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="Setting"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table Of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back To Top"><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.js"></script><script src="https://cdn.jsdelivr.net/npm/node-snackbar/dist/snackbar.min.js"></script><div class="js-pjax"></div><script src="https://cdn.jsdelivr.net/npm/pjax/pjax.min.js"></script><script>let pjaxSelectors = [
+  'title',
+  '#config-diff',
+  '#body-wrap',
+  '#rightside-config-hide',
+  '#rightside-config-show',
+  '.js-pjax'
+]
+
+if (false) {
+  pjaxSelectors.unshift('meta[property="og:image"]', 'meta[property="og:title"]', 'meta[property="og:url"]')
+}
+
+var pjax = new Pjax({
+  elements: 'a:not([target="_blank"]):not([href="/music/"]):not([href="/no-pjax/"])',
+  selectors: pjaxSelectors,
+  cacheBust: false,
+  analytics: false,
+  scrollRestoration: false
+})
+
+document.addEventListener('pjax:send', function () {
+
+  // removeEventListener scroll 
+  window.removeEventListener('scroll', window.tocScrollFn)
+  window.removeEventListener('scroll', scrollCollect)
+
+  typeof preloader === 'object' && preloader.initLoading()
+  
+  if (window.aplayers) {
+    for (let i = 0; i < window.aplayers.length; i++) {
+      if (!window.aplayers[i].options.fixed) {
+        window.aplayers[i].destroy()
+      }
+    }
+  }
+
+  typeof typed === 'object' && typed.destroy()
+
+  //reset readmode
+  const $bodyClassList = document.body.classList
+  $bodyClassList.contains('read-mode') && $bodyClassList.remove('read-mode')
+
+})
+
+document.addEventListener('pjax:complete', function () {
+  window.refreshFn()
+
+  document.querySelectorAll('script[data-pjax]').forEach(item => {
+    const newScript = document.createElement('script')
+    const content = item.text || item.textContent || item.innerHTML || ""
+    Array.from(item.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value))
+    newScript.appendChild(document.createTextNode(content))
+    item.parentNode.replaceChild(newScript, item)
+  })
+
+  GLOBAL_CONFIG.islazyload && window.lazyLoadInstance.update()
+
+  typeof chatBtnFn === 'function' && chatBtnFn()
+  typeof panguInit === 'function' && panguInit()
+
+  // google analytics
+  typeof gtag === 'function' && gtag('config', '', {'page_path': window.location.pathname});
+
+  // baidu analytics
+  typeof _hmt === 'object' && _hmt.push(['_trackPageview',window.location.pathname]);
+
+  typeof loadMeting === 'function' && document.getElementsByClassName('aplayer').length && loadMeting()
+
+  // prismjs
+  typeof Prism === 'object' && Prism.highlightAll()
+
+  typeof preloader === 'object' && preloader.endLoading()
+})
+
+document.addEventListener('pjax:error', (e) => {
+  if (e.request.status === 404) {
+    pjax.loadUrl('/404.html')
+  }
+})</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

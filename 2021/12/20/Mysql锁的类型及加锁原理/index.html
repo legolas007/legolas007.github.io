@@ -1,0 +1,302 @@
+<!DOCTYPE html><html lang="zh-Hans" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>Mysql锁的类型及加锁原理 | Usher_Ou's Blog</title><meta name="keywords" content="Mysql"><meta name="author" content="Usher"><meta name="copyright" content="Usher"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="表锁和行锁我们首先来了解一下表锁和行锁：表锁是指对一整张表加锁，一般是 DDL 处理时使用；而行锁则是锁定某一行或者某几行，或者行与行之间的间隙。 表锁由 MySQL Server 实现，行锁则是存储引擎实现，不同的引擎实现的不同。在 MySQL 的常用引擎中 InnoDB 支持行锁，而 MyISAM 则只能使用 MySQL Server 提供的表锁。  表锁表锁由 MySQL Server 实现">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Mysql锁的类型及加锁原理">
+<meta property="og:url" content="http://www.usherblog.site/2021/12/20/Mysql%E9%94%81%E7%9A%84%E7%B1%BB%E5%9E%8B%E5%8F%8A%E5%8A%A0%E9%94%81%E5%8E%9F%E7%90%86/index.html">
+<meta property="og:site_name" content="Usher_Ou&#39;s Blog">
+<meta property="og:description" content="表锁和行锁我们首先来了解一下表锁和行锁：表锁是指对一整张表加锁，一般是 DDL 处理时使用；而行锁则是锁定某一行或者某几行，或者行与行之间的间隙。 表锁由 MySQL Server 实现，行锁则是存储引擎实现，不同的引擎实现的不同。在 MySQL 的常用引擎中 InnoDB 支持行锁，而 MyISAM 则只能使用 MySQL Server 提供的表锁。  表锁表锁由 MySQL Server 实现">
+<meta property="og:locale">
+<meta property="og:image" content="https://tva1.sinaimg.cn/large/005P73H4gy1gxy2j0ekj4j31hc0u0q7c.jpg">
+<meta property="article:published_time" content="2021-12-20T14:03:14.000Z">
+<meta property="article:modified_time" content="2021-12-20T14:13:40.918Z">
+<meta property="article:author" content="Usher">
+<meta property="article:tag" content="Mysql">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://tva1.sinaimg.cn/large/005P73H4gy1gxy2j0ekj4j31hc0u0q7c.jpg"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://www.usherblog.site/2021/12/20/Mysql%E9%94%81%E7%9A%84%E7%B1%BB%E5%9E%8B%E5%8F%8A%E5%8A%A0%E9%94%81%E5%8E%9F%E7%90%86/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/node-snackbar/dist/snackbar.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.css" media="print" onload="this.media='all'"><script async="async" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><script>(adsbygoogle = window.adsbygoogle || []).push({
+  google_ad_client: 'ca-pub-5019695460390847',
+  enable_page_level_ads: 'true'
+});</script><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: 'days',
+  date_suffix: {
+    just: 'Just',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: {"chs_to_cht":"Traditional Chinese Activated Manually","cht_to_chs":"Simplified Chinese Activated Manually","day_to_night":"Dark Mode Activated Manually","night_to_day":"Light Mode Activated Manually","bgLight":"#49b1f5","bgDark":"#121212","position":"bottom-left"},
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Mysql锁的类型及加锁原理',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2021-12-20 22:13:40'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="baidu_union_verify" content="7aa3d4669bd0cb824cffa7f17c7ae1ca"><script async src="https://www.googletagmanager.com/gtag/js?id=G-NM1VS5D757"></script><script>  window.dataLayer = window.dataLayer || [];  function gtag(){dataLayer.push(arguments);}  gtag('js', new Date());  gtag('config', 'G-NM1VS5D757');</script><meta name="google-site-verification" content="e1Ufu68xXNJlblUj28b-YCuR4TGw52w2EpQjq0HhO14" /><script>var _hmt=_hmt||[];(function(){var hm=document.createElement("script");hm.src="https://hm.baidu.com/hm.js?9dac5a1d54c53caffecf4954d4041153";var s=document.getElementsByTagName("script")[0];s.parentNode.insertBefore(hm,s)})();</script><meta name="baidu-site-verification" content="code-SfwtUQCUG9" /><script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5019695460390847"crossorigin="anonymous"></script><meta name="generator" content="Hexo 5.4.0"></head><body><div id="web_bg"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxcmaek0tpj308w08wgls.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data is-center"><div class="data-item"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">80</div></a></div><div class="data-item"><a href="/tags/"><div class="headline">Tags</div><div class="length-num">38</div></a></div><div class="data-item"><a href="/categories/"><div class="headline">Categories</div><div class="length-num">25</div></a></div></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">Usher_Ou's Blog</a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">Mysql锁的类型及加锁原理</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2021-12-20T14:03:14.000Z" title="Created 2021-12-20 22:03:14">2021-12-20</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2021-12-20T14:13:40.918Z" title="Updated 2021-12-20 22:13:40">2021-12-20</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Mysql/">Mysql</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">Word count:</span><span class="word-count">3.3k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">Reading time:</span><span>10min</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="Mysql锁的类型及加锁原理"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post View:</span><span id="busuanzi_value_page_pv"></span></span></div></div></div><article class="post-content" id="article-container"><h3 id="表锁和行锁"><a href="#表锁和行锁" class="headerlink" title="表锁和行锁"></a>表锁和行锁</h3><p>我们首先来了解一下表锁和行锁：表锁是指对一整张表加锁，一般是 DDL 处理时使用；而行锁则是锁定某一行或者某几行，或者行与行之间的间隙。</p>
+<p>表锁由 MySQL Server 实现，行锁则是存储引擎实现，不同的引擎实现的不同。在 MySQL 的常用引擎中 InnoDB 支持行锁，而 MyISAM 则只能使用 MySQL Server 提供的表锁。</p>
+<p><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxknjt1t82j30iy0b3dfx.jpg" alt="图片"></p>
+<h3 id="表锁"><a href="#表锁" class="headerlink" title="表锁"></a>表锁</h3><p>表锁由 MySQL Server 实现，一般在执行 DDL 语句时会对整个表进行加锁，比如说 ALTER TABLE 等操作。在执行 SQL 语句时，也可以明确指定对某个表进行加锁。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; lock table user read(write); # 分为读锁和写锁Query OK, 0 rows affected (0.00 sec)</span><br><span class="line">mysql&gt; select * from user where id = 100; # 成功mysql&gt; select * from role where id = 100; # 失败，未提前获取该 role的读表锁mysql&gt; update user  set name = &#x27;Tom&#x27; where id = 100; # 失败，未提前获得user的写表锁</span><br><span class="line">mysql&gt; unlock tables; # 显示释放表锁Query OK, 0 rows affected (0.00 sec)</span><br></pre></td></tr></table></figure>
+
+<p>表锁使用的是一次性锁技术，也就是说，在会话开始的地方使用 lock 命令将后续需要用到的表都加上锁，在表释放前，只能访问这些加锁的表，不能访问其他表，直到最后通过 unlock tables 释放所有表锁。</p>
+<p>除了使用 unlock tables 显示释放锁之外，会话持有其他表锁时执行lock table 语句会释放会话之前持有的锁；会话持有其他表锁时执行 start transaction 或者 begin 开启事务时，也会释放之前持有的锁。</p>
+<h3 id="行锁"><a href="#行锁" class="headerlink" title="行锁"></a>行锁</h3><p>不同存储引擎的行锁实现不同，后续没有特别说明，则行锁特指 InnoDB 实现的行锁。</p>
+<p>在了解 InnoDB 的加锁原理前，需要对其存储结构有一定的了解。InnoDB 是聚簇索引，也就是 B+树的叶节点既存储了主键索引也存储了数据行。而 InnoDB 的二级索引的叶节点存储的则是主键值，所以通过二级索引查询数据时，还需要拿对应的主键去聚簇索引中再次进行查询。关于 InnoDB 和 MyISAM 的索引的详细知识可以阅读《Mysql探索(一):B+Tree索引》一文。</p>
+<p><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxknibwfj3j30jz0ivgma.jpg" alt="图片"></p>
+<p>下面以两条 SQL 的执行为例，讲解一下 InnoDB 对于单行数据的加锁原理。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">update user set age = 10 where id = 49;update user set age = 10 where name = &#x27;Tom&#x27;;</span><br></pre></td></tr></table></figure>
+
+<p>第一条 SQL 使用主键索引来查询，则只需要在 id = 49 这个主键索引上加上写锁；第二条 SQL 则使用二级索引来查询，则首先在 name = Tom 这个索引上加写锁，然后由于使用 InnoDB 二级索引还需再次根据主键索引查询，所以还需要在 id = 49 这个主键索引上加写锁，如上图所示。</p>
+<p>也就是说使用主键索引需要加一把锁，使用二级索引需要在二级索引和主键索引上各加一把锁。</p>
+<p>根据索引对单行数据进行更新的加锁原理了解了，那如果更新操作涉及多个行呢，比如下面 SQL 的执行场景。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">update user set age = 10 where id &gt; 49;</span><br></pre></td></tr></table></figure>
+
+<p>上述 SQL 的执行过程如下图所示。MySQL Server 会根据 WHERE 条件读取第一条满足条件的记录，然后 InnoDB 引擎会将第一条记录返回并加锁，接着 MySQL Server 发起更新改行记录的 UPDATE 请求，更新这条记录。一条记录操作完成，再读取下一条记录，直至没有匹配的记录为止。</p>
+<p><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxknkrx71wj30k10ahglw.jpg" alt="图片"></p>
+<p>这种场景下的锁的释放较为复杂，有多种的优化方式，我对这块暂时还没有了解，还请知道的小伙伴在下方留言解释。</p>
+<p>下面主要依次介绍 InnoDB 中锁的模式和类型，锁的类型是指锁的粒度或者锁具体加在什么地方；而锁模式描述的是锁的兼容性，也就是加的是什么锁，比如写锁或者读锁。</p>
+<p>内容基本来自于 MySQL 的技术文档 innodb-lock 一章，感兴趣的同学可以直接去阅读原文，原文地址为见文章末尾。</p>
+<h3 id="行锁的模式"><a href="#行锁的模式" class="headerlink" title="行锁的模式"></a>行锁的模式</h3><p>锁的模式有：读意向锁，写意向锁，读锁，写锁和自增锁(auto_inc)，下面我们依次来看。</p>
+<h4 id="读写锁"><a href="#读写锁" class="headerlink" title="读写锁"></a>读写锁</h4><p>读锁，又称共享锁（Share locks，简称 S 锁），加了读锁的记录，所有的事务都可以读取，但是不能修改，并且可同时有多个事务对记录加读锁。</p>
+<p>写锁，又称排他锁（Exclusive locks，简称 X 锁），或独占锁，对记录加了排他锁之后，只有拥有该锁的事务可以读取和修改，其他事务都不可以读取和修改，并且同一时间只能有一个事务加写锁。</p>
+<h3 id="读写意向锁"><a href="#读写意向锁" class="headerlink" title="读写意向锁"></a>读写意向锁</h3><p>由于表锁和行锁虽然锁定范围不同，但是会相互冲突。所以当你要加表锁时，势必要先遍历该表的所有记录，判断是否加有排他锁。这种遍历检查的方式显然是一种低效的方式，MySQL 引入了意向锁，来检测表锁和行锁的冲突。</p>
+<p>意向锁也是表级锁，也可分为读意向锁（IS 锁）和写意向锁（IX 锁）。当事务要在记录上加上读锁或写锁时，要首先在表上加上意向锁。这样判断表中是否有记录加锁就很简单了，只要看下表上是否有意向锁就行了。</p>
+<p>意向锁之间是不会产生冲突的，也不和 AUTO_INC 表锁冲突，它只会阻塞表级读锁或表级写锁，另外，意向锁也不会和行锁冲突，行锁只会和行锁冲突。</p>
+<h3 id="自增锁"><a href="#自增锁" class="headerlink" title="自增锁"></a>自增锁</h3><p>AUTOINC 锁又叫自增锁（一般简写成 AI 锁），是一种表锁，当表中有自增列（AUTOINCREMENT）时出现。当插入表中有自增列时，数据库需要自动生成自增值，它会先为该表加 AUTOINC 表锁，阻塞其他事务的插入操作，这样保证生成的自增值肯定是唯一的。AUTOINC 锁具有如下特点：</p>
+<ul>
+<li>AUTO_INC 锁互不兼容，也就是说同一张表同时只允许有一个自增锁；</li>
+<li>自增值一旦分配了就会 +1，如果事务回滚，自增值也不会减回去，所以自增值可能会出现中断的情况。</li>
+</ul>
+<p>显然，AUTOINC 表锁会导致并发插入的效率降低，为了提高插入的并发性，MySQL 从 5.1.22 版本开始，引入了一种可选的轻量级锁（mutex）机制来代替 AUTOINC 锁，可以通过参数 innodbautoinclockmode 来灵活控制分配自增值时的并发策略。具体可以参考 MySQL 的 AUTOINCREMENT Handling in InnoDB 一文，链接在文末。</p>
+<h4 id="不同模式锁的兼容矩阵"><a href="#不同模式锁的兼容矩阵" class="headerlink" title="不同模式锁的兼容矩阵"></a>不同模式锁的兼容矩阵</h4><p>下面是各个表锁之间的兼容矩阵。</p>
+<p><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxknlh0a0cj30jz08jweq.jpg" alt="图片"></p>
+<p>总结起来有下面几点：</p>
+<ul>
+<li>意向锁之间互不冲突；</li>
+<li>S 锁只和 S/IS 锁兼容，和其他锁都冲突；</li>
+<li>X 锁和其他所有锁都冲突；</li>
+<li>AI 锁只和意向锁兼容；</li>
+</ul>
+<h3 id="行锁的类型"><a href="#行锁的类型" class="headerlink" title="行锁的类型"></a>行锁的类型</h3><p>根据锁的粒度可以把锁细分为表锁和行锁，行锁根据场景的不同又可以进一步细分，依次为 Next-Key Lock，Gap Lock 间隙锁，Record Lock 记录锁和插入意向 GAP 锁。</p>
+<p>不同的锁锁定的位置是不同的，比如说记录锁只锁住对应的记录，而间隙锁锁住记录和记录之间的间隔，Next-Key Lock 则所属记录和记录之前的间隙。不同类型锁的锁定范围大致如下图所示。</p>
+<p><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxknm0o3bvj30jh07odfw.jpg" alt="图片"></p>
+<p>下面我们来依次了解一下不同的类型的锁。</p>
+<h3 id="记录锁"><a href="#记录锁" class="headerlink" title="记录锁"></a>记录锁</h3><p>记录锁是最简单的行锁，并没有什么好说的。上边描述 InnoDB 加锁原理中的锁就是记录锁，只锁住 id = 49 或者 name = ‘Tom’ 这一条记录。</p>
+<p>当 SQL 语句无法使用索引时，会进行全表扫描，这个时候 MySQL 会给整张表的所有数据行加记录锁，再由 MySQL Server 层进行过滤。但是，在 MySQL Server 层进行过滤的时候，如果发现不满足 WHERE 条件，会释放对应记录的锁。这样做，保证了最后只会持有满足条件记录上的锁，但是每条记录的加锁操作还是不能省略的。</p>
+<p>所以更新操作必须要根据索引进行操作，没有索引时，不仅会消耗大量的锁资源，增加数据库的开销，还会极大的降低了数据库的并发性能。</p>
+<h3 id="间隙锁"><a href="#间隙锁" class="headerlink" title="间隙锁"></a>间隙锁</h3><p>还是最开始更新用户年龄的例子，如果 id = 49 这条记录不存在，这个 SQL 语句还会加锁吗？答案是可能有，这取决于数据库的隔离级别。这种情况下，在 RC 隔离级别不会加任何锁，在 RR 隔离级别会在 id = 49 前后两个索引之间加上间隙锁。</p>
+<p>间隙锁是一种加在两个索引之间的锁，或者加在第一个索引之前，或最后一个索引之后的间隙。这个间隙可以跨一个索引记录，多个索引记录，甚至是空的。使用间隙锁可以防止其他事务在这个范围内插入或修改记录，保证两次读取这个范围内的记录不会变，从而不会出现幻读现象。</p>
+<p>值得注意的是，间隙锁和间隙锁之间是互不冲突的，间隙锁唯一的作用就是为了防止其他事务的插入，所以加间隙 S 锁和加间隙 X 锁没有任何区别。</p>
+<h3 id="Next-Key-锁"><a href="#Next-Key-锁" class="headerlink" title="Next-Key 锁"></a>Next-Key 锁</h3><p>Next-key锁是记录锁和间隙锁的组合，它指的是加在某条记录以及这条记录前面间隙上的锁。假设一个索引包含 15、18、20 ，30，49，50 这几个值，可能的 Next-key 锁如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(-∞, 15]，(15, 18]，(18, 20]，(20, 30]，(30, 49]，(49, 50]，(50, +∞)</span><br></pre></td></tr></table></figure>
+
+<p>通常我们都用这种左开右闭区间来表示 Next-key 锁，其中，圆括号表示不包含该记录，方括号表示包含该记录。前面四个都是 Next-key 锁，最后一个为间隙锁。和间隙锁一样，在 RC 隔离级别下没有 Next-key 锁，只有 RR 隔离级别才有。还是之前的例子，如果 id 不是主键，而是二级索引，且不是唯一索引，那么这个 SQL 在 RR 隔离级别下就会加如下的 Next-key 锁 (30, 49](49, 50)</p>
+<p>此时如果插入一条 id = 31 的记录将会阻塞住。之所以要把 id = 49 前后的间隙都锁住，仍然是为了解决幻读问题，因为 id 是非唯一索引，所以 id = 49 可能会有多条记录，为了防止再插入一条 id = 49 的记录。</p>
+<h3 id="插入意向锁"><a href="#插入意向锁" class="headerlink" title="插入意向锁"></a>插入意向锁</h3><p>插入意向锁是一种特殊的间隙锁（简写成 II GAP）表示插入的意向，只有在 INSERT 的时候才会有这个锁。注意，这个锁虽然也叫意向锁，但是和上面介绍的表级意向锁是两个完全不同的概念，不要搞混了。</p>
+<p>插入意向锁和插入意向锁之间互不冲突，所以可以在同一个间隙中有多个事务同时插入不同索引的记录。譬如在上面的例子中，id = 30 和 id = 49 之间如果有两个事务要同时分别插入 id = 32 和 id = 33 是没问题的，虽然两个事务都会在 id = 30 和 id = 50 之间加上插入意向锁，但是不会冲突。</p>
+<p>插入意向锁只会和间隙锁或 Next-key 锁冲突，正如上面所说，间隙锁唯一的作用就是防止其他事务插入记录造成幻读，正是由于在执行 INSERT 语句时需要加插入意向锁，而插入意向锁和间隙锁冲突，从而阻止了插入操作的执行。</p>
+<h4 id="不同类型锁的兼容矩阵"><a href="#不同类型锁的兼容矩阵" class="headerlink" title="不同类型锁的兼容矩阵"></a>不同类型锁的兼容矩阵</h4><p>不同类型锁的兼容下如下图所示。</p>
+<p><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxknnpea7lj30h806uwen.jpg" alt="图片"></p>
+<p>其中，第一行表示已有的锁，第一列表示要加的锁。插入意向锁较为特殊，所以我们先对插入意向锁做个总结，如下：</p>
+<ul>
+<li>插入意向锁不影响其他事务加其他任何锁。也就是说，一个事务已经获取了插入意向锁，对其他事务是没有任何影响的；</li>
+<li>插入意向锁与间隙锁和 Next-key 锁冲突。也就是说，一个事务想要获取插入意向锁，如果有其他事务已经加了间隙锁或 Next-key 锁，则会阻塞。</li>
+</ul>
+<p>其他类型的锁的规则较为简单：</p>
+<ul>
+<li>间隙锁不和其他锁（不包括插入意向锁）冲突；</li>
+<li>记录锁和记录锁冲突，Next-key 锁和 Next-key 锁冲突，记录锁和 Next-key 锁冲突；</li>
+</ul>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined" rel="external nofollow noreferrer">Usher</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="http://www.usherblog.site/2021/12/20/Mysql%E9%94%81%E7%9A%84%E7%B1%BB%E5%9E%8B%E5%8F%8A%E5%8A%A0%E9%94%81%E5%8E%9F%E7%90%86/">http://www.usherblog.site/2021/12/20/Mysql%E9%94%81%E7%9A%84%E7%B1%BB%E5%9E%8B%E5%8F%8A%E5%8A%A0%E9%94%81%E5%8E%9F%E7%90%86/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener external nofollow noreferrer" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Mysql/">Mysql</a></div><div class="post_share"><div class="social-share" data-image="https://tva1.sinaimg.cn/large/005P73H4gy1gxy2j0ekj4j31hc0u0q7c.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/social-share.js/dist/js/social-share.min.js" defer></script></div></div><div class="post-reward"><div class="reward-button button--animated"><i class="fas fa-qrcode"></i> Donate</div><div class="reward-main"><ul class="reward-all"><li class="reward-item"><a href="https://tva1.sinaimg.cn/mw690/005P73H4gy1gxcm78wfitj30v20wfq99.jpg" rel="external nofollow noreferrer" target="_blank"><img class="post-qr-code-img" src="https://tva1.sinaimg.cn/mw690/005P73H4gy1gxcm78wfitj30v20wfq99.jpg"/></a><div class="post-qr-code-desc"></div></li></ul></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2021/12/20/Redlock%EF%BC%9ARedis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81%E6%9C%80%E7%89%9B%E9%80%BC%E7%9A%84%E5%AE%9E%E7%8E%B0/"><img class="prev-cover" src="https://tva1.sinaimg.cn/large/005P73H4gy1gxy2j0ekj4j31hc0u0q7c.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">Previous Post</div><div class="prev_info">Redlock：Redis分布式锁最牛逼的实现</div></div></a></div><div class="next-post pull-right"><a href="/2021/12/18/MySQL-%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E5%AE%9E%E8%B7%B5/"><img class="next-cover" src="https://tva1.sinaimg.cn/large/005P73H4gy1gxclrtmsz9j31400p0my3.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">Next Post</div><div class="next_info">MySQL 性能优化实践</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>Related Articles</span></div><div class="relatedPosts-list"><div><a href="/2021/12/15/12%E6%9D%A1%E9%9D%9E%E5%B8%B8%E6%9C%89%E7%94%A8%E7%9A%84SQL%E6%8A%80%E5%B7%A7%EF%BC%8C%E5%BB%BA%E8%AE%AE%E6%94%B6%E8%97%8F/" title="12条非常有用的SQL技巧，建议收藏"><img class="cover" src="https://tva1.sinaimg.cn/large/005P73H4gy1gxy2jvyp2kj31hc0u07n8.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-12-15</div><div class="title">12条非常有用的SQL技巧，建议收藏</div></div></a></div><div><a href="/2021/12/25/mysql%E7%BC%93%E5%AD%98%E6%B1%A0/" title="mysql缓存池"><img class="cover" src="https://tva1.sinaimg.cn/large/005P73H4gy1gxclr4dsubj30hi0a0406.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-12-25</div><div class="title">mysql缓存池</div></div></a></div><div><a href="/2021/12/18/MySQL-%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E5%AE%9E%E8%B7%B5/" title="MySQL 性能优化实践"><img class="cover" src="https://tva1.sinaimg.cn/large/005P73H4gy1gxclrtmsz9j31400p0my3.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-12-18</div><div class="title">MySQL 性能优化实践</div></div></a></div><div><a href="/2022/01/12/Mysql%E7%BC%93%E5%AD%98%E3%80%81%E7%B4%A2%E5%BC%95%E3%80%81%E4%BA%8B%E5%8A%A1%E7%AD%89%E6%80%BB%E7%BB%93/" title="Mysql缓存、索引、事务等总结"><img class="cover" src="https://tva1.sinaimg.cn/large/005P73H4gy1gxy2jvyp2kj31hc0u07n8.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2022-01-12</div><div class="title">Mysql缓存、索引、事务等总结</div></div></a></div><div><a href="/2021/12/21/SQL%E8%AF%AD%E5%8F%A5%E5%A4%A7%E5%85%A8/" title="SQL语句大全"><img class="cover" src="https://tva1.sinaimg.cn/large/005P73H4gy1gxclrtmsz9j31400p0my3.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-12-21</div><div class="title">SQL语句大全</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxcmaek0tpj308w08wgls.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">Usher</div><div class="author-info__description">Honor To The End</div></div><div class="card-info-data is-center"><div class="card-info-data-item"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">80</div></a></div><div class="card-info-data-item"><a href="/tags/"><div class="headline">Tags</div><div class="length-num">38</div></a></div><div class="card-info-data-item"><a href="/categories/"><div class="headline">Categories</div><div class="length-num">25</div></a></div></div><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/legolas007" rel="external nofollow noreferrer" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="https://www.letaotao.site/" rel="external nofollow noreferrer" target="_blank" title="最好用的网址导航"><i class="fas fa-blog"></i></a></div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Catalog</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%A1%A8%E9%94%81%E5%92%8C%E8%A1%8C%E9%94%81"><span class="toc-number">1.</span> <span class="toc-text">表锁和行锁</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%A1%A8%E9%94%81"><span class="toc-number">2.</span> <span class="toc-text">表锁</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%A1%8C%E9%94%81"><span class="toc-number">3.</span> <span class="toc-text">行锁</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%A1%8C%E9%94%81%E7%9A%84%E6%A8%A1%E5%BC%8F"><span class="toc-number">4.</span> <span class="toc-text">行锁的模式</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%AF%BB%E5%86%99%E9%94%81"><span class="toc-number">4.1.</span> <span class="toc-text">读写锁</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AF%BB%E5%86%99%E6%84%8F%E5%90%91%E9%94%81"><span class="toc-number">5.</span> <span class="toc-text">读写意向锁</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%87%AA%E5%A2%9E%E9%94%81"><span class="toc-number">6.</span> <span class="toc-text">自增锁</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%B8%8D%E5%90%8C%E6%A8%A1%E5%BC%8F%E9%94%81%E7%9A%84%E5%85%BC%E5%AE%B9%E7%9F%A9%E9%98%B5"><span class="toc-number">6.1.</span> <span class="toc-text">不同模式锁的兼容矩阵</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%A1%8C%E9%94%81%E7%9A%84%E7%B1%BB%E5%9E%8B"><span class="toc-number">7.</span> <span class="toc-text">行锁的类型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AE%B0%E5%BD%95%E9%94%81"><span class="toc-number">8.</span> <span class="toc-text">记录锁</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%97%B4%E9%9A%99%E9%94%81"><span class="toc-number">9.</span> <span class="toc-text">间隙锁</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Next-Key-%E9%94%81"><span class="toc-number">10.</span> <span class="toc-text">Next-Key 锁</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8F%92%E5%85%A5%E6%84%8F%E5%90%91%E9%94%81"><span class="toc-number">11.</span> <span class="toc-text">插入意向锁</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%B8%8D%E5%90%8C%E7%B1%BB%E5%9E%8B%E9%94%81%E7%9A%84%E5%85%BC%E5%AE%B9%E7%9F%A9%E9%98%B5"><span class="toc-number">11.1.</span> <span class="toc-text">不同类型锁的兼容矩阵</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Post</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2022/01/25/Geohash%E7%AE%97%E6%B3%95/" title="Geohash算法"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxclr4dsubj30hi0a0406.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Geohash算法"/></a><div class="content"><a class="title" href="/2022/01/25/Geohash%E7%AE%97%E6%B3%95/" title="Geohash算法">Geohash算法</a><time datetime="2022-01-25T15:55:11.000Z" title="Created 2022-01-25 23:55:11">2022-01-25</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/01/23/Zookeeper%E9%9D%A2%E8%AF%95%E9%A2%98%E6%80%BB%E7%BB%93/" title="Zookeeper面试题总结"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxclr4dsubj30hi0a0406.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Zookeeper面试题总结"/></a><div class="content"><a class="title" href="/2022/01/23/Zookeeper%E9%9D%A2%E8%AF%95%E9%A2%98%E6%80%BB%E7%BB%93/" title="Zookeeper面试题总结">Zookeeper面试题总结</a><time datetime="2022-01-23T08:56:41.000Z" title="Created 2022-01-23 16:56:41">2022-01-23</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/01/22/HBase%E4%BC%98%E5%8C%96%E7%AC%94%E8%AE%B0/" title="HBase优化笔记"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxy2jvyp2kj31hc0u07n8.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="HBase优化笔记"/></a><div class="content"><a class="title" href="/2022/01/22/HBase%E4%BC%98%E5%8C%96%E7%AC%94%E8%AE%B0/" title="HBase优化笔记">HBase优化笔记</a><time datetime="2022-01-22T05:43:02.000Z" title="Created 2022-01-22 13:43:02">2022-01-22</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/01/20/HBase-RowKey%E8%AE%BE%E8%AE%A1/" title="HBase RowKey设计"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxclqqeek6j312w0m8wnu.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="HBase RowKey设计"/></a><div class="content"><a class="title" href="/2022/01/20/HBase-RowKey%E8%AE%BE%E8%AE%A1/" title="HBase RowKey设计">HBase RowKey设计</a><time datetime="2022-01-20T14:25:23.000Z" title="Created 2022-01-20 22:25:23">2022-01-20</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/01/20/HBase%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E6%8C%87%E5%8D%97/" title="HBase性能优化指南"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxcls4qjqtj31400p0gnh.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="HBase性能优化指南"/></a><div class="content"><a class="title" href="/2022/01/20/HBase%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E6%8C%87%E5%8D%97/" title="HBase性能优化指南">HBase性能优化指南</a><time datetime="2022-01-20T13:45:18.000Z" title="Created 2022-01-20 21:45:18">2022-01-20</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2018 - 2022 By Usher</div><div class="framework-info"><span>Framework </span><a target="_blank" rel="noopener external nofollow noreferrer" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Read Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light And Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle between single-column and double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="Setting"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table Of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back To Top"><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.js"></script><script src="https://cdn.jsdelivr.net/npm/node-snackbar/dist/snackbar.min.js"></script><div class="js-pjax"></div><script src="https://cdn.jsdelivr.net/npm/pjax/pjax.min.js"></script><script>let pjaxSelectors = [
+  'title',
+  '#config-diff',
+  '#body-wrap',
+  '#rightside-config-hide',
+  '#rightside-config-show',
+  '.js-pjax'
+]
+
+if (false) {
+  pjaxSelectors.unshift('meta[property="og:image"]', 'meta[property="og:title"]', 'meta[property="og:url"]')
+}
+
+var pjax = new Pjax({
+  elements: 'a:not([target="_blank"]):not([href="/music/"]):not([href="/no-pjax/"])',
+  selectors: pjaxSelectors,
+  cacheBust: false,
+  analytics: false,
+  scrollRestoration: false
+})
+
+document.addEventListener('pjax:send', function () {
+
+  // removeEventListener scroll 
+  window.removeEventListener('scroll', window.tocScrollFn)
+  window.removeEventListener('scroll', scrollCollect)
+
+  typeof preloader === 'object' && preloader.initLoading()
+  
+  if (window.aplayers) {
+    for (let i = 0; i < window.aplayers.length; i++) {
+      if (!window.aplayers[i].options.fixed) {
+        window.aplayers[i].destroy()
+      }
+    }
+  }
+
+  typeof typed === 'object' && typed.destroy()
+
+  //reset readmode
+  const $bodyClassList = document.body.classList
+  $bodyClassList.contains('read-mode') && $bodyClassList.remove('read-mode')
+
+})
+
+document.addEventListener('pjax:complete', function () {
+  window.refreshFn()
+
+  document.querySelectorAll('script[data-pjax]').forEach(item => {
+    const newScript = document.createElement('script')
+    const content = item.text || item.textContent || item.innerHTML || ""
+    Array.from(item.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value))
+    newScript.appendChild(document.createTextNode(content))
+    item.parentNode.replaceChild(newScript, item)
+  })
+
+  GLOBAL_CONFIG.islazyload && window.lazyLoadInstance.update()
+
+  typeof chatBtnFn === 'function' && chatBtnFn()
+  typeof panguInit === 'function' && panguInit()
+
+  // google analytics
+  typeof gtag === 'function' && gtag('config', '', {'page_path': window.location.pathname});
+
+  // baidu analytics
+  typeof _hmt === 'object' && _hmt.push(['_trackPageview',window.location.pathname]);
+
+  typeof loadMeting === 'function' && document.getElementsByClassName('aplayer').length && loadMeting()
+
+  // prismjs
+  typeof Prism === 'object' && Prism.highlightAll()
+
+  typeof preloader === 'object' && preloader.endLoading()
+})
+
+document.addEventListener('pjax:error', (e) => {
+  if (e.request.status === 404) {
+    pjax.loadUrl('/404.html')
+  }
+})</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

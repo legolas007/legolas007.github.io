@@ -1,0 +1,338 @@
+<!DOCTYPE html><html lang="zh-Hans" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>Redis优化 | Usher_Ou's Blog</title><meta name="keywords" content="redis"><meta name="author" content="Usher"><meta name="copyright" content="Usher"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="Redis作为内存数据库，拥有非常高的性能，单个实例的QPS能够达到10W左右。但我们在使用Redis时，经常时不时会出现访问延迟很大的情况，如果你不知道Redis的内部实现原理，在排查问题时就会一头雾水。 很多时候，Redis出现访问延迟变大，都与我们的使用不当或运维不合理导致的。 这篇文章我们就来分析一下Redis在使用过程中，经常会遇到的延迟问题以及如何定位和分析。 使用复杂度高的命令如果在">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis优化">
+<meta property="og:url" content="http://www.usherblog.site/2021/12/27/Redis%E4%BC%98%E5%8C%96/index.html">
+<meta property="og:site_name" content="Usher_Ou&#39;s Blog">
+<meta property="og:description" content="Redis作为内存数据库，拥有非常高的性能，单个实例的QPS能够达到10W左右。但我们在使用Redis时，经常时不时会出现访问延迟很大的情况，如果你不知道Redis的内部实现原理，在排查问题时就会一头雾水。 很多时候，Redis出现访问延迟变大，都与我们的使用不当或运维不合理导致的。 这篇文章我们就来分析一下Redis在使用过程中，经常会遇到的延迟问题以及如何定位和分析。 使用复杂度高的命令如果在">
+<meta property="og:locale">
+<meta property="og:image" content="https://tva1.sinaimg.cn/large/005P73H4gy1gxclrtmsz9j31400p0my3.jpg">
+<meta property="article:published_time" content="2021-12-27T14:12:59.000Z">
+<meta property="article:modified_time" content="2021-12-27T14:26:35.414Z">
+<meta property="article:author" content="Usher">
+<meta property="article:tag" content="redis">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://tva1.sinaimg.cn/large/005P73H4gy1gxclrtmsz9j31400p0my3.jpg"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://www.usherblog.site/2021/12/27/Redis%E4%BC%98%E5%8C%96/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/node-snackbar/dist/snackbar.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.css" media="print" onload="this.media='all'"><script async="async" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><script>(adsbygoogle = window.adsbygoogle || []).push({
+  google_ad_client: 'ca-pub-5019695460390847',
+  enable_page_level_ads: 'true'
+});</script><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: 'days',
+  date_suffix: {
+    just: 'Just',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: {"chs_to_cht":"Traditional Chinese Activated Manually","cht_to_chs":"Simplified Chinese Activated Manually","day_to_night":"Dark Mode Activated Manually","night_to_day":"Light Mode Activated Manually","bgLight":"#49b1f5","bgDark":"#121212","position":"bottom-left"},
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Redis优化',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2021-12-27 22:26:35'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="baidu_union_verify" content="7aa3d4669bd0cb824cffa7f17c7ae1ca"><script async src="https://www.googletagmanager.com/gtag/js?id=G-NM1VS5D757"></script><script>  window.dataLayer = window.dataLayer || [];  function gtag(){dataLayer.push(arguments);}  gtag('js', new Date());  gtag('config', 'G-NM1VS5D757');</script><meta name="google-site-verification" content="e1Ufu68xXNJlblUj28b-YCuR4TGw52w2EpQjq0HhO14" /><script>var _hmt=_hmt||[];(function(){var hm=document.createElement("script");hm.src="https://hm.baidu.com/hm.js?9dac5a1d54c53caffecf4954d4041153";var s=document.getElementsByTagName("script")[0];s.parentNode.insertBefore(hm,s)})();</script><meta name="baidu-site-verification" content="code-SfwtUQCUG9" /><script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5019695460390847"crossorigin="anonymous"></script><meta name="generator" content="Hexo 5.4.0"></head><body><div id="web_bg"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxcmaek0tpj308w08wgls.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data is-center"><div class="data-item"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">80</div></a></div><div class="data-item"><a href="/tags/"><div class="headline">Tags</div><div class="length-num">38</div></a></div><div class="data-item"><a href="/categories/"><div class="headline">Categories</div><div class="length-num">25</div></a></div></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">Usher_Ou's Blog</a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">Redis优化</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2021-12-27T14:12:59.000Z" title="Created 2021-12-27 22:12:59">2021-12-27</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2021-12-27T14:26:35.414Z" title="Updated 2021-12-27 22:26:35">2021-12-27</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/redis/">redis</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">Word count:</span><span class="word-count">5.1k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">Reading time:</span><span>15min</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="Redis优化"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post View:</span><span id="busuanzi_value_page_pv"></span></span></div></div></div><article class="post-content" id="article-container"><p>Redis作为内存数据库，拥有非常高的性能，单个实例的QPS能够达到10W左右。但我们在使用Redis时，经常时不时会出现访问延迟很大的情况，如果你不知道Redis的内部实现原理，在排查问题时就会一头雾水。</p>
+<p>很多时候，Redis出现访问延迟变大，都与我们的使用不当或运维不合理导致的。</p>
+<p>这篇文章我们就来分析一下Redis在使用过程中，经常会遇到的延迟问题以及如何定位和分析。</p>
+<h2 id="使用复杂度高的命令"><a href="#使用复杂度高的命令" class="headerlink" title="使用复杂度高的命令"></a>使用复杂度高的命令</h2><p>如果在使用Redis时，发现访问延迟突然增大，如何进行排查？</p>
+<p>首先，第一步，建议你去查看一下Redis的慢日志。Redis提供了慢日志命令的统计功能，我们通过以下设置，就可以查看有哪些命令在执行时延迟比较大。</p>
+<p>首先设置Redis的慢日志阈值，只有超过阈值的命令才会被记录，这里的单位是微秒，例如设置慢日志的阈值为5毫秒，同时设置只保留最近1000条慢日志记录：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"># 命令执行超过5毫秒记录慢日志CONFIG SET slowlog-log-slower-than 5000# 只保留最近1000条慢日志CONFIG SET slowlog-max-len 1000</span><br></pre></td></tr></table></figure>
+
+
+
+<p>设置完成之后，所有执行的命令如果延迟大于5毫秒，都会被Redis记录下来，我们执行SLOWLOG get 5查询最近5条慢日志</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">127.0.0.1:6379&gt; SLOWLOG get51)1)(integer)32693# 慢日志ID2)(integer)1593763337# 执行时间3)(integer)5299# 执行耗时(微秒)4)1)&quot;LRANGE&quot;# 具体执行的命令和参数2)&quot;user_list_2000&quot;3)&quot;0&quot;4)&quot;-1&quot;2)1)(integer)326922)(integer)15937633373)(integer)50444)1)&quot;GET&quot;2)&quot;book_price_1000&quot;...</span><br></pre></td></tr></table></figure>
+
+
+
+<p>通过查看慢日志记录，我们就可以知道在什么时间执行哪些命令比较耗时，如果你的业务经常使用O(n)以上复杂度的命令，例如sort、sunion、zunionstore，或者在执行O(n)命令时操作的数据量比较大，这些情况下Redis处理数据时就会很耗时。</p>
+<p>如果你的服务请求量并不大，但Redis实例的CPU使用率很高，很有可能是使用了复杂度高的命令导致的。</p>
+<p>解决方案就是，不使用这些复杂度较高的命令，并且一次不要获取太多的数据，每次尽量操作少量的数据，让Redis可以及时处理返回。</p>
+<h2 id="存储大key"><a href="#存储大key" class="headerlink" title="存储大key"></a>存储大key</h2><p>如果查询慢日志发现，并不是复杂度较高的命令导致的，例如都是SET、DELETE操作出现在慢日志记录中，那么你就要怀疑是否存在Redis写入了大key的情况。</p>
+<p>Redis在写入数据时，需要为新的数据分配内存，当从Redis中删除数据时，它会释放对应的内存空间。</p>
+<p>如果一个key写入的数据非常大，Redis在分配内存时也会比较耗时。同样的，当删除这个key的数据时，释放内存也会耗时比较久。</p>
+<p>你需要检查你的业务代码，是否存在写入大key的情况，需要评估写入数据量的大小，业务层应该避免一个key存入过大的数据量。</p>
+<p>那么有没有什么办法可以扫描现在Redis中是否存在大key的数据吗？</p>
+<p>Redis也提供了扫描大key的方法：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">redis-cli -h $host -p $port --bigkeys -i 0.01</span><br></pre></td></tr></table></figure>
+
+
+
+<p>使用上面的命令就可以扫描出整个实例key大小的分布情况，它是以类型维度来展示的。</p>
+<p>需要注意的是当我们在线上实例进行大key扫描时，Redis的QPS会突增，为了降低扫描过程中对Redis的影响，我们需要控制扫描的频率，使用-i参数控制即可，它表示扫描过程中每次扫描的时间间隔，单位是秒。</p>
+<p>使用这个命令的原理，其实就是Redis在内部执行scan命令，遍历所有key，然后针对不同类型的key执行strlen、llen、hlen、scard、zcard来获取字符串的长度以及容器类型(list/dict/set/zset)的元素个数。</p>
+<p>而对于容器类型的key，只能扫描出元素最多的key，但元素最多的key不一定占用内存最多，这一点需要我们注意下。不过使用这个命令一般我们是可以对整个实例中key的分布情况有比较清晰的了解。</p>
+<p>针对大key的问题，Redis官方在4.0版本推出了lazy-free的机制，用于异步释放大key的内存，降低对Redis性能的影响。即使这样，我们也不建议使用大key，大key在集群的迁移过程中，也会影响到迁移的性能，这个后面在介绍集群相关的文章时，会再详细介绍到。</p>
+<h2 id="集中过期"><a href="#集中过期" class="headerlink" title="集中过期"></a>集中过期</h2><p>有时你会发现，平时在使用Redis时没有延时比较大的情况，但在某个时间点突然出现一波延时，而且报慢的时间点很有规律，例如某个整点，或者间隔多久就会发生一次。</p>
+<p>如果出现这种情况，就需要考虑是否存在大量key集中过期的情况。</p>
+<p>如果有大量的key在某个固定时间点集中过期，在这个时间点访问Redis时，就有可能导致延迟增加。</p>
+<p>Redis的过期策略采用主动过期+懒惰过期两种策略：</p>
+<p>•主动过期：Redis内部维护一个定时任务，默认每隔100毫秒会从过期字典中随机取出20个key，删除过期的key，如果过期key的比例超过了25%，则继续获取20个key，删除过期的key，循环往复，直到过期key的比例下降到25%或者这次任务的执行耗时超过了25毫秒，才会退出循环</p>
+<p>•懒惰过期：只有当访问某个key时，才判断这个key是否已过期，如果已经过期，则从实例中删除</p>
+<p>注意，Redis的主动过期的定时任务，也是在Redis<strong>主线程</strong>中执行的，也就是说如果在执行主动过期的过程中，出现了需要大量删除过期key的情况，那么在业务访问时，必须等这个过期任务执行结束，才可以处理业务请求。此时就会出现，业务访问延时增大的问题，最大延迟为25毫秒。</p>
+<p>而且这个访问延迟的情况，不会记录在慢日志里。慢日志中只记录真正执行某个命令的耗时，Redis主动过期策略执行在操作命令之前，如果操作命令耗时达不到慢日志阈值，它是不会计算在慢日志统计中的，但我们的业务却感到了延迟增大。</p>
+<p>此时你需要检查你的业务，是否真的存在集中过期的代码，一般集中过期使用的命令是expireat或pexpireat命令，在代码中搜索这个关键字就可以了。</p>
+<p>如果你的业务确实需要集中过期掉某些key，又不想导致Redis发生抖动，有什么优化方案？</p>
+<p>解决方案是，在集中过期时增加一个<code>随机时间</code>，把这些需要过期的key的时间打散即可。</p>
+<p>伪代码可以这么写：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"># 在过期时间点之后的5分钟内随机过期掉redis.expireat(key, expire_time + random(300))</span><br></pre></td></tr></table></figure>
+
+
+
+<p>这样Redis在处理过期时，不会因为集中删除key导致压力过大，阻塞主线程。</p>
+<p>另外，除了业务使用需要注意此问题之外，还可以通过运维手段来及时发现这种情况。</p>
+<p>做法是我们需要把Redis的各项运行数据监控起来，执行info可以拿到所有的运行数据，在这里我们需要重点关注expired_keys这一项，它代表整个实例到目前为止，累计删除过期key的数量。</p>
+<p>我们需要对这个指标监控，当在很短时间内这个指标出现突增时，需要及时报警出来，然后与业务报慢的时间点对比分析，确认时间是否一致，如果一致，则可以认为确实是因为这个原因导致的延迟增大。</p>
+<h2 id="实例内存达到上限"><a href="#实例内存达到上限" class="headerlink" title="实例内存达到上限"></a>实例内存达到上限</h2><p>有时我们把Redis当做纯缓存使用，就会给实例设置一个内存上限maxmemory，然后开启LRU淘汰策略。</p>
+<p>当实例的内存达到了maxmemory后，你会发现之后的每次写入新的数据，有可能变慢了。</p>
+<p>导致变慢的原因是，当Redis内存达到maxmemory后，每次写入新的数据之前，必须先踢出一部分数据，让内存维持在maxmemory之下。</p>
+<p>这个踢出旧数据的逻辑也是需要消耗时间的，而具体耗时的长短，要取决于配置的淘汰策略：</p>
+<p>•allkeys-lru：不管key是否设置了过期，淘汰最近最少访问的key</p>
+<p>•volatile-lru：只淘汰最近最少访问并设置过期的key</p>
+<p>•allkeys-random：不管key是否设置了过期，随机淘汰</p>
+<p>•volatile-random：只随机淘汰有设置过期的key</p>
+<p>•allkeys-ttl：不管key是否设置了过期，淘汰即将过期的key</p>
+<p>•noeviction：不淘汰任何key，满容后再写入直接报错</p>
+<p>•allkeys-lfu：不管key是否设置了过期，淘汰访问频率最低的key（4.0+支持）</p>
+<p>•volatile-lfu：只淘汰访问频率最低的过期key（4.0+支持）</p>
+<p>备注：allkeys-xxx表示从所有的键值中淘汰数据，而volatile-xxx表示从设置了过期键的键值中淘汰数据。</p>
+<p>具体使用哪种策略，需要根据业务场景来决定。</p>
+<p>我们最常使用的一般是allkeys-lru或volatile-lru策略，它们的处理逻辑是，每次从实例中随机取出一批key（可配置），然后淘汰一个最少访问的key，之后把剩下的key暂存到一个池子中，继续随机取出一批key，并与之前池子中的key比较，再淘汰一个最少访问的key。以此循环，直到内存降到maxmemory之下。</p>
+<p>如果使用的是allkeys-random或volatile-random策略，那么就会快很多，因为是随机淘汰，那么就少了比较key访问频率时间的消耗了，随机拿出一批key后直接淘汰即可，因此这个策略要比上面的LRU策略执行快一些。</p>
+<p>但以上这些逻辑都是在访问Redis时，真正命令执行之前执行的，也就是它会影响我们访问Redis时执行的命令。</p>
+<p>另外，如果此时Redis实例中有存储大key，那么在淘汰大key释放内存时，这个耗时会更加久，延迟更大，这需要我们格外注意。</p>
+<p>如果你的业务访问量非常大，并且必须设置maxmemory限制实例的内存上限，同时面临淘汰key导致延迟增大的的情况，要想缓解这种情况，除了上面说的避免存储大key、使用随机淘汰策略之外，也可以考虑拆分实例的方法来缓解，拆分实例可以把一个实例淘汰key的压力分摊到多个实例上，可以在一定程度降低延迟。</p>
+<h2 id="fork耗时严重"><a href="#fork耗时严重" class="headerlink" title="fork耗时严重"></a>fork耗时严重</h2><p>如果你的Redis开启了自动生成RDB和AOF重写功能，那么有可能在后台生成RDB和AOF重写时导致Redis的访问延迟增大，而等这些任务执行完毕后，延迟情况消失。</p>
+<p>遇到这种情况，一般就是执行生成RDB和AOF重写任务导致的。</p>
+<p>生成RDB和AOF都需要父进程fork出一个子进程进行数据的持久化，在fork执行过程中，父进程需要拷贝<strong>内存页表</strong>给子进程，如果整个实例内存占用很大，那么需要拷贝的内存页表会比较耗时，此过程会消耗大量的CPU资源，在完成fork之前，整个实例会被阻塞住，无法处理任何请求，如果此时CPU资源紧张，那么fork的时间会更长，甚至达到秒级。这会严重影响Redis的性能。</p>
+<p>我们可以执行info命令，查看最后一次fork执行的耗时latest_fork_usec，单位微秒。这个时间就是整个实例阻塞无法处理请求的时间。</p>
+<p>除了因为备份的原因生成RDB之外，在主从节点第一次建立数据同步时，主节点也会生成RDB文件给从节点进行一次全量同步，这时也会对Redis产生性能影响。</p>
+<p>要想避免这种情况，我们需要规划好数据备份的周期，建议在从节点上执行备份，而且最好放在<strong>低峰期</strong>执行。如果对于丢失数据不敏感的业务，那么不建议开启AOF和AOF重写功能。</p>
+<p>另外，fork的耗时也与系统有关，如果把Redis部署在虚拟机上，那么这个时间也会增大。所以使用Redis时建议部署在物理机上，降低fork的影响。</p>
+<h2 id="绑定CPU"><a href="#绑定CPU" class="headerlink" title="绑定CPU"></a>绑定CPU</h2><p>很多时候，我们在部署服务时，为了提高性能，降低程序在使用多个CPU时上下文切换的性能损耗，一般会采用进程绑定CPU的操作。</p>
+<p>但在使用Redis时，我们不建议这么干，原因如下:</p>
+<p>绑定CPU的Redis，在进行数据持久化时，fork出的子进程，子进程会继承父进程的CPU使用偏好，而此时子进程会消耗大量的CPU资源进行数据持久化，子进程会与主进程发生CPU争抢，这也会导致主进程的CPU资源不足访问延迟增大。</p>
+<p>所以在部署Redis进程时，如果需要开启RDB和AOF重写机制，一定不能进行CPU绑定操作！</p>
+<h2 id="开启AOF"><a href="#开启AOF" class="headerlink" title="开启AOF"></a>开启AOF</h2><p>上面提到了，当执行AOF文件重写时会因为fork执行耗时导致Redis延迟增大，除了这个之外，如果开启AOF机制，设置的策略不合理，也会导致性能问题。</p>
+<p>开启AOF后，Redis会把写入的命令实时写入到文件中，但写入文件的过程是先写入内存，等内存中的数据超过一定阈值或达到一定时间后，内存中的内容才会被真正写入到磁盘中。</p>
+<p>AOF为了保证文件写入磁盘的安全性，提供了3种刷盘机制：</p>
+<p>•appendfsync always：每次写入都刷盘，对性能影响最大，占用磁盘IO比较高，数据安全性最高</p>
+<p>•appendfsync everysec：1秒刷一次盘，对性能影响相对较小，节点宕机时最多丢失1秒的数据</p>
+<p>•appendfsync no：按照操作系统的机制刷盘，对性能影响最小，数据安全性低，节点宕机丢失数据取决于操作系统刷盘机制</p>
+<p>当使用第一种机制appendfsync always时，Redis每处理一次写命令，都会把这个命令写入磁盘，而且这个操作是在主线程中执行的。</p>
+<p>内存中的的数据写入磁盘，这个会加重磁盘的IO负担，操作磁盘成本要比操作内存的代价大得多。如果写入量很大，那么每次更新都会写入磁盘，此时机器的磁盘IO就会非常高，拖慢Redis的性能，因此我们不建议使用这种机制。</p>
+<p>与第一种机制对比，appendfsync everysec会每隔1秒刷盘，而appendfsync no取决于操作系统的刷盘时间，安全性不高。因此我们推荐使用appendfsync everysec这种方式，在最坏的情况下，只会丢失1秒的数据，但它能保持较好的访问性能。</p>
+<p>当然，对于有些业务场景，对丢失数据并不敏感，也可以不开启AOF。</p>
+<h2 id="使用Swap"><a href="#使用Swap" class="headerlink" title="使用Swap"></a>使用Swap</h2><p>如果你发现Redis突然变得非常慢，每次访问的耗时都达到了几百毫秒甚至秒级，那此时就检查Redis是否使用到了Swap，这种情况下Redis基本上已经无法提供高性能的服务。</p>
+<p>我们知道，操作系统提供了Swap机制，目的是为了当内存不足时，可以把一部分内存中的数据换到磁盘上，以达到对内存使用的缓冲。</p>
+<p>但当内存中的数据被换到磁盘上后，访问这些数据就需要从磁盘中读取，这个速度要比内存慢太多！</p>
+<p>尤其是针对Redis这种高性能的内存数据库来说，如果Redis中的内存被换到磁盘上，对于Redis这种性能极其敏感的数据库，这个操作时间是无法接受的。</p>
+<p>我们需要检查机器的内存使用情况，确认是否确实是因为内存不足导致使用到了Swap。</p>
+<p>如果确实使用到了Swap，要及时整理内存空间，释放出足够的内存供Redis使用，然后释放Redis的Swap，让Redis重新使用内存。</p>
+<p>释放Redis的Swap过程通常要重启实例，为了避免重启实例对业务的影响，一般先进行主从切换，然后释放旧主节点的Swap，重新启动服务，待数据同步完成后，再切换回主节点即可。</p>
+<p>可见，当Redis使用到Swap后，此时的Redis的高性能基本被废掉，所以我们需要提前预防这种情况。</p>
+<p>我们需要对Redis机器的内存和Swap使用情况进行监控，在内存不足和使用到Swap时及时报警出来，及时进行相应的处理。</p>
+<h2 id="网卡负载过高"><a href="#网卡负载过高" class="headerlink" title="网卡负载过高"></a>网卡负载过高</h2><p>如果以上产生性能问题的场景，你都规避掉了，而且Redis也稳定运行了很长时间，但在某个时间点之后开始，访问Redis开始变慢了，而且一直持续到现在，这种情况是什么原因导致的？</p>
+<p>之前我们就遇到这种问题，特点就是从某个时间点之后就开始变慢，并且一直持续。这时你需要检查一下机器的网卡流量，是否存在网卡流量被跑满的情况。</p>
+<p>网卡负载过高，在网络层和TCP层就会出现数据发送延迟、数据丢包等情况。Redis高性能除了内存之外，就在于网络IO，请求量突增会导致网卡负载变高。</p>
+<p>如果出现这种情况，你需要排查这个机器上的哪个Redis实例的流量过大占满了网络带宽，然后确认流量突增是否属于业务正常情况，如果属于那就需要及时扩容或迁移实例，避免这个机器的其他实例受到影响。</p>
+<p>运维层面，我们需要对机器的各项指标增加监控，包括网络流量，在达到阈值时提前报警，及时与业务确认并扩容。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>以上我们总结了Redis中常见的可能导致延迟增大甚至阻塞的场景，这其中既涉及到了业务的使用问题，也涉及到Redis的运维问题。</p>
+<p>可见，要想保证Redis高性能的运行，其中涉及到CPU、内存、网络，甚至磁盘的方方面面，其中还包括操作系统的相关特性的使用。</p>
+<p>作为开发人员，我们需要了解Redis的运行机制，例如各个命令的执行时间复杂度、数据过期策略、数据淘汰策略等，使用合理的命令，并结合业务场景进行优化。</p>
+<p>作为DBA运维人员，需要了解数据持久化、操作系统fork原理、Swap机制等，并对Redis的容量进行合理规划，预留足够的机器资源，对机器做好完善的监控，才能保证Redis的稳定运行</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined" rel="external nofollow noreferrer">Usher</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="http://www.usherblog.site/2021/12/27/Redis%E4%BC%98%E5%8C%96/">http://www.usherblog.site/2021/12/27/Redis%E4%BC%98%E5%8C%96/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener external nofollow noreferrer" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/redis/">redis</a></div><div class="post_share"><div class="social-share" data-image="https://tva1.sinaimg.cn/large/005P73H4gy1gxclrtmsz9j31400p0my3.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/social-share.js/dist/js/social-share.min.js" defer></script></div></div><div class="post-reward"><div class="reward-button button--animated"><i class="fas fa-qrcode"></i> Donate</div><div class="reward-main"><ul class="reward-all"><li class="reward-item"><a href="https://tva1.sinaimg.cn/mw690/005P73H4gy1gxcm78wfitj30v20wfq99.jpg" rel="external nofollow noreferrer" target="_blank"><img class="post-qr-code-img" src="https://tva1.sinaimg.cn/mw690/005P73H4gy1gxcm78wfitj30v20wfq99.jpg"/></a><div class="post-qr-code-desc"></div></li></ul></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2021/12/28/SpringBoot-%E5%A4%9A%E7%A7%8D%E8%AF%BB%E5%8F%96%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E4%B8%AD%E5%8F%82%E6%95%B0%E7%9A%84%E6%96%B9%E5%BC%8F/"><img class="prev-cover" src="https://tva1.sinaimg.cn/large/005P73H4gy1gxclr4dsubj30hi0a0406.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">Previous Post</div><div class="prev_info">SpringBoot 多种读取配置文件中参数的方式</div></div></a></div><div class="next-post pull-right"><a href="/2021/12/25/SpringBoot-Actuator%E7%9B%91%E6%8E%A7%E5%BA%94%E7%94%A8/"><img class="next-cover" src="https://tva1.sinaimg.cn/large/005P73H4gy1gxclr4dsubj30hi0a0406.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">Next Post</div><div class="next_info">SpringBoot Actuator监控应用</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxcmaek0tpj308w08wgls.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">Usher</div><div class="author-info__description">Honor To The End</div></div><div class="card-info-data is-center"><div class="card-info-data-item"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">80</div></a></div><div class="card-info-data-item"><a href="/tags/"><div class="headline">Tags</div><div class="length-num">38</div></a></div><div class="card-info-data-item"><a href="/categories/"><div class="headline">Categories</div><div class="length-num">25</div></a></div></div><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/legolas007" rel="external nofollow noreferrer" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="https://www.letaotao.site/" rel="external nofollow noreferrer" target="_blank" title="最好用的网址导航"><i class="fas fa-blog"></i></a></div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Catalog</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E5%A4%8D%E6%9D%82%E5%BA%A6%E9%AB%98%E7%9A%84%E5%91%BD%E4%BB%A4"><span class="toc-number">1.</span> <span class="toc-text">使用复杂度高的命令</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AD%98%E5%82%A8%E5%A4%A7key"><span class="toc-number">2.</span> <span class="toc-text">存储大key</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%9B%86%E4%B8%AD%E8%BF%87%E6%9C%9F"><span class="toc-number">3.</span> <span class="toc-text">集中过期</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E4%BE%8B%E5%86%85%E5%AD%98%E8%BE%BE%E5%88%B0%E4%B8%8A%E9%99%90"><span class="toc-number">4.</span> <span class="toc-text">实例内存达到上限</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#fork%E8%80%97%E6%97%B6%E4%B8%A5%E9%87%8D"><span class="toc-number">5.</span> <span class="toc-text">fork耗时严重</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BB%91%E5%AE%9ACPU"><span class="toc-number">6.</span> <span class="toc-text">绑定CPU</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BC%80%E5%90%AFAOF"><span class="toc-number">7.</span> <span class="toc-text">开启AOF</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8Swap"><span class="toc-number">8.</span> <span class="toc-text">使用Swap</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BD%91%E5%8D%A1%E8%B4%9F%E8%BD%BD%E8%BF%87%E9%AB%98"><span class="toc-number">9.</span> <span class="toc-text">网卡负载过高</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-number">10.</span> <span class="toc-text">总结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Post</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2022/01/25/Geohash%E7%AE%97%E6%B3%95/" title="Geohash算法"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxclr4dsubj30hi0a0406.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Geohash算法"/></a><div class="content"><a class="title" href="/2022/01/25/Geohash%E7%AE%97%E6%B3%95/" title="Geohash算法">Geohash算法</a><time datetime="2022-01-25T15:55:11.000Z" title="Created 2022-01-25 23:55:11">2022-01-25</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/01/23/Zookeeper%E9%9D%A2%E8%AF%95%E9%A2%98%E6%80%BB%E7%BB%93/" title="Zookeeper面试题总结"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxclr4dsubj30hi0a0406.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Zookeeper面试题总结"/></a><div class="content"><a class="title" href="/2022/01/23/Zookeeper%E9%9D%A2%E8%AF%95%E9%A2%98%E6%80%BB%E7%BB%93/" title="Zookeeper面试题总结">Zookeeper面试题总结</a><time datetime="2022-01-23T08:56:41.000Z" title="Created 2022-01-23 16:56:41">2022-01-23</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/01/22/HBase%E4%BC%98%E5%8C%96%E7%AC%94%E8%AE%B0/" title="HBase优化笔记"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxy2jvyp2kj31hc0u07n8.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="HBase优化笔记"/></a><div class="content"><a class="title" href="/2022/01/22/HBase%E4%BC%98%E5%8C%96%E7%AC%94%E8%AE%B0/" title="HBase优化笔记">HBase优化笔记</a><time datetime="2022-01-22T05:43:02.000Z" title="Created 2022-01-22 13:43:02">2022-01-22</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/01/20/HBase-RowKey%E8%AE%BE%E8%AE%A1/" title="HBase RowKey设计"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxclqqeek6j312w0m8wnu.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="HBase RowKey设计"/></a><div class="content"><a class="title" href="/2022/01/20/HBase-RowKey%E8%AE%BE%E8%AE%A1/" title="HBase RowKey设计">HBase RowKey设计</a><time datetime="2022-01-20T14:25:23.000Z" title="Created 2022-01-20 22:25:23">2022-01-20</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/01/20/HBase%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E6%8C%87%E5%8D%97/" title="HBase性能优化指南"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxcls4qjqtj31400p0gnh.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="HBase性能优化指南"/></a><div class="content"><a class="title" href="/2022/01/20/HBase%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E6%8C%87%E5%8D%97/" title="HBase性能优化指南">HBase性能优化指南</a><time datetime="2022-01-20T13:45:18.000Z" title="Created 2022-01-20 21:45:18">2022-01-20</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2018 - 2022 By Usher</div><div class="framework-info"><span>Framework </span><a target="_blank" rel="noopener external nofollow noreferrer" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Read Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light And Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle between single-column and double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="Setting"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table Of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back To Top"><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.js"></script><script src="https://cdn.jsdelivr.net/npm/node-snackbar/dist/snackbar.min.js"></script><div class="js-pjax"></div><script src="https://cdn.jsdelivr.net/npm/pjax/pjax.min.js"></script><script>let pjaxSelectors = [
+  'title',
+  '#config-diff',
+  '#body-wrap',
+  '#rightside-config-hide',
+  '#rightside-config-show',
+  '.js-pjax'
+]
+
+if (false) {
+  pjaxSelectors.unshift('meta[property="og:image"]', 'meta[property="og:title"]', 'meta[property="og:url"]')
+}
+
+var pjax = new Pjax({
+  elements: 'a:not([target="_blank"]):not([href="/music/"]):not([href="/no-pjax/"])',
+  selectors: pjaxSelectors,
+  cacheBust: false,
+  analytics: false,
+  scrollRestoration: false
+})
+
+document.addEventListener('pjax:send', function () {
+
+  // removeEventListener scroll 
+  window.removeEventListener('scroll', window.tocScrollFn)
+  window.removeEventListener('scroll', scrollCollect)
+
+  typeof preloader === 'object' && preloader.initLoading()
+  
+  if (window.aplayers) {
+    for (let i = 0; i < window.aplayers.length; i++) {
+      if (!window.aplayers[i].options.fixed) {
+        window.aplayers[i].destroy()
+      }
+    }
+  }
+
+  typeof typed === 'object' && typed.destroy()
+
+  //reset readmode
+  const $bodyClassList = document.body.classList
+  $bodyClassList.contains('read-mode') && $bodyClassList.remove('read-mode')
+
+})
+
+document.addEventListener('pjax:complete', function () {
+  window.refreshFn()
+
+  document.querySelectorAll('script[data-pjax]').forEach(item => {
+    const newScript = document.createElement('script')
+    const content = item.text || item.textContent || item.innerHTML || ""
+    Array.from(item.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value))
+    newScript.appendChild(document.createTextNode(content))
+    item.parentNode.replaceChild(newScript, item)
+  })
+
+  GLOBAL_CONFIG.islazyload && window.lazyLoadInstance.update()
+
+  typeof chatBtnFn === 'function' && chatBtnFn()
+  typeof panguInit === 'function' && panguInit()
+
+  // google analytics
+  typeof gtag === 'function' && gtag('config', '', {'page_path': window.location.pathname});
+
+  // baidu analytics
+  typeof _hmt === 'object' && _hmt.push(['_trackPageview',window.location.pathname]);
+
+  typeof loadMeting === 'function' && document.getElementsByClassName('aplayer').length && loadMeting()
+
+  // prismjs
+  typeof Prism === 'object' && Prism.highlightAll()
+
+  typeof preloader === 'object' && preloader.endLoading()
+})
+
+document.addEventListener('pjax:error', (e) => {
+  if (e.request.status === 404) {
+    pjax.loadUrl('/404.html')
+  }
+})</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

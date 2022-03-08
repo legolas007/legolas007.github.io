@@ -1,0 +1,374 @@
+<!DOCTYPE html><html lang="zh-Hans" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>SpringBoot过滤器Filter使用指南 | Usher_Ou's Blog</title><meta name="keywords" content="Java,Spring"><meta name="author" content="Usher"><meta name="copyright" content="Usher"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="I. 背景在正式开始之前，有必要先简单看一下什么是 Filter（过滤器），以及这个有什么用 1. Filter 说明Filter，过滤器，属于 Servlet 规范，并不是 Spring 独有的。其作用从命名上也可以看出一二，拦截一个请求，做一些业务逻辑操作，然后可以决定请求是否可以继续往下分发，落到其他的 Filter 或者对应的 Servlet 简单描述下一个 http 请求过来之后，一个">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SpringBoot过滤器Filter使用指南">
+<meta property="og:url" content="http://www.usherblog.site/2021/12/16/SpringBoot%E8%BF%87%E6%BB%A4%E5%99%A8Filter%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97/index.html">
+<meta property="og:site_name" content="Usher_Ou&#39;s Blog">
+<meta property="og:description" content="I. 背景在正式开始之前，有必要先简单看一下什么是 Filter（过滤器），以及这个有什么用 1. Filter 说明Filter，过滤器，属于 Servlet 规范，并不是 Spring 独有的。其作用从命名上也可以看出一二，拦截一个请求，做一些业务逻辑操作，然后可以决定请求是否可以继续往下分发，落到其他的 Filter 或者对应的 Servlet 简单描述下一个 http 请求过来之后，一个">
+<meta property="og:locale">
+<meta property="og:image" content="https://tva1.sinaimg.cn/large/005P73H4gy1gxy2jvyp2kj31hc0u07n8.jpg">
+<meta property="article:published_time" content="2021-12-16T13:12:11.000Z">
+<meta property="article:modified_time" content="2021-12-16T13:19:35.500Z">
+<meta property="article:author" content="Usher">
+<meta property="article:tag" content="Java">
+<meta property="article:tag" content="Spring">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://tva1.sinaimg.cn/large/005P73H4gy1gxy2jvyp2kj31hc0u07n8.jpg"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://www.usherblog.site/2021/12/16/SpringBoot%E8%BF%87%E6%BB%A4%E5%99%A8Filter%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/node-snackbar/dist/snackbar.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.css" media="print" onload="this.media='all'"><script async="async" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script><script>(adsbygoogle = window.adsbygoogle || []).push({
+  google_ad_client: 'ca-pub-5019695460390847',
+  enable_page_level_ads: 'true'
+});</script><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: 'days',
+  date_suffix: {
+    just: 'Just',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: {"chs_to_cht":"Traditional Chinese Activated Manually","cht_to_chs":"Simplified Chinese Activated Manually","day_to_night":"Dark Mode Activated Manually","night_to_day":"Light Mode Activated Manually","bgLight":"#49b1f5","bgDark":"#121212","position":"bottom-left"},
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery@2/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'SpringBoot过滤器Filter使用指南',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2021-12-16 21:19:35'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="baidu_union_verify" content="7aa3d4669bd0cb824cffa7f17c7ae1ca"><script async src="https://www.googletagmanager.com/gtag/js?id=G-NM1VS5D757"></script><script>  window.dataLayer = window.dataLayer || [];  function gtag(){dataLayer.push(arguments);}  gtag('js', new Date());  gtag('config', 'G-NM1VS5D757');</script><meta name="google-site-verification" content="e1Ufu68xXNJlblUj28b-YCuR4TGw52w2EpQjq0HhO14" /><script>var _hmt=_hmt||[];(function(){var hm=document.createElement("script");hm.src="https://hm.baidu.com/hm.js?9dac5a1d54c53caffecf4954d4041153";var s=document.getElementsByTagName("script")[0];s.parentNode.insertBefore(hm,s)})();</script><meta name="baidu-site-verification" content="code-SfwtUQCUG9" /><script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5019695460390847"crossorigin="anonymous"></script><meta name="generator" content="Hexo 5.4.0"></head><body><div id="web_bg"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxcmaek0tpj308w08wgls.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data is-center"><div class="data-item"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">80</div></a></div><div class="data-item"><a href="/tags/"><div class="headline">Tags</div><div class="length-num">38</div></a></div><div class="data-item"><a href="/categories/"><div class="headline">Categories</div><div class="length-num">25</div></a></div></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">Usher_Ou's Blog</a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">SpringBoot过滤器Filter使用指南</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2021-12-16T13:12:11.000Z" title="Created 2021-12-16 21:12:11">2021-12-16</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2021-12-16T13:19:35.500Z" title="Updated 2021-12-16 21:19:35">2021-12-16</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Spring-Boot/">Spring Boot</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">Word count:</span><span class="word-count">2.3k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">Reading time:</span><span>9min</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="SpringBoot过滤器Filter使用指南"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post View:</span><span id="busuanzi_value_page_pv"></span></span></div></div></div><article class="post-content" id="article-container"><h2 id="I-背景"><a href="#I-背景" class="headerlink" title="I. 背景"></a>I. 背景</h2><p>在正式开始之前，有必要先简单看一下什么是 Filter（过滤器），以及这个有什么用</p>
+<h3 id="1-Filter-说明"><a href="#1-Filter-说明" class="headerlink" title="1. Filter 说明"></a>1. Filter 说明</h3><p>Filter，过滤器，属于 Servlet 规范，并不是 Spring 独有的。其作用从命名上也可以看出一二，拦截一个请求，做一些业务逻辑操作，然后可以决定请求是否可以继续往下分发，落到其他的 Filter 或者对应的 Servlet</p>
+<p>简单描述下一个 http 请求过来之后，一个 Filter 的工作流程：</p>
+<ul>
+<li>首先进入 filter，执行相关业务逻辑</li>
+<li>若判定通行，则进入 Servlet 逻辑，Servlet 执行完毕之后，又返回 Filter，最后在返回给请求方</li>
+<li>判定失败，直接返回，不需要将请求发给 Servlet</li>
+</ul>
+<blockquote>
+<p>插播一句：上面这个过程，和 AOP 中的<code>@Around</code>环绕切面的作用差不多</p>
+</blockquote>
+<h3 id="2-项目搭建"><a href="#2-项目搭建" class="headerlink" title="2. 项目搭建"></a>2. 项目搭建</h3><p>接下来我们搭建一个 web 应用方便后续的演示，借助 SpringBoot 搭建一个 web 应用属于比较简单的活;</p>
+<p>创建一个 maven 项目，pom 文件如下</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line">&lt;parent&gt;</span><br><span class="line">    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;</span><br><span class="line">    &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;</span><br><span class="line">    &lt;version&gt;2.1.7&lt;/version&gt;</span><br><span class="line">    &lt;relativePath/&gt;&lt;!-- lookup parent from update --&gt;</span><br><span class="line">&lt;/parent&gt;</span><br><span class="line"></span><br><span class="line">&lt;properties&gt;</span><br><span class="line">    &lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;</span><br><span class="line">    &lt;project.reporting.outputEncoding&gt;UTF-8&lt;/project.reporting.outputEncoding&gt;</span><br><span class="line">    &lt;spring-cloud.version&gt;Finchley.RELEASE&lt;/spring-cloud.version&gt;</span><br><span class="line">    &lt;java.version&gt;1.8&lt;/java.version&gt;</span><br><span class="line">&lt;/properties&gt;</span><br><span class="line"></span><br><span class="line">&lt;dependencies&gt;</span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line">    &lt;dependency&gt;</span><br><span class="line">        &lt;groupId&gt;com.alibaba&lt;/groupId&gt;</span><br><span class="line">        &lt;artifactId&gt;fastjson&lt;/artifactId&gt;</span><br><span class="line">        &lt;version&gt;1.2.45&lt;/version&gt;</span><br><span class="line">    &lt;/dependency&gt;</span><br><span class="line">&lt;/dependencies&gt;</span><br><span class="line"></span><br><span class="line">&lt;build&gt;</span><br><span class="line">    &lt;pluginManagement&gt;</span><br><span class="line">        &lt;plugins&gt;</span><br><span class="line">            &lt;plugin&gt;</span><br><span class="line">                &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;</span><br><span class="line">                &lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;</span><br><span class="line">            &lt;/plugin&gt;</span><br><span class="line">        &lt;/plugins&gt;</span><br><span class="line">    &lt;/pluginManagement&gt;</span><br><span class="line">&lt;/build&gt;</span><br><span class="line">&lt;repositories&gt;</span><br><span class="line">    &lt;repository&gt;</span><br><span class="line">        &lt;id&gt;spring-milestones&lt;/id&gt;</span><br><span class="line">        &lt;name&gt;Spring Milestones&lt;/name&gt;</span><br><span class="line">        &lt;url&gt;https://repo.spring.io/milestone&lt;/url&gt;</span><br><span class="line">        &lt;snapshots&gt;</span><br><span class="line">            &lt;enabled&gt;false&lt;/enabled&gt;</span><br><span class="line">        &lt;/snapshots&gt;</span><br><span class="line">    &lt;/repository&gt;</span><br><span class="line">&lt;/repositories&gt;</span><br></pre></td></tr></table></figure>
+
+<h2 id="II-Filter-教程"><a href="#II-Filter-教程" class="headerlink" title="II. Filter 教程"></a>II. Filter 教程</h2><h3 id="1-使用说明"><a href="#1-使用说明" class="headerlink" title="1. 使用说明"></a>1. 使用说明</h3><p>在 SpringBoot 项目中，如果需要自定义一个 Filter，并没有什么特殊的地方，直接实现接口即可，比如下面一个输出请求日志的拦截器</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">@Slf4j</span><br><span class="line">@WebFilter</span><br><span class="line">publicclass ReqFilter implements Filter &#123;</span><br><span class="line">    public ReqFilter() &#123;</span><br><span class="line">        System.out.println(&quot;init reqFilter&quot;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void init(FilterConfig filterConfig) throws ServletException &#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)</span><br><span class="line">            throws IOException, ServletException &#123;</span><br><span class="line">        HttpServletRequest req = (HttpServletRequest) request;</span><br><span class="line">        log.info(&quot;url=&#123;&#125;, params=&#123;&#125;&quot;, req.getRequestURI(), JSON.toJSONString(req.getParameterMap()));</span><br><span class="line">        chain.doFilter(req, response);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void destroy() &#123;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>实现一个自定义的 Filter 容易，一般有两个步骤</p>
+<ul>
+<li>实现 Filter 接口</li>
+<li>在<code>doFilter</code>方法中添加业务逻辑，如果允许访问继续，则执行<code>chain.doFilter(req, response);</code>；不执行上面这一句，则访问到此为止</li>
+</ul>
+<p>接下来的一个问题就是如何让我们自定义的 Filter 生效，在 SpringBoot 项目中，有两种常见的使用方式</p>
+<ul>
+<li>@WebFilter</li>
+<li>包装 Bean: <code>FilterRegistrationBean</code></li>
+</ul>
+<h4 id="a-WebFilter"><a href="#a-WebFilter" class="headerlink" title="a. WebFilter"></a>a. WebFilter</h4><p>这个注解属于 Servlet3+，与 Spring 也没有什么关系，所以问题来了，当我在 Filter 上添加了这个注解之后，Spring 怎么让它生效呢?</p>
+<ul>
+<li>配置文件中显示使用注解 <code>@ServletComponentScan</code></li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">@ServletComponentScan</span><br><span class="line">@SpringBootApplication</span><br><span class="line">publicclass Application &#123;</span><br><span class="line"></span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        SpringApplication.run(Application.class);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>WebFilter 常用属性如下，其中<code>urlPatterns</code>最为常用，表示这个 filter 适用于哪些 url 请求（默认场景下全部请求都被拦截）</p>
+<table>
+<thead>
+<tr>
+<th align="left">属性名</th>
+<th align="left">类型</th>
+<th align="left">描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">filterName</td>
+<td align="left">String</td>
+<td align="left">指定过滤器的 name 属性，等价于</td>
+</tr>
+<tr>
+<td align="left">value</td>
+<td align="left">String[]</td>
+<td align="left">该属性等价于 urlPatterns 属性。但是两者不应该同时使用。</td>
+</tr>
+<tr>
+<td align="left">urlPatterns</td>
+<td align="left">String[]</td>
+<td align="left">指定一组过滤器的 URL 匹配模式。等价于标签。</td>
+</tr>
+<tr>
+<td align="left">servletNames</td>
+<td align="left">String[]</td>
+<td align="left">指定过滤器将应用于哪些 Servlet。取值是 @WebServlet 中的 name 属性的取值，或者是 web.xml 中的取值。</td>
+</tr>
+<tr>
+<td align="left">dispatcherTypes</td>
+<td align="left">DispatcherType</td>
+<td align="left">指定过滤器的转发模式。具体取值包括：ASYNC、ERROR、FORWARD、INCLUDE、REQUEST。</td>
+</tr>
+<tr>
+<td align="left">initParams</td>
+<td align="left">WebInitParam[]</td>
+<td align="left">指定一组过滤器初始化参数，等价于标签。</td>
+</tr>
+<tr>
+<td align="left">asyncSupported</td>
+<td align="left">boolean</td>
+<td align="left">声明过滤器是否支持异步操作模式，等价于标签。</td>
+</tr>
+<tr>
+<td align="left">description</td>
+<td align="left">String</td>
+<td align="left">该过滤器的描述信息，等价于标签。</td>
+</tr>
+<tr>
+<td align="left">displayName</td>
+<td align="left">String</td>
+<td align="left">该过滤器的显示名，通常配合工具使用，等价于标签。</td>
+</tr>
+</tbody></table>
+<h4 id="b-FilterRegistrationBean"><a href="#b-FilterRegistrationBean" class="headerlink" title="b. FilterRegistrationBean"></a>b. FilterRegistrationBean</h4><p>上面一种方式比较简单，后面会说到有个小问题，指定 Filter 的优先级比较麻烦，</p>
+<p>下面是使用包装 bean 注册方式</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">@Bean</span><br><span class="line">public FilterRegistrationBean&lt;OrderFilter&gt; orderFilter() &#123;</span><br><span class="line">    FilterRegistrationBean&lt;OrderFilter&gt; filter = new FilterRegistrationBean&lt;&gt;();</span><br><span class="line">    filter.setName(&quot;reqFilter&quot;);</span><br><span class="line">    filter.setFilter(new ReqFilter());</span><br><span class="line">    // 指定优先级</span><br><span class="line">    filter.setOrder(-1);</span><br><span class="line">    return filter;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id=""><a href="#" class="headerlink" title=""></a></h3><h3 id="2-常见问题"><a href="#2-常见问题" class="headerlink" title="2. 常见问题"></a>2. 常见问题</h3><p>上面整完，就可以开始测试使用过滤器了，在进入实测环节之前，先来看两个常见的问题</p>
+<ul>
+<li>Filter 作为 Servelt 的组件，怎么与 SpringBoot 中的 Bean 交互</li>
+<li>多个 Filter 之间的优先级怎么确定</li>
+</ul>
+<h4 id="a-Filter-依赖-Bean-注入问题"><a href="#a-Filter-依赖-Bean-注入问题" class="headerlink" title="a. Filter 依赖 Bean 注入问题"></a>a. Filter 依赖 Bean 注入问题</h4><p>如果有小伙伴使用 SpringMVC + web.xml 方式来定义 Filter，就会发现自定义的 Filter 中无法通过<code>@Autowired</code>方式来注入 Spring 的 bean</p>
+<blockquote>
+<p>我之前使用的是 spring4 Servlet2+ ，存在上面的问题，如果有不同观点请留言告诉我，感谢</p>
+</blockquote>
+<p>SpringBoot 中可以直接注入依赖的 Bean，从上面的第二种注册方式可以看到，Spring 将 Filter 封装成了一个 Bean 对象，因此可以直接注入依赖的 Bean</p>
+<p>下面定义一个<code>AuthFilter</code>，依赖了自定义的<code>DemoBean</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line">@Data</span><br><span class="line">@Component</span><br><span class="line">publicclass DemoBean &#123;</span><br><span class="line">    privatelong time;</span><br><span class="line"></span><br><span class="line">    public DemoBean() &#123;</span><br><span class="line">        time = System.currentTimeMillis();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void show() &#123;</span><br><span class="line">        System.out.println(&quot;demo bean!!! &quot; + time);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">@Slf4j</span><br><span class="line">@WebFilter</span><br><span class="line">publicclass AuthFilter implements Filter &#123;</span><br><span class="line">    @Autowired</span><br><span class="line">    private DemoBean demoBean;</span><br><span class="line"></span><br><span class="line">    public AuthFilter() &#123;</span><br><span class="line">        System.out.println(&quot;init autFilter&quot;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void init(FilterConfig filterConfig) throws ServletException &#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)</span><br><span class="line">            throws IOException, ServletException &#123;</span><br><span class="line">        log.info(&quot;in auth filter! &#123;&#125;&quot;, demoBean);</span><br><span class="line">        // 测试，用header中的 tx-demo 来判断是否为认证的请求</span><br><span class="line">        HttpServletRequest req = (HttpServletRequest) request;</span><br><span class="line">        String auth = req.getHeader(&quot;tx-demo&quot;);</span><br><span class="line">        if (&quot;yihuihui&quot;.equals(auth)) &#123;</span><br><span class="line">            // 只有认证的请求才允许访问，请求头中没有这个时，不执行下面的的方法，则表示请求被过滤了</span><br><span class="line">            // 在测试优先级时打开下面的注释</span><br><span class="line">            // chain.doFilter(request, response);</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            chain.doFilter(request, response);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void destroy() &#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="b-优先级指定"><a href="#b-优先级指定" class="headerlink" title="b. 优先级指定"></a>b. 优先级指定</h4><p>Filter 的优先级指定，通过我的实际测试，<code>@Order</code>注解没有用，继承 <code>Ordered</code>接口也没有用，再不考虑 web.xml 的场景下，只能通过在注册 Bean 的时候指定优先级</p>
+<p>实例如下，三个 Filter，两个通过<code>@WebFilter</code>注解方式注册，一个通过<code>FilterRegistrationBean</code>方式注册</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">@Slf4j</span><br><span class="line">@Order(2)</span><br><span class="line">@WebFilter</span><br><span class="line">publicclass AuthFilter implements Filter, Ordered &#123;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">@Slf4j</span><br><span class="line">@Order(1)</span><br><span class="line">@WebFilter</span><br><span class="line">publicclass ReqFilter implements Filter, Ordered &#123;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">@Slf4j</span><br><span class="line">publicclass OrderFilter implements Filter &#123;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">@ServletComponentScan</span><br><span class="line">@SpringBootApplication</span><br><span class="line">publicclass Application &#123;</span><br><span class="line">    @Bean</span><br><span class="line">    public FilterRegistrationBean&lt;OrderFilter&gt; orderFilter() &#123;</span><br><span class="line">        FilterRegistrationBean&lt;OrderFilter&gt; filter = new FilterRegistrationBean&lt;&gt;();</span><br><span class="line">        filter.setName(&quot;orderFilter&quot;);</span><br><span class="line">        filter.setFilter(new OrderFilter());</span><br><span class="line">        filter.setOrder(-1);</span><br><span class="line">        return filter;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        SpringApplication.run(Application.class);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-测试"><a href="#3-测试" class="headerlink" title="3. 测试"></a>3. 测试</h3><p>上面定义了三个 Filter，我们主要验证下优先级，如果<code>@Order</code>注解生效，那么执行的先后顺序应该是</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">OrderFilter -&gt; ReqFilter -&gt; AuthFilter</span><br></pre></td></tr></table></figure>
+
+<p>如果不是上面的顺序，那么说明<code>@Order</code>注解没有用</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">@RestController</span><br><span class="line">publicclass IndexRest &#123;</span><br><span class="line">    @GetMapping(path = &#123;&quot;/&quot;, &quot;index&quot;&#125;)</span><br><span class="line">    public String hello(String name) &#123;</span><br><span class="line">        return&quot;hello &quot; + name;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从<code>org.apache.catalina.core.ApplicationFilterFactory#createFilterChain</code>可以看出 <code>AuthFilter</code>的优先级大于<code>ReqFilter</code>， 下面实际的输出也说明了<code>@Order</code>注解不能指定 Filter 的优先级（不知道为什么网络上有大量使用 Order 来指定 Filer 优先级的文章!!!）</p>
+<p><img src="data:image/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWNgYGBgAAAABQABh6FO1AAAAABJRU5ErkJggg==" alt="图片"></p>
+<p>接下来我们的问题就是<code>WebFilter</code>注解来注册的 Filter 的优先级是怎样的呢，我们依然通过 code来看，关键代码路径为: <code>org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext#selfInitialize</code></p>
+<p><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxfzldx9vsj30gv0nm0u5.jpg" alt="图片"></p>
+<ul>
+<li>OrderFiler 是我们手动注册并设置优先级为-1</li>
+<li>ReqFilter, AuthFilter 通过 WebFillter 方式注册，默认优先级为<code>2147483647</code>，相同优先级的情况下，根据名字先后顺序来决定</li>
+</ul>
+<h2 id="III-小结"><a href="#III-小结" class="headerlink" title="III. 小结"></a>III. 小结</h2><p>本文主要介绍了过滤器 Filter 的使用方式，以及常见的两个问题解答，文中内容穿插了一点源码的分析截图，并未深入，如有兴趣的同学可以根据文中提的几个关键位置探索一番</p>
+<p>下面简单小结下文中内容</p>
+<h3 id="1-Filter-使用"><a href="#1-Filter-使用" class="headerlink" title="1. Filter 使用"></a>1. Filter 使用</h3><p><strong>自定义 Filter 的实现</strong></p>
+<ul>
+<li>实现 Filter 接口</li>
+<li>doFilter 方法中，显示调用<code>chain.doFilter(request, response);</code>表示请求继续；否则表示请求被过滤</li>
+</ul>
+<p><strong>注册生效</strong></p>
+<ul>
+<li><code>@ServletComponentScan</code>自动扫描带有<code>@WebFilter</code>注解的 Filter</li>
+<li>创建 Bean: <code>FilterRegistrationBean</code> 来包装自定义的 Filter</li>
+</ul>
+<h3 id="2-IoC-DI"><a href="#2-IoC-DI" class="headerlink" title="2. IoC/DI"></a>2. IoC/DI</h3><p>在 SpringBoot 中 Filter 可以和一般的 Bean 一样使用，直接通过<code>Autowired</code>注入其依赖的 Spring Bean 对象</p>
+<h3 id="3-优先级"><a href="#3-优先级" class="headerlink" title="3. 优先级"></a>3. 优先级</h3><p>通过创建<code>FilterRegistrationBean</code>的时候指定优先级，如下</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">@Bean</span><br><span class="line">public FilterRegistrationBean&lt;OrderFilter&gt; orderFilter() &#123;</span><br><span class="line">    FilterRegistrationBean&lt;OrderFilter&gt; filter = new FilterRegistrationBean&lt;&gt;();</span><br><span class="line">    filter.setName(&quot;orderFilter&quot;);</span><br><span class="line">    filter.setFilter(new OrderFilter());</span><br><span class="line">    filter.setOrder(-1);</span><br><span class="line">    return filter;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>此外格外注意, <code>@WebFilter</code>声明的 Filter，优先级为<code>2147483647</code>(最低优先级)</p>
+<ul>
+<li><strong>@Order 注解不能指定 Filter 优先级</strong></li>
+<li><strong>@Order 注解不能指定 Filter 优先级</strong></li>
+<li><strong>@Order 注解不能指定 Filter 优先级</strong></li>
+</ul>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined" rel="external nofollow noreferrer">Usher</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="http://www.usherblog.site/2021/12/16/SpringBoot%E8%BF%87%E6%BB%A4%E5%99%A8Filter%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97/">http://www.usherblog.site/2021/12/16/SpringBoot%E8%BF%87%E6%BB%A4%E5%99%A8Filter%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener external nofollow noreferrer" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Java/">Java</a><a class="post-meta__tags" href="/tags/Spring/">Spring</a></div><div class="post_share"><div class="social-share" data-image="https://tva1.sinaimg.cn/large/005P73H4gy1gxy2jvyp2kj31hc0u07n8.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/social-share.js/dist/js/social-share.min.js" defer></script></div></div><div class="post-reward"><div class="reward-button button--animated"><i class="fas fa-qrcode"></i> Donate</div><div class="reward-main"><ul class="reward-all"><li class="reward-item"><a href="https://tva1.sinaimg.cn/mw690/005P73H4gy1gxcm78wfitj30v20wfq99.jpg" rel="external nofollow noreferrer" target="_blank"><img class="post-qr-code-img" src="https://tva1.sinaimg.cn/mw690/005P73H4gy1gxcm78wfitj30v20wfq99.jpg"/></a><div class="post-qr-code-desc"></div></li></ul></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2021/12/18/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Java%E5%86%85%E9%83%A8%E7%B1%BB/"><img class="prev-cover" src="https://tva1.sinaimg.cn/large/005P73H4gy1gxclrtmsz9j31400p0my3.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">Previous Post</div><div class="prev_info">深入理解Java内部类</div></div></a></div><div class="next-post pull-right"><a href="/2021/12/15/12%E6%9D%A1%E9%9D%9E%E5%B8%B8%E6%9C%89%E7%94%A8%E7%9A%84SQL%E6%8A%80%E5%B7%A7%EF%BC%8C%E5%BB%BA%E8%AE%AE%E6%94%B6%E8%97%8F/"><img class="next-cover" src="https://tva1.sinaimg.cn/large/005P73H4gy1gxy2jvyp2kj31hc0u07n8.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">Next Post</div><div class="next_info">12条非常有用的SQL技巧，建议收藏</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>Related Articles</span></div><div class="relatedPosts-list"><div><a href="/2018/03/11/Spring%20AOP%E4%B8%8EIoC/" title="Spring AOP与IoC"><img class="cover" src="https://tva1.sinaimg.cn/large/005P73H4gy1gxclrtmsz9j31400p0my3.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2018-03-11</div><div class="title">Spring AOP与IoC</div></div></a></div><div><a href="/2021/12/14/Arthas%EF%BC%88%E9%98%BF%E5%B0%94%E8%90%A8%E6%96%AF%EF%BC%89%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B/" title="Arthas（阿尔萨斯）使用教程"><img class="cover" src="https://tva1.sinaimg.cn/large/005P73H4gy1gxclr4dsubj30hi0a0406.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-12-14</div><div class="title">Arthas（阿尔萨斯）使用教程</div></div></a></div><div><a href="/2018/04/28/ForkJoinPool/" title="ForkJoinPool"><img class="cover" src="https://tva1.sinaimg.cn/large/005P73H4gy1gxcls4qjqtj31400p0gnh.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2018-04-28</div><div class="title">ForkJoinPool</div></div></a></div><div><a href="/2018/04/18/LRU%E7%BC%93%E5%AD%98%E5%AE%9E%E7%8E%B0-LinkedHashMap/" title="LRU缓存实现-LinkedHashMap"><img class="cover" src="https://tva1.sinaimg.cn/large/005P73H4gy1gxcls4qjqtj31400p0gnh.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2018-04-18</div><div class="title">LRU缓存实现-LinkedHashMap</div></div></a></div><div><a href="/2018/08/05/Redis%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81%E5%AE%9E%E7%8E%B0%E9%AB%98%E5%B9%B6%E5%8F%91%E6%8E%A7%E5%88%B6%E5%AE%9E%E8%B7%B5/" title="Redis分布式锁实现高并发控制实践"><img class="cover" src="https://tva1.sinaimg.cn/large/005P73H4gy1gxcls4qjqtj31400p0gnh.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2018-08-05</div><div class="title">Redis分布式锁实现高并发控制实践</div></div></a></div><div><a href="/2018/05/19/NIO%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%E5%8F%8A%E5%AE%9E%E7%8E%B0%E7%AE%80%E5%8D%95%E8%81%8A%E5%A4%A9%E5%AE%A4/" title="NIO学习笔记及实现简单聊天室"><img class="cover" src="https://tva1.sinaimg.cn/large/005P73H4gy1gxclrtmsz9j31400p0my3.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2018-05-19</div><div class="title">NIO学习笔记及实现简单聊天室</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxcmaek0tpj308w08wgls.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">Usher</div><div class="author-info__description">Honor To The End</div></div><div class="card-info-data is-center"><div class="card-info-data-item"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">80</div></a></div><div class="card-info-data-item"><a href="/tags/"><div class="headline">Tags</div><div class="length-num">38</div></a></div><div class="card-info-data-item"><a href="/categories/"><div class="headline">Categories</div><div class="length-num">25</div></a></div></div><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/legolas007" rel="external nofollow noreferrer" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="https://www.letaotao.site/" rel="external nofollow noreferrer" target="_blank" title="最好用的网址导航"><i class="fas fa-blog"></i></a></div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Catalog</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#I-%E8%83%8C%E6%99%AF"><span class="toc-number">1.</span> <span class="toc-text">I. 背景</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Filter-%E8%AF%B4%E6%98%8E"><span class="toc-number">1.1.</span> <span class="toc-text">1. Filter 说明</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E9%A1%B9%E7%9B%AE%E6%90%AD%E5%BB%BA"><span class="toc-number">1.2.</span> <span class="toc-text">2. 项目搭建</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#II-Filter-%E6%95%99%E7%A8%8B"><span class="toc-number">2.</span> <span class="toc-text">II. Filter 教程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E"><span class="toc-number">2.1.</span> <span class="toc-text">1. 使用说明</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#a-WebFilter"><span class="toc-number">2.1.1.</span> <span class="toc-text">a. WebFilter</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#b-FilterRegistrationBean"><span class="toc-number">2.1.2.</span> <span class="toc-text">b. FilterRegistrationBean</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">2.2.</span> <span class="toc-text"></span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98"><span class="toc-number">2.3.</span> <span class="toc-text">2. 常见问题</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#a-Filter-%E4%BE%9D%E8%B5%96-Bean-%E6%B3%A8%E5%85%A5%E9%97%AE%E9%A2%98"><span class="toc-number">2.3.1.</span> <span class="toc-text">a. Filter 依赖 Bean 注入问题</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#b-%E4%BC%98%E5%85%88%E7%BA%A7%E6%8C%87%E5%AE%9A"><span class="toc-number">2.3.2.</span> <span class="toc-text">b. 优先级指定</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E6%B5%8B%E8%AF%95"><span class="toc-number">2.4.</span> <span class="toc-text">3. 测试</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#III-%E5%B0%8F%E7%BB%93"><span class="toc-number">3.</span> <span class="toc-text">III. 小结</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Filter-%E4%BD%BF%E7%94%A8"><span class="toc-number">3.1.</span> <span class="toc-text">1. Filter 使用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-IoC-DI"><span class="toc-number">3.2.</span> <span class="toc-text">2. IoC&#x2F;DI</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E4%BC%98%E5%85%88%E7%BA%A7"><span class="toc-number">3.3.</span> <span class="toc-text">3. 优先级</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Post</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2022/01/25/Geohash%E7%AE%97%E6%B3%95/" title="Geohash算法"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxclr4dsubj30hi0a0406.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Geohash算法"/></a><div class="content"><a class="title" href="/2022/01/25/Geohash%E7%AE%97%E6%B3%95/" title="Geohash算法">Geohash算法</a><time datetime="2022-01-25T15:55:11.000Z" title="Created 2022-01-25 23:55:11">2022-01-25</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/01/23/Zookeeper%E9%9D%A2%E8%AF%95%E9%A2%98%E6%80%BB%E7%BB%93/" title="Zookeeper面试题总结"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxclr4dsubj30hi0a0406.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Zookeeper面试题总结"/></a><div class="content"><a class="title" href="/2022/01/23/Zookeeper%E9%9D%A2%E8%AF%95%E9%A2%98%E6%80%BB%E7%BB%93/" title="Zookeeper面试题总结">Zookeeper面试题总结</a><time datetime="2022-01-23T08:56:41.000Z" title="Created 2022-01-23 16:56:41">2022-01-23</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/01/22/HBase%E4%BC%98%E5%8C%96%E7%AC%94%E8%AE%B0/" title="HBase优化笔记"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxy2jvyp2kj31hc0u07n8.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="HBase优化笔记"/></a><div class="content"><a class="title" href="/2022/01/22/HBase%E4%BC%98%E5%8C%96%E7%AC%94%E8%AE%B0/" title="HBase优化笔记">HBase优化笔记</a><time datetime="2022-01-22T05:43:02.000Z" title="Created 2022-01-22 13:43:02">2022-01-22</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/01/20/HBase-RowKey%E8%AE%BE%E8%AE%A1/" title="HBase RowKey设计"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxclqqeek6j312w0m8wnu.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="HBase RowKey设计"/></a><div class="content"><a class="title" href="/2022/01/20/HBase-RowKey%E8%AE%BE%E8%AE%A1/" title="HBase RowKey设计">HBase RowKey设计</a><time datetime="2022-01-20T14:25:23.000Z" title="Created 2022-01-20 22:25:23">2022-01-20</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2022/01/20/HBase%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E6%8C%87%E5%8D%97/" title="HBase性能优化指南"><img src="https://tva1.sinaimg.cn/large/005P73H4gy1gxcls4qjqtj31400p0gnh.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="HBase性能优化指南"/></a><div class="content"><a class="title" href="/2022/01/20/HBase%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E6%8C%87%E5%8D%97/" title="HBase性能优化指南">HBase性能优化指南</a><time datetime="2022-01-20T13:45:18.000Z" title="Created 2022-01-20 21:45:18">2022-01-20</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2018 - 2022 By Usher</div><div class="framework-info"><span>Framework </span><a target="_blank" rel="noopener external nofollow noreferrer" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener external nofollow noreferrer" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Read Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light And Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle between single-column and double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="Setting"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table Of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back To Top"><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.js"></script><script src="https://cdn.jsdelivr.net/npm/node-snackbar/dist/snackbar.min.js"></script><div class="js-pjax"></div><script src="https://cdn.jsdelivr.net/npm/pjax/pjax.min.js"></script><script>let pjaxSelectors = [
+  'title',
+  '#config-diff',
+  '#body-wrap',
+  '#rightside-config-hide',
+  '#rightside-config-show',
+  '.js-pjax'
+]
+
+if (false) {
+  pjaxSelectors.unshift('meta[property="og:image"]', 'meta[property="og:title"]', 'meta[property="og:url"]')
+}
+
+var pjax = new Pjax({
+  elements: 'a:not([target="_blank"]):not([href="/music/"]):not([href="/no-pjax/"])',
+  selectors: pjaxSelectors,
+  cacheBust: false,
+  analytics: false,
+  scrollRestoration: false
+})
+
+document.addEventListener('pjax:send', function () {
+
+  // removeEventListener scroll 
+  window.removeEventListener('scroll', window.tocScrollFn)
+  window.removeEventListener('scroll', scrollCollect)
+
+  typeof preloader === 'object' && preloader.initLoading()
+  
+  if (window.aplayers) {
+    for (let i = 0; i < window.aplayers.length; i++) {
+      if (!window.aplayers[i].options.fixed) {
+        window.aplayers[i].destroy()
+      }
+    }
+  }
+
+  typeof typed === 'object' && typed.destroy()
+
+  //reset readmode
+  const $bodyClassList = document.body.classList
+  $bodyClassList.contains('read-mode') && $bodyClassList.remove('read-mode')
+
+})
+
+document.addEventListener('pjax:complete', function () {
+  window.refreshFn()
+
+  document.querySelectorAll('script[data-pjax]').forEach(item => {
+    const newScript = document.createElement('script')
+    const content = item.text || item.textContent || item.innerHTML || ""
+    Array.from(item.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value))
+    newScript.appendChild(document.createTextNode(content))
+    item.parentNode.replaceChild(newScript, item)
+  })
+
+  GLOBAL_CONFIG.islazyload && window.lazyLoadInstance.update()
+
+  typeof chatBtnFn === 'function' && chatBtnFn()
+  typeof panguInit === 'function' && panguInit()
+
+  // google analytics
+  typeof gtag === 'function' && gtag('config', '', {'page_path': window.location.pathname});
+
+  // baidu analytics
+  typeof _hmt === 'object' && _hmt.push(['_trackPageview',window.location.pathname]);
+
+  typeof loadMeting === 'function' && document.getElementsByClassName('aplayer').length && loadMeting()
+
+  // prismjs
+  typeof Prism === 'object' && Prism.highlightAll()
+
+  typeof preloader === 'object' && preloader.endLoading()
+})
+
+document.addEventListener('pjax:error', (e) => {
+  if (e.request.status === 404) {
+    pjax.loadUrl('/404.html')
+  }
+})</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
