@@ -10,4 +10,4 @@ Disallow: /css/
 Disallow: /fonts/
 Disallow: /vendors/
 Disallow: /lib/
-Sitemap: https://www.usherblog.site/baidusitemap.xml
+Sitemap: https://www.codertools.site/baidusitemap.xml
